@@ -49,7 +49,7 @@ revoke insert, update, delete on public.nastolka_room_players from anon, authent
 create or replace function public.nastolka_create_room(
   p_room_name text, p_host_name text, p_map_id text, p_map_name text,
   p_map_data jsonb, p_max_players integer, p_token text
-) returns jsonb language plpgsql security definer set search_path = public, extensions as $
+) returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 declare v_room_id uuid; v_player_id uuid;
 begin
   if char_length(trim(coalesce(p_room_name,''))) not between 2 and 48 then raise exception 'Название комнаты должно содержать 2–48 символов'; end if;
@@ -68,7 +68,7 @@ exception when unique_violation then raise exception 'Комната с таки
 end; $$;
 
 create or replace function public.nastolka_join_room(p_room_id uuid,p_player_name text,p_token text)
-returns jsonb language plpgsql security definer set search_path = public, extensions as $
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 declare v_room nastolka_rooms%rowtype; v_player_id uuid; v_hash text;
 begin
   if char_length(trim(coalesce(p_player_name,''))) not between 1 and 24 then raise exception 'Имя игрока должно содержать 1–24 символа'; end if;
@@ -86,7 +86,7 @@ begin
 end; $$;
 
 create or replace function public.nastolka_leave_room(p_room_id uuid,p_player_id uuid,p_token text)
-returns jsonb language plpgsql security definer set search_path = public, extensions as $
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 declare v_is_host boolean;
 begin
   if not exists(select 1 from nastolka_player_secrets where room_id=p_room_id and player_id=p_player_id and token_hash=encode(digest(coalesce(p_token,''),'sha256'),'hex')) then raise exception 'Не удалось подтвердить участника'; end if;
@@ -98,7 +98,7 @@ begin
 end; $$;
 
 create or replace function public.nastolka_start_room(p_room_id uuid,p_player_id uuid,p_token text)
-returns jsonb language plpgsql security definer set search_path = public, extensions as $
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not exists(select 1 from nastolka_player_secrets where room_id=p_room_id and player_id=p_player_id and token_hash=encode(digest(coalesce(p_token,''),'sha256'),'hex')) then raise exception 'Не удалось подтвердить участника'; end if;
   if (select count(*) from nastolka_room_players where room_id=p_room_id) < 2 then raise exception 'Для старта нужен хотя бы один присоединившийся игрок'; end if;
@@ -136,7 +136,7 @@ create or replace function public.nastolka_begin_game(
   p_initial_state jsonb,
   p_player_ids uuid[]
 ) returns jsonb
-language plpgsql security definer set search_path = public, extensions as $
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_room public.nastolka_rooms%rowtype;
   v_player_count integer;
@@ -187,7 +187,7 @@ create or replace function public.nastolka_submit_turn(
   p_expected_version integer,
   p_next_state jsonb
 ) returns jsonb
-language plpgsql security definer set search_path = public, extensions as $
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_room public.nastolka_rooms%rowtype;
   v_ids uuid[];
