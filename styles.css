@@ -84,3 +84,18 @@
 .map-backup-tools p{flex-basis:100%;margin:0 0 10px;color:#939688;font-size:9px;line-height:1.6}
 .import-maps-label{margin:0}
 @media(max-width:480px){.map-backup-tools>*:not(p){flex:1;text-align:center}.map-backup-tools p{font-size:8px}}
+
+
+/* Player identity and persistent local leaderboard */
+.player-name-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0 16px}
+.player-name-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.player-name-field>span{font-size:9px;color:#a5a699;letter-spacing:.5px}
+.player-name-field input{width:100%;min-width:0;padding:11px 12px;background:#10110e;border:1px solid #3b3d33;color:var(--text);border-radius:3px;font-size:11px;outline:none}
+.player-name-field input:focus{border-color:var(--lime)}
+.player-stats-list{margin-top:16px;padding-top:14px;border-top:1px solid #34362d}
+.player-stats-heading{margin:0 0 9px;font-family:var(--display);font-size:9px;letter-spacing:1px;color:#a5a699}
+.player-stats-row{display:grid;grid-template-columns:25px minmax(0,1fr) auto;align-items:center;gap:9px;padding:9px 10px;background:#20211d;border-radius:3px;margin-top:5px}
+.player-stats-rank{font-family:var(--display);font-size:10px;color:var(--lime)}
+.player-stats-row strong{font-size:10px;overflow-wrap:anywhere}
+.player-stats-row>span:last-child{font-size:9px;color:#a5a699;text-align:right}
+@media(max-width:420px){.player-name-fields{gap:7px}.player-name-field input{padding:10px 8px;font-size:10px}.player-stats-row{grid-template-columns:22px minmax(0,1fr);gap:6px}.player-stats-row>span:last-child{grid-column:2;text-align:left}}
