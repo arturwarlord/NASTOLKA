@@ -79,7 +79,7 @@
     let result = await client.from('nastolka_rooms').select('id,room_name,map_id,map_name,map_data,game_state,game_version,max_players,status,created_at,host_player_id').in('status',['waiting','playing']).order('created_at',{ascending:false}).limit(100);
     if(result.error && /game_state|game_version|column/i.test(result.error.message||'')) {
       gameSyncSchemaReady = false;
-      setStatus('Список комнат доступен, но синхронизация партии ещё не установлена в Supabase. Нужно применить supabase/multiplayer.sql один раз.','error');
+      setStatus('Список комнат доступен, но синхронизация партии ещё не установлена в Supabase. Открой supabase/schema.sql и выполни его целиком: он включает SQL синхронизации.','error');
       result = await client.from('nastolka_rooms').select('id,room_name,map_id,map_name,map_data,max_players,status,created_at,host_player_id').in('status',['waiting','playing']).order('created_at',{ascending:false}).limit(100);
     } else if(!result.error) {
       gameSyncSchemaReady = true;
@@ -166,7 +166,7 @@
     const actions=document.createElement('div');actions.className='room-lobby-actions';
     if(currentPlayer&&currentRoom&&currentPlayer.is_host&&room.status==='waiting'){
       const start=document.createElement('button');start.type='button';start.className='primary-button';start.textContent='Начать партию ↗';start.disabled=room.players.length<2||!gameSyncSchemaReady;
-      start.title=!gameSyncSchemaReady?'Сначала примени supabase/multiplayer.sql в Supabase SQL Editor':(room.players.length<2?'Нужен хотя бы один присоединившийся игрок':'');
+      start.title=!gameSyncSchemaReady?'Сначала выполни полный supabase/schema.sql в Supabase SQL Editor':(room.players.length<2?'Нужен хотя бы один присоединившийся игрок':'');
       start.addEventListener('click',async()=>{
         try{
           const playerIds=room.players.map(player=>player.id);
