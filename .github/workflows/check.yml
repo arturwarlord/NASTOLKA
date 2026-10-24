@@ -89,5 +89,8 @@ jobs:
               raise SystemExit("Не найдена защита от устаревшего состояния партии.")
           if "document.documentElement.classList.add('game-mode')" not in js:
               raise SystemExit("Онлайн-партия не переключает интерфейс в полноэкранный режим.")
+          for feature in ["function setGameScene(map)", "current-player-cell", "route-step", "player-token-"]:
+              if feature not in js and feature not in Path("styles.css").read_text(encoding="utf-8"):
+                  raise SystemExit(f"Не найдены детали игрового оформления: {feature}")
           print("Проверка структуры страницы, истории партий, онлайн-синхронизации и восстановления соединения пройдена.")
           PY
