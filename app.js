@@ -563,6 +563,7 @@ window.NASTOLKA_GAME = {
     };
   },
   showOnline(map, state, context) {
+    setGameScene(map);
     document.documentElement.classList.add('game-mode');
     const sameRoom = onlineGameContext && onlineGameContext.roomId === context.roomId;
     const incomingVersion = Number(state.version) || Number(context.version) || 1;
