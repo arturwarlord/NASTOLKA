@@ -27,7 +27,6 @@ jobs:
           test -s supabase-config.js
           test -s supabase/schema.sql
           test -s supabase/multiplayer.sql
-          test -s supabase/game-sync.sql
           grep -q 'styles.css' index.html
           grep -q 'app.js' index.html
           echo "Основные файлы найдены."
