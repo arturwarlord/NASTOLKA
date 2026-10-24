@@ -11,7 +11,7 @@ create or replace function public.nastolka_begin_game(
   p_initial_state jsonb,
   p_player_ids uuid[]
 ) returns jsonb
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $
 declare
   v_room public.nastolka_rooms%rowtype;
   v_player_count integer;
@@ -62,7 +62,7 @@ create or replace function public.nastolka_submit_turn(
   p_expected_version integer,
   p_next_state jsonb
 ) returns jsonb
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $
 declare
   v_room public.nastolka_rooms%rowtype;
   v_ids uuid[];
