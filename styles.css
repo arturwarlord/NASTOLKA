@@ -53,6 +53,7 @@
 .play-cell.tile-treasure{background:#4a4125;color:#ffdc73}
 .play-cell.tile-trap{background:#492c2b;color:#ff9b82}
 .play-cell.tile-event{background:#302b4c;color:#c4b7ff}
+.play-cell.off-route{opacity:.28;filter:saturate(.45)}
 .play-cell-symbol{font-size:clamp(10px,2vw,19px);line-height:1}
 .play-cell>small{font-size:clamp(4px,.7vw,7px);letter-spacing:.3px;margin-top:2px}
 .play-tokens{position:absolute;right:2px;bottom:2px;display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end;max-width:90%}
