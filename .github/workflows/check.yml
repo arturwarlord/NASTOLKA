@@ -50,12 +50,13 @@ jobs:
               'id="customGamePanel"', 'id="playerCount"', 'id="startGameBtn"',
               'id="playBoard"', 'id="playRollBtn"', 'id="restartGameBtn"',
               'id="gameStatsSummary"', 'id="gameHistoryList"', 'id="gameHistoryTitle"',
+              'id="playerNameFields"', 'id="playerStatsList"',
           ]
           missing = [item for item in required if item not in html]
           if missing:
               raise SystemExit(f"Не найдены элементы: {', '.join(missing)}")
           js = Path("app.js").read_text(encoding="utf-8")
-          for feature in ["nastolka-game-history", "function renderGameStats()", "gameState.recorded=true"]:
+          for feature in ["nastolka-game-history", "function renderGameStats()", "gameState.recorded=true", "nastolka-player-names", "function renderPlayerNameFields()", "playerStatsList"]:
               if feature not in js:
                   raise SystemExit(f"Не найдена логика истории партий: {feature}")
           print("Проверка структуры страницы и истории партий пройдена.")
