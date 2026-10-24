@@ -16,6 +16,7 @@
   let currentPlayer = null;
   let currentToken = null;
   let roomsCache = [];
+  let gameSyncSchemaReady = true;
   const tokenKey = 'nastolka-online-player-token';
   const playerIdKey = 'nastolka-online-player-id';
   const roomIdKey = 'nastolka-online-room-id';
@@ -75,7 +76,15 @@
   }
   async function loadRooms() {
     if (!client) return;
-    const {data,error} = await client.from('nastolka_rooms').select('id,room_name,map_id,map_name,map_data,game_state,game_version,max_players,status,created_at,host_player_id').in('status',['waiting','playing']).order('created_at',{ascending:false}).limit(100);
+    let result = await client.from('nastolka_rooms').select('id,room_name,map_id,map_name,map_data,game_state,game_version,max_players,status,created_at,host_player_id').in('status',['waiting','playing']).order('created_at',{ascending:false}).limit(100);
+    if(result.error && /game_state|game_version|column/i.test(result.error.message||'')) {
+      gameSyncSchemaReady = false;
+      setStatus('Список комнат доступен, но синхронизация партии ещё не установлена в Supabase. Нужно применить supabase/multiplayer.sql один раз.','error');
+      result = await client.from('nastolka_rooms').select('id,room_name,map_id,map_name,map_data,max_players,status,created_at,host_player_id').in('status',['waiting','playing']).order('created_at',{ascending:false}).limit(100);
+    } else if(!result.error) {
+      gameSyncSchemaReady = true;
+    }
+    const {data,error} = result;
     if (error) throw error;
     const ids=(data||[]).map(room=>room.id);
     let playerRows=[];
@@ -156,8 +165,8 @@
     lobbyEl.append(players);
     const actions=document.createElement('div');actions.className='room-lobby-actions';
     if(currentPlayer&&currentRoom&&currentPlayer.is_host&&room.status==='waiting'){
-      const start=document.createElement('button');start.type='button';start.className='primary-button';start.textContent='Начать партию ↗';start.disabled=room.players.length<2;
-      start.title=room.players.length<2?'Нужен хотя бы один присоединившийся игрок':'';
+      const start=document.createElement('button');start.type='button';start.className='primary-button';start.textContent='Начать партию ↗';start.disabled=room.players.length<2||!gameSyncSchemaReady;
+      start.title=!gameSyncSchemaReady?'Сначала примени supabase/multiplayer.sql в Supabase SQL Editor':(room.players.length<2?'Нужен хотя бы один присоединившийся игрок':'');
       start.addEventListener('click',async()=>{
         try{
           const playerIds=room.players.map(player=>player.id);
@@ -222,7 +231,7 @@
     try{
       client=window.supabase.createClient(config.url,config.anonKey);
       await loadRooms();
-      setStatus('Подключено к онлайн-комнатам. Список обновляется автоматически.','connected');
+      setStatus(gameSyncSchemaReady?'Подключено к онлайн-комнатам. Список обновляется автоматически.':'Комнаты доступны; для запуска общей партии нужно применить supabase/multiplayer.sql.','connected');
       roomChannel=client.channel('nastolka-room-updates').on('postgres_changes',{event:'*',schema:'public',table:'nastolka_rooms'},()=>loadRooms().catch(()=>{})).on('postgres_changes',{event:'*',schema:'public',table:'nastolka_room_players'},()=>loadRooms().catch(()=>{})).subscribe();
       const session=restoreSession();
       if(session){const room=roomsCache.find(item=>item.id===session.roomId);if(room){currentRoom=room;const player=room.players.find(item=>item.id===session.playerId);if(player){currentPlayer={...player,is_host:player.is_host};renderLobby(room);if(room.status==='playing'&&room.game_state)syncOnlineGame(room)}}}
