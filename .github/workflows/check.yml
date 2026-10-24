@@ -64,7 +64,7 @@ jobs:
           if missing:
               raise SystemExit(f"Не найдены элементы: {', '.join(missing)}")
           js = Path("app.js").read_text(encoding="utf-8")
-          for feature in ["nastolka-game-history", "function renderGameStats()", "gameState.recorded=true", "nastolka-player-names", "function renderPlayerNameFields()", "playerStatsList", "function buildPresetMap(game)", "function persistGameSession()", "function resumeCustomGame()", "nastolka-active-session", "function renderFinalResults()", "game-result-row"]:
+          for feature in ["nastolka-game-history", "function renderGameStats()", "gameState.recorded=true", "nastolka-player-names", "function renderPlayerNameFields()", "playerStatsList", "function buildPresetMap(game)", "sceneProps[scene]", "function persistGameSession()", "function resumeCustomGame()", "nastolka-active-session", "function renderFinalResults()", "game-result-row"]:
               if feature not in js:
                   raise SystemExit(f"Не найдена логика истории партий: {feature}")
           rooms = Path("rooms.js").read_text(encoding="utf-8")
