@@ -253,7 +253,7 @@ function openGame(id){
   const game=games.find(item=>item.id===id);
   if(!game)return;
   const params=new URLSearchParams(window.location.search);
-  if(params.has('play')) {
+  if(params.get('play')===id) {
     openCustomGame(buildPresetMap(game));
     return;
   }
