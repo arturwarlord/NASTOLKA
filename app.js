@@ -13,6 +13,10 @@ let toastTimer;
 let searchMode = 'games';
 let activeMapId = null;
 let selectedTile = 'path';
+let activePlayMap = null;
+let gameState = null;
+const playerColors = ['#d8ff3e','#7ec8ff','#ff9b82','#c4a7ff'];
+const playerNames = ['Игрок 1','Игрок 2','Игрок 3','Игрок 4'];
 const tileInfo = {
   empty:{label:'Пусто',symbol:''},
   path:{label:'Путь',symbol:'·'},
@@ -107,11 +111,136 @@ function rollDice(target){
 function openGame(id){
   const game = games.find(g => g.id === id);
   if(!game) return;
+  activePlayMap = null;
+  gameState = null;
   $('#dialogTitle').textContent = game.name;
-  $('#dialogDescription').textContent = game.description + ' Жанр: ' + game.genre + '. Это демонстрационный режим — полноценная игровая сессия появится в следующих версиях.';
+  $('#dialogDescription').textContent = game.description + ' Жанр: ' + game.genre + '. Это демонстрационный бросок кубика.';
   $('#dialogRollResult').textContent = 'Готов к игре?';
+  $('#demoBoard').hidden = false;
+  $('#customGamePanel').hidden = true;
+  $('#dialogRoll').hidden = false;
   $('#gameDialog').showModal();
 }
+function openCustomGame(map){
+  activePlayMap = map;
+  gameState = null;
+  $('#dialogTitle').textContent = map.name;
+  $('#dialogDescription').textContent = (map.description || 'Авторское приключение') + (map.rules ? ' Правила: ' + map.rules : '');
+  $('#demoBoard').hidden = true;
+  $('#customGamePanel').hidden = false;
+  $('#dialogRoll').hidden = true;
+  $('#dialogRollResult').textContent = 'Сначала начни партию.';
+  $('#playerCount').value = '2';
+  $('#playRollBtn').disabled = true;
+  $('#playBoard').replaceChildren();
+  $('#turnStatus').textContent = 'Выбери число игроков и нажми «Начать партию».';
+  $('#gameLog').replaceChildren();
+  $('#gameDialog').showModal();
+}
+function playableCells(map){
+  const cells = normalizeBoard(map);
+  let route = cells.map((type,index)=>({type,index})).filter(cell=>cell.type!=='empty');
+  if(!route.some(cell=>cell.type==='start')) route.unshift({type:'start',index:-1});
+  if(!route.some(cell=>cell.type==='finish')) route.push({type:'finish',index:64});
+  const start = route.findIndex(cell=>cell.type==='start');
+  const finish = route.findIndex(cell=>cell.type==='finish');
+  if(finish <= start) route.push({type:'finish',index:65});
+  return route.slice(start);
+}
+function renderPlayBoard(){
+  const route = gameState.route;
+  const board = $('#playBoard');
+  board.replaceChildren();
+  route.forEach((cell,index)=>{
+    const tile = document.createElement('div');
+    tile.className = 'play-cell tile-' + cell.type;
+    tile.title = 'Клетка ' + (cell.index >= 0 ? cell.index+1 : 'дополнительная') + ': ' + (tileInfo[cell.type]?.label || 'Путь');
+    const label = document.createElement('span');
+    label.className = 'play-cell-symbol';
+    label.textContent = tileInfo[cell.type]?.symbol || '·';
+    tile.append(label);
+    const tokens = document.createElement('div');
+    tokens.className = 'play-tokens';
+    gameState.players.forEach((player,playerIndex)=>{
+      if(player.position===index){
+        const token=document.createElement('span');
+        token.className='player-token';
+        token.style.background=playerColors[playerIndex];
+        token.textContent=String(playerIndex+1);
+        token.title=player.name;
+        tokens.append(token);
+      }
+    });
+    tile.append(tokens);
+    if(index===0){const tag=document.createElement('small');tag.textContent='СТАРТ';tile.append(tag)}
+    if(cell.type==='finish'){const tag=document.createElement('small');tag.textContent='ФИНИШ';tile.append(tag)}
+    board.append(tile);
+  });
+}
+function startCustomGame(){
+  if(!activePlayMap) return;
+  const count=Number($('#playerCount').value)||2;
+  gameState={route:playableCells(activePlayMap),players:Array.from({length:count},(_,i)=>({name:playerNames[i],position:0,coins:0,skip:false})),turn:0,finished:false,log:[]};
+  $('#playRollBtn').disabled=false;
+  $('#gameLog').replaceChildren();
+  addGameLog('Партия началась! Все игроки на старте.');
+  updateGameStatus();
+  renderPlayBoard();
+}
+function addGameLog(message){
+  if(!gameState) return;
+  gameState.log.unshift(message);
+  gameState.log=gameState.log.slice(0,5);
+  $('#gameLog').replaceChildren();
+  gameState.log.forEach(line=>{const p=document.createElement('p');p.textContent=line;$('#gameLog').append(p)});
+}
+function updateGameStatus(){
+  if(!gameState) return;
+  const player=gameState.players[gameState.turn];
+  $('#turnStatus').textContent=gameState.finished?'🏆 '+player.name+' победил!':player.name+' — твой ход · монеты: '+player.coins;
+}
+function nextPlayer(){
+  if(!gameState || gameState.finished) return;
+  for(let i=0;i<gameState.players.length;i++){
+    gameState.turn=(gameState.turn+1)%gameState.players.length;
+    if(!gameState.players[gameState.turn].skip) break;
+    gameState.players[gameState.turn].skip=false;
+    addGameLog(gameState.players[gameState.turn].name+' пропускает ход из-за ловушки.');
+  }
+  updateGameStatus();
+}
+function takeGameTurn(){
+  if(!gameState || gameState.finished) return;
+  const player=gameState.players[gameState.turn];
+  if(player.skip){player.skip=false;addGameLog(player.name+' пропускает ход.');nextPlayer();return}
+  const roll=Math.floor(Math.random()*6)+1;
+  const from=player.position;
+  player.position=Math.min(gameState.route.length-1,player.position+roll);
+  const cell=gameState.route[player.position];
+  let event='выпало '+roll+', переход на клетку '+(player.position+1)+'.';
+  if(cell.type==='treasure'){player.coins+=3;event+=' Сокровище: +3 монеты!'}
+  else if(cell.type==='trap'){player.position=Math.max(0,player.position-2);event+=' Ловушка! Отступаешь на 2 клетки.'}
+  else if(cell.type==='event'){
+    const outcome=Math.floor(Math.random()*3);
+    if(outcome===0){player.coins+=2;event+=' Удача: +2 монеты.'}
+    else if(outcome===1){player.position=Math.max(0,player.position-1);event+=' Неожиданность: шаг назад.'}
+    else {player.coins+=1;event+=' Находка: +1 монета.'}
+  }
+  addGameLog(player.name+': '+event);
+  if(cell.type==='finish' || player.position>=gameState.route.length-1){
+    player.position=gameState.route.length-1;
+    gameState.finished=true;
+    gameState.winner=gameState.turn;
+    $('#playRollBtn').disabled=true;
+    updateGameStatus();
+    renderPlayBoard();
+    addGameLog('Партия завершена. Поздравляем победителя!');
+    return;
+  }
+  renderPlayBoard();
+  nextPlayer();
+}
+
 $$('.filter-chip').forEach(btn => btn.addEventListener('click', () => {
   $$('.filter-chip').forEach(b => b.classList.toggle('selected', b === btn));
   let shown = 0;
@@ -141,6 +270,9 @@ $('#rollHeroDie').addEventListener('click', () => {
   toast('Твой бросок: ' + value + '! ' + rollMessages[value-1]);
 });
 $('#dialogRoll').addEventListener('click', () => rollDice($('#dialogRollResult')));
+$('#startGameBtn').addEventListener('click', startCustomGame);
+$('#playRollBtn').addEventListener('click', takeGameTurn);
+$('#restartGameBtn').addEventListener('click', startCustomGame);
 $$('.dialog-close').forEach(btn => btn.addEventListener('click', () => btn.closest('dialog').close()));
 $('#createMapBtn').addEventListener('click', () => $('#createDialog').showModal());
 $('.tile-tool').forEach(button => button.addEventListener('click', () => {
@@ -241,6 +373,15 @@ function renderSearchResults(items, isMaps = false){
         const current = getSavedMaps().find(map => map.id === item.id);
         if(current) openEditor(current);
       });
+      const play = document.createElement('button');
+      play.type = 'button';
+      play.textContent = 'Играть';
+      play.setAttribute('aria-label', 'Играть на карте ' + item.name);
+      play.addEventListener('click', () => {
+        $('#searchDialog').close();
+        const current = getSavedMaps().find(map => map.id === item.id);
+        if(current) openCustomGame(current);
+      });
       const remove = document.createElement('button');
       remove.type = 'button';
       remove.textContent = 'Удалить';
@@ -256,7 +397,7 @@ function renderSearchResults(items, isMaps = false){
         renderSearchResults(getSavedMaps().filter(map => (map.name + ' ' + map.genre + ' ' + (map.description || '')).toLocaleLowerCase('ru').includes(query)), true);
         toast('Карта удалена');
       });
-      actions.append(label, edit, remove);
+      actions.append(label, play, edit, remove);
       row.append(actions);
     }
     container.append(row);
