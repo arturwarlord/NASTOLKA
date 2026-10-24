@@ -265,3 +265,10 @@ html.game-mode .player-token-1{border-radius:50% 50% 35% 35%;transform:translate
 html.game-mode .player-token-2{border-radius:35% 35% 45% 45%;transform:translateY(-2px) rotate(3deg)}
 html.game-mode .player-token-3{border-radius:50%;transform:translateY(-2px)}
 @media(max-width:620px){html.game-mode .route-step{top:2px;left:2px;font-size:5px}html.game-mode .play-tokens{right:1px;bottom:3px;gap:1px}html.game-mode .player-token{width:clamp(11px,3.2vw,18px);height:clamp(12px,3.4vw,19px);font-size:clamp(9px,2.7vw,14px);box-shadow:0 2px 0 #080d09,0 3px 3px #0009,0 0 0 1px #111b12}html.game-mode .player-token:after{left:-2px;right:-2px;bottom:-3px;height:3px}}
+
+/* A multiplayer match can be detached into its own tab without losing its room token. */
+.game-world-popout{justify-self:end;border:1px solid #d8ff3e4a;background:#18251a;color:#d8ff3e;border-radius:5px;padding:10px 12px;font:inherit;font-size:8px;font-weight:800;letter-spacing:1px;cursor:pointer;white-space:nowrap;transition:background .2s,transform .2s}
+.game-world-popout:hover{background:#293c24;transform:translateY(-1px)}
+html.game-mode .game-world-topbar{grid-template-columns:1fr auto auto auto}
+html.game-mode .game-world-popout[hidden]{display:none!important}
+@media(max-width:620px){html.game-mode .game-world-topbar{grid-template-columns:1fr auto;grid-template-rows:auto auto}html.game-mode .game-world-popout{grid-column:1 / -1;grid-row:2;justify-self:start;padding:8px 10px;font-size:7px}html.game-mode .game-world-brand{grid-column:2;grid-row:1}}
