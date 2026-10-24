@@ -58,7 +58,7 @@ begin
   if length(coalesce(p_token,'')) < 24 then raise exception 'Недействительный токен игрока'; end if;
   if p_map_data is null or jsonb_typeof(p_map_data) <> 'object' or jsonb_typeof(p_map_data->'cells') <> 'array' or jsonb_array_length(p_map_data->'cells') <> 64 then raise exception 'Некорректная игровая карта'; end if;
   insert into nastolka_rooms(room_name,map_id,map_name,map_data,host_player_id,max_players)
-  values(trim(p_room_name),left(trim(p_map_id),80),left(trim(p_map_name),80),p_map_data,p_max_players, p_max_players)
+  values(trim(p_room_name),left(trim(p_map_id),80),left(trim(p_map_name),80),p_map_data,gen_random_uuid(),p_max_players)
   returning id into v_room_id;
   insert into nastolka_room_players(room_id,player_name,is_host) values(v_room_id,trim(p_host_name),true) returning id into v_player_id;
   update nastolka_rooms set host_player_id=v_player_id where id=v_room_id;
@@ -101,6 +101,7 @@ create or replace function public.nastolka_start_room(p_room_id uuid,p_player_id
 returns jsonb language plpgsql security definer set search_path = public as $$
 begin
   if not exists(select 1 from nastolka_player_secrets where room_id=p_room_id and player_id=p_player_id and token_hash=encode(digest(coalesce(p_token,''),'sha256'),'hex')) then raise exception 'Не удалось подтвердить участника'; end if;
+  if (select count(*) from nastolka_room_players where room_id=p_room_id) < 2 then raise exception 'Для старта нужен хотя бы один присоединившийся игрок'; end if;
   update nastolka_rooms set status='playing',updated_at=now() where id=p_room_id and host_player_id=p_player_id and status='waiting';
   if not found then raise exception 'Только создатель может запустить ожидающую партию'; end if;
   return jsonb_build_object('ok',true,'room_id',p_room_id);
