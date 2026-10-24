@@ -11,6 +11,64 @@ const games = [
 const rollMessages = ['Судьба на твоей стороне. Сделай смелый ход!','Неожиданный поворот — именно то, что нужно.','Время исследовать неизведанное.','Собери команду: впереди большое приключение.','Рискни. Лучшие истории начинаются с риска.','Сегодня выпало шесть. Мир открыт!'];
 let toastTimer;
 let searchMode = 'games';
+let activeMapId = null;
+let selectedTile = 'path';
+const tileInfo = {
+  empty:{label:'Пусто',symbol:''},
+  path:{label:'Путь',symbol:'·'},
+  start:{label:'Старт',symbol:'↗'},
+  finish:{label:'Финиш',symbol:'⚑'},
+  treasure:{label:'Сокровище',symbol:'✦'},
+  trap:{label:'Ловушка',symbol:'!'},
+  event:{label:'Событие',symbol:'?'}
+};
+function blankBoard(){
+  const cells = Array.from({length:64}, () => 'path');
+  cells[0] = 'start';
+  cells[63] = 'finish';
+  return cells;
+}
+function normalizeBoard(map){
+  if(Array.isArray(map.cells) && map.cells.length === 64) return map.cells.map(cell => tileInfo[cell] ? cell : 'path');
+  return blankBoard();
+}
+function openEditor(map){
+  activeMapId = map.id;
+  selectedTile = 'path';
+  $('.tile-tool').forEach(button => button.classList.toggle('selected', button.dataset.tile === selectedTile));
+  $('#editorTitle').textContent = map.name.toLocaleUpperCase('ru');
+  $('#mapRules').value = map.rules || '';
+  map.cells = normalizeBoard(map);
+  renderEditorBoard(map.cells);
+  $('#editorDialog').showModal();
+}
+function renderEditorBoard(cells){
+  const board = $('#editorBoard');
+  board.replaceChildren();
+  cells.forEach((type, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'editor-cell tile-' + (tileInfo[type] ? type : 'path');
+    button.textContent = tileInfo[type] ? tileInfo[type].symbol : '·';
+    button.setAttribute('aria-label', 'Клетка ' + (index + 1) + ': ' + (tileInfo[type] ? tileInfo[type].label : 'Путь'));
+    button.title = 'Клетка ' + (index + 1) + ' — ' + (tileInfo[type] ? tileInfo[type].label : 'Путь');
+    button.addEventListener('click', () => {
+      const maps = getSavedMaps();
+      const map = maps.find(item => item.id === activeMapId);
+      if(!map) return;
+      const next = [...normalizeBoard(map)];
+      if(selectedTile === 'start' || selectedTile === 'finish'){
+        next.forEach((cell, i) => { if(cell === selectedTile) next[i] = 'path'; });
+      }
+      next[index] = selectedTile;
+      map.cells = next;
+      setSavedMaps(maps);
+      renderEditorBoard(next);
+    });
+    board.append(button);
+  });
+  $('#tileCount').textContent = cells.length;
+}
 
 function toast(message){
   const el = $('#toast');
@@ -85,6 +143,30 @@ $('#rollHeroDie').addEventListener('click', () => {
 $('#dialogRoll').addEventListener('click', () => rollDice($('#dialogRollResult')));
 $$('.dialog-close').forEach(btn => btn.addEventListener('click', () => btn.closest('dialog').close()));
 $('#createMapBtn').addEventListener('click', () => $('#createDialog').showModal());
+$('.tile-tool').forEach(button => button.addEventListener('click', () => {
+  selectedTile = button.dataset.tile;
+  $('.tile-tool').forEach(tool => tool.classList.toggle('selected', tool === button));
+}));
+$('#clearBoardBtn').addEventListener('click', () => {
+  const maps = getSavedMaps();
+  const map = maps.find(item => item.id === activeMapId);
+  if(!map) return;
+  map.cells = Array.from({length:64}, () => 'empty');
+  setSavedMaps(maps);
+  renderEditorBoard(map.cells);
+  toast('Поле очищено');
+});
+$('#saveBoardBtn').addEventListener('click', () => {
+  const maps = getSavedMaps();
+  const map = maps.find(item => item.id === activeMapId);
+  if(!map) {toast('Не удалось найти карту для сохранения');return}
+  map.rules = $('#mapRules').value.trim();
+  map.updatedAt = new Date().toISOString();
+  setSavedMaps(maps);
+  updateSavedUI();
+  $('#editorDialog').close();
+  toast('Игровое поле сохранено!');
+});
 
 $('#myMapsBtn').addEventListener('click', () => openMyMaps());
 function openMyMaps(){
@@ -107,13 +189,17 @@ $('#mapForm').addEventListener('submit', event => {
     name,
     genre: String(data.get('mapGenre') || 'Другое'),
     description: String(data.get('mapDescription') || '').trim(),
+    rules: '',
+    cells: blankBoard(),
     createdAt: new Date().toISOString()
   });
+  const newMap = maps[0];
   setSavedMaps(maps);
   updateSavedUI();
   event.currentTarget.reset();
   $('#createDialog').close();
-  toast('Карта сохранена в этом браузере!');
+  toast('Карта создана! Теперь построй игровое поле.');
+  openEditor(newMap);
 });
 function renderSearchResults(items, isMaps = false){
   const container = $('#searchResults');
@@ -145,6 +231,15 @@ function renderSearchResults(items, isMaps = false){
       actions.className = 'map-row-actions';
       const label = document.createElement('small');
       label.textContent = 'МОЯ КАРТА';
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.textContent = 'Редактировать';
+      edit.setAttribute('aria-label', 'Редактировать карту ' + item.name);
+      edit.addEventListener('click', () => {
+        $('#searchDialog').close();
+        const current = getSavedMaps().find(map => map.id === item.id);
+        if(current) openEditor(current);
+      });
       const remove = document.createElement('button');
       remove.type = 'button';
       remove.textContent = 'Удалить';
@@ -160,7 +255,7 @@ function renderSearchResults(items, isMaps = false){
         renderSearchResults(getSavedMaps().filter(map => (map.name + ' ' + map.genre + ' ' + (map.description || '')).toLocaleLowerCase('ru').includes(query)), true);
         toast('Карта удалена');
       });
-      actions.append(label, remove);
+      actions.append(label, edit, remove);
       row.append(actions);
     }
     container.append(row);
