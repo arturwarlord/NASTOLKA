@@ -474,6 +474,7 @@ async function takeGameTurn(){
     onlineGameContext.version = Number(result.version) || expectedVersion + 1;
     gameState.version = onlineGameContext.version;
     $('#playRollBtn').disabled = gameState.finished || onlineGameContext.playerIds[gameState.turn] !== onlineGameContext.playerId;
+    if(typeof onlineGameContext.refresh === 'function') onlineGameContext.refresh();
   } catch(error) {
     gameState = previousState;
     renderPlayBoard(); updateGameStatus();
@@ -543,9 +544,12 @@ window.NASTOLKA_GAME = {
   },
   showOnline(map, state, context) {
     const sameRoom = onlineGameContext && onlineGameContext.roomId === context.roomId;
+    const incomingVersion = Number(state.version) || Number(context.version) || 1;
+    // Ignore duplicate or out-of-order realtime/poll responses; never roll a client back.
+    if(sameRoom && incomingVersion <= Number(onlineGameContext.version || 0)) return;
     if(!sameRoom) openCustomGame(map);
     activePlayMap = map;
-    gameState = {...state,route:playableCells(map),online_player_ids:context.playerIds,version:Number(state.version)||context.version||1};
+    gameState = {...state,route:playableCells(map),online_player_ids:context.playerIds,version:incomingVersion};
     onlineGameContext = {...context,version:gameState.version};
     const setup=$('.game-setup'); if(setup) setup.hidden=true;
     $('#playerNameFields').hidden=true;
