@@ -118,10 +118,13 @@ function renderGameStats(){
   const recent=$('#gameHistoryList');
   if(!summary||!recent)return;
   const history=getGameHistory();
-  const wins=history.length;
+  const completed=history.length;
   const coins=history.reduce((sum,game)=>sum+(Number(game.totalCoins)||0),0);
+  const winsByPlayer=history.reduce((totals,game)=>{const name=game.winner||'Неизвестно';totals[name]=(totals[name]||0)+1;return totals},{});
+  const leader=Object.entries(winsByPlayer).sort((a,b)=>b[1]-a[1])[0];
+  const leaderLabel=leader?leader[0]+' · '+leader[1]:'—';
   summary.replaceChildren();
-  [[wins,'Побед записано'],[coins,'Монет собрано'],[history.length,'Сохранённых партий']].forEach(([value,label])=>{
+  [[completed,'Завершённых партий'],[coins,'Монет собрано'],[leaderLabel,'Чаще побеждает']].forEach(([value,label])=>{
     const item=document.createElement('div');item.className='game-stat';
     const strong=document.createElement('strong');strong.textContent=String(value);
     const caption=document.createElement('span');caption.textContent=label;
