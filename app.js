@@ -543,6 +543,7 @@ window.NASTOLKA_GAME = {
     };
   },
   showOnline(map, state, context) {
+    document.documentElement.classList.add('game-mode');
     const sameRoom = onlineGameContext && onlineGameContext.roomId === context.roomId;
     const incomingVersion = Number(state.version) || Number(context.version) || 1;
     // Ignore duplicate or out-of-order realtime/poll responses; never roll a client back.
