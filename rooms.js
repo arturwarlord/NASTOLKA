@@ -141,9 +141,14 @@
       const owner=document.createElement('span'); owner.textContent='Создатель: '+(host?host.player_name:'игрок');
       meta.append(count,owner);
       const actions=document.createElement('div'); actions.className='room-card-actions';
-      const join=document.createElement('button'); join.type='button'; join.className='primary-button'; join.textContent=room.status==='playing'?'Просмотреть':'Присоединиться ↗';
-      join.disabled=room.status!=='waiting'||room.players.length>=room.max_players;
-      join.addEventListener('click',()=>joinRoom(room));
+      const savedRoomId=localStorage.getItem(roomIdKey);
+      const savedPlayerId=localStorage.getItem(playerIdKey);
+      const savedToken=localStorage.getItem(tokenKey);
+      const canResume=Boolean(savedToken&&savedRoomId===room.id&&savedPlayerId&&room.players.some(player=>player.id===savedPlayerId));
+      const join=document.createElement('button'); join.type='button'; join.className='primary-button';
+      join.textContent=canResume?'Вернуться в игру ↗':(room.status==='playing'?'Идёт игра':'Присоединиться ↗');
+      join.disabled=canResume?false:(room.status!=='waiting'||room.players.length>=room.max_players);
+      join.addEventListener('click',()=>canResume?resumeRoom(room):joinRoom(room));
       actions.append(join);
       card.append(top,meta,actions); listEl.append(card);
     });
@@ -196,6 +201,28 @@
     const leave=document.createElement('button');leave.type='button';leave.className='secondary-editor-button';leave.textContent='Выйти из комнаты';
     leave.addEventListener('click',async()=>{if(!currentRoom||!currentPlayer||!currentToken){currentRoom=null;currentPlayer=null;lobbyEl.hidden=true;return}try{await rpc('nastolka_leave_room',{p_room_id:currentRoom.id,p_player_id:currentPlayer.id,p_token:currentToken});localStorage.removeItem(roomIdKey);localStorage.removeItem(playerIdKey);currentRoom=null;currentPlayer=null;currentToken=null;lobbyEl.hidden=true;await loadRooms();setStatus('Ты вышел из комнаты.','connected')}catch(error){setStatus(error.message||'Не удалось выйти из комнаты.','error')}});
     actions.append(leave); lobbyEl.append(actions);
+  }
+  function resumeRoom(room) {
+    const savedRoomId=localStorage.getItem(roomIdKey);
+    const savedPlayerId=localStorage.getItem(playerIdKey);
+    const savedToken=localStorage.getItem(tokenKey);
+    if(!savedToken||savedRoomId!==room.id||!savedPlayerId) {
+      setStatus('Не найдена сохранённая сессия этой комнаты. Присоединиться можно только до старта партии.','error');
+      return;
+    }
+    const player=room.players.find(item=>item.id===savedPlayerId);
+    if(!player) {
+      setStatus('Твой игрок больше не числится в этой комнате. Возможно, создатель закрыл стол.','error');
+      return;
+    }
+    currentRoom=room;
+    currentPlayer={...player,is_host:player.is_host};
+    currentToken=savedToken;
+    renderLobby(room);
+    if(room.status==='playing'&&room.game_state) syncOnlineGame(room);
+    else if(room.status==='playing') setStatus('Комната найдена, но состояние партии ещё не загрузилось. Обновляю список…','');
+    else setStatus('Ты вернулся в комнату «'+room.room_name+'».','connected');
+    lobbyEl.scrollIntoView({behavior:'smooth',block:'center'});
   }
   async function joinRoom(room) {
     if(!client)return;
