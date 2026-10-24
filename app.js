@@ -565,6 +565,16 @@ window.NASTOLKA_GAME = {
   showOnline(map, state, context) {
     setGameScene(map);
     document.documentElement.classList.add('game-mode');
+    const popout=$('#gameWorldPopout');
+    if(popout){
+      popout.hidden=false;
+      popout.onclick=()=>{
+        const url=new URL(window.location.href);
+        url.search='';
+        url.searchParams.set('onlineRoom',context.roomId);
+        window.open(url.toString(),'_blank','noopener');
+      };
+    }
     const sameRoom = onlineGameContext && onlineGameContext.roomId === context.roomId;
     const incomingVersion = Number(state.version) || Number(context.version) || 1;
     // Ignore duplicate or out-of-order realtime/poll responses; never roll a client back.
