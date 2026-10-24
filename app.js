@@ -139,13 +139,35 @@ function openCustomGame(map){
 }
 function playableCells(map){
   const cells = normalizeBoard(map);
-  let route = cells.map((type,index)=>({type,index})).filter(cell=>cell.type!=='empty');
-  if(!route.some(cell=>cell.type==='start')) route.unshift({type:'start',index:-1});
-  if(!route.some(cell=>cell.type==='finish')) route.push({type:'finish',index:64});
-  const start = route.findIndex(cell=>cell.type==='start');
-  const finish = route.findIndex(cell=>cell.type==='finish');
-  if(finish <= start) route.push({type:'finish',index:65});
-  return route.slice(start);
+  const start = cells.indexOf('start');
+  const finish = cells.indexOf('finish');
+  if(start < 0 || finish < 0) return null;
+
+  const queue = [start];
+  const previous = new Map([[start, null]]);
+  while(queue.length){
+    const current = queue.shift();
+    if(current === finish) break;
+    const row = Math.floor(current / 8);
+    const col = current % 8;
+    const neighbors = [];
+    if(row > 0) neighbors.push(current - 8);
+    if(col < 7) neighbors.push(current + 1);
+    if(row < 7) neighbors.push(current + 8);
+    if(col > 0) neighbors.push(current - 1);
+    neighbors.forEach(next => {
+      if(cells[next] !== 'empty' && !previous.has(next)){
+        previous.set(next, current);
+        queue.push(next);
+      }
+    });
+  }
+  if(!previous.has(finish)) return null;
+
+  const indices = [];
+  for(let current = finish; current !== null; current = previous.get(current)) indices.push(current);
+  indices.reverse();
+  return indices.map(index => ({type:cells[index], index}));
 }
 function renderPlayBoard(){
   const route = gameState.route;
@@ -179,11 +201,20 @@ function renderPlayBoard(){
 }
 function startCustomGame(){
   if(!activePlayMap) return;
+  const route = playableCells(activePlayMap);
+  if(!route){
+    gameState = null;
+    $('#playRollBtn').disabled = true;
+    $('#turnStatus').textContent = 'Маршрут не соединён. В редакторе соедини Старт и Финиш клетками пути без пустых разрывов.';
+    $('#playBoard').replaceChildren();
+    toast('Не найден непрерывный путь от старта до финиша.');
+    return;
+  }
   const count=Number($('#playerCount').value)||2;
-  gameState={route:playableCells(activePlayMap),players:Array.from({length:count},(_,i)=>({name:playerNames[i],position:0,coins:0,skip:false})),turn:0,finished:false,log:[]};
+  gameState={route,players:Array.from({length:count},(_,i)=>({name:playerNames[i],position:0,coins:0,skip:false})),turn:0,finished:false,log:[]};
   $('#playRollBtn').disabled=false;
   $('#gameLog').replaceChildren();
-  addGameLog('Партия началась! Все игроки на старте.');
+  addGameLog('Партия началась! Все игроки на старте. Маршрут: '+route.length+' клеток.');
   updateGameStatus();
   renderPlayBoard();
 }
