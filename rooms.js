@@ -89,7 +89,7 @@
     const ids=(data||[]).map(room=>room.id);
     let playerRows=[];
     if(ids.length) {
-      const result=await client.from('nastolka_room_players').select('id,room_id,player_name,is_host,joined_at').in('room_id',ids).order('joined_at',{ascending:true});
+      const result=await client.from('nastolka_room_players').select('id,room_id,player_name,is_host,joined_at').in('room_id',ids).order('joined_at',{ascending:true}).order('id',{ascending:true});
       if(result.error) throw result.error;
       playerRows=result.data||[];
     }
