@@ -43,8 +43,11 @@ create or replace function public.nastolka_submit_game_state(
   p_room_id uuid, p_player_id uuid, p_token text,
   p_expected_revision bigint, p_state jsonb
 ) returns jsonb language plpgsql security definer set search_path = public as $$
-declare v_current public.nastolka_room_game_states%rowtype; v_room public.nastolka_rooms%rowtype;
-declare v_turn integer; v_turn_player_id text;
+declare
+  v_current public.nastolka_room_game_states%rowtype;
+  v_room public.nastolka_rooms%rowtype;
+  v_turn integer;
+  v_turn_player_id text;
 begin
   if not exists (
     select 1 from public.nastolka_player_secrets
