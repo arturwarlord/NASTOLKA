@@ -16,7 +16,7 @@
   <header class="topbar">
     <a class="brand" href="#" aria-label="NASTOLKA — главная"><span class="brand-mark">N<span>·</span></span><span>NASTOLKA</span></a>
     <nav class="desktop-nav" aria-label="Главная навигация">
-      <a class="nav-link active" href="#discover">Исследовать</a><a class="nav-link" href="#collections">Коллекции</a><a class="nav-link" href="#shop">Магазин</a>
+      <a class="nav-link active" href="#discover">Исследовать</a><a class="nav-link" href="#current-games">Текущие игры</a><a class="nav-link" href="#collections">Коллекции</a><a class="nav-link" href="#shop">Магазин</a>
     </nav>
     <div class="header-actions"><button class="icon-button search-open" aria-label="Поиск">⌕</button><button class="ghost-button" id="myMapsBtn">Мои карты <span class="tiny-count">0</span></button><button class="profile-button" aria-label="Профиль">↗</button><button class="mobile-menu" aria-label="Открыть меню">☰</button></div>
   </header>
@@ -41,6 +41,15 @@
     </section>
 
     <section class="ticker" aria-label="Популярные игровые жанры"><div class="ticker-track"><span>✳ ФЭНТЕЗИ</span><i>✦</i><span>СТРАТЕГИИ</span><i>✦</i><span>МИСТИКА</span><i>✦</i><span>СЕМЕЙНЫЕ ИГРЫ</span><i>✦</i><span>КИБЕРПАНК</span><i>✦</i><span>✳ ФЭНТЕЗИ</span><i>✦</i><span>СТРАТЕГИИ</span><i>✦</i><span>МИСТИКА</span><i>✦</i><span>СЕМЕЙНЫЕ ИГРЫ</span><i>✦</i><span>КИБЕРПАНК</span><i>✦</i></div></section>
+
+    <section class="section current-games-section" id="current-games">
+      <div class="section-heading"><div><div class="eyebrow">СОБЕРИ КОМАНДУ ОНЛАЙН</div><h2>ТЕКУЩИЕ <span>ИГРЫ.</span></h2></div><button type="button" class="primary-button" id="createRoomOpen">＋ Создать стол</button></div>
+      <p class="section-intro">Создай комнату, выбери карту и пригласи друзей. Игроки из других браузеров увидят её в общем списке после подключения онлайн-сервиса.</p>
+      <div class="room-toolbar"><label class="room-search-label" for="roomSearch">Найти комнату</label><input id="roomSearch" class="room-search" type="search" maxlength="60" placeholder="Введи название комнаты…" autocomplete="off"><button type="button" class="secondary-editor-button" id="refreshRoomsBtn">Обновить ↻</button></div>
+      <div id="roomConnectionStatus" class="room-connection-status" role="status" aria-live="polite"><span class="status-dot"></span><span>Онлайн-сервис не настроен. Сначала подключим базу комнат.</span></div>
+      <div id="roomsList" class="rooms-list"><div class="room-empty"><span>⚄</span><strong>Пока нет доступных столов</strong><p>Создай первую комнату — она появится здесь после подключения базы данных.</p></div></div>
+      <section id="roomLobby" class="room-lobby" hidden aria-live="polite"></section>
+    </section>
 
     <section class="section collections" id="collections">
       <div class="section-heading"><div><div class="eyebrow">ТВОЁ ПРИКЛЮЧЕНИЕ НАЧИНАЕТСЯ ЗДЕСЬ</div><h2>МИРЫ НА <span>ВЫБОР.</span></h2></div><a href="#all-games" class="view-all">Все игры <span>↗</span></a></div>
@@ -97,6 +106,6 @@
     <textarea id="mapRules" maxlength="1000" placeholder="Например: ✦ Сокровище — получи 3 монеты. ! Ловушка — пропусти ход."></textarea>
     <div class="editor-footer"><button type="button" class="secondary-editor-button" id="clearBoardBtn">Очистить поле</button><button type="button" class="primary-button" id="saveBoardBtn">Сохранить изменения ↗</button></div>
   </dialog>
-\n  <script src="app.js?v=1cc284a"></script>
+\n  <dialog class="game-dialog room-dialog" id="createRoomDialog"><button class="dialog-close" aria-label="Закрыть">×</button><div class="eyebrow">НОВАЯ ОНЛАЙН-ПАРТИЯ</div><h2>СОЗДАТЬ СТОЛ</h2><p>Выбери название, карту и количество мест. Другие игроки смогут найти стол по названию.</p><form id="createRoomForm"><label for="roomName">Название комнаты</label><input id="roomName" name="roomName" maxlength="48" placeholder="Например, Пятничное приключение" required><label for="roomHostName">Твоё имя за столом</label><input id="roomHostName" name="hostName" maxlength="24" placeholder="Как тебя будут видеть игроки" required><label for="roomMapSelect">Игровая карта</label><select id="roomMapSelect" name="mapId" required></select><label for="roomMaxPlayers">Количество игроков</label><select id="roomMaxPlayers" name="maxPlayers"><option value="2">2 игрока</option><option value="3">3 игрока</option><option value="4" selected>4 игрока</option></select><p class="room-form-note">Пока подключение не настроено, создание комнаты не отправит данные и не покажет фальшивый онлайн-стол.</p><button class="primary-button form-submit" type="submit">Создать комнату ↗</button></form></dialog>\n\n  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>\n  <script src="supabase-config.js"></script>\n  <script src="app.js?v=1cc284a"></script>\n  <script src="rooms.js?v=1"></script>
 </body>
 </html>
