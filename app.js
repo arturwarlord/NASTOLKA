@@ -389,6 +389,7 @@ function resumeCustomGame(){
   toast('Партия восстановлена!');
 }
 function startCustomGame(){
+  if(onlineGameMode){toast('В онлайн-партии нельзя перезапускать поле локально.');return}
   if(!activePlayMap) return;
   const route = playableCells(activePlayMap);
   if(!route){
@@ -424,7 +425,55 @@ function updateGameStatus(){
   if(!gameState) return;
   const player=gameState.players[gameState.turn];
   $('#turnStatus').textContent=gameState.finished?'🏆 '+player.name+' победил!':player.name+' — твой ход · монеты: '+player.coins;
+  if(onlineGameMode){
+    const localId=window.NASTOLKA_ONLINE_PLAYER_ID;
+    $('#playRollBtn').disabled=gameState.finished||!localId||player.onlinePlayerId!==localId;
+  }
 }
+function serializeOnlineGameState(){
+  if(!gameState)return null;
+  return {
+    route:gameState.route,
+    players:gameState.players.map(player=>({...player})),
+    turn:gameState.turn,finished:Boolean(gameState.finished),
+    turns:Number(gameState.turns)||0,log:Array.isArray(gameState.log)?gameState.log.slice(0,5):[],
+    winner:Number.isInteger(gameState.winner)?gameState.winner:null
+  };
+}
+function openOnlineGame(room,localPlayerId,syncedState=null){
+  if(!room||!room.map_data||!Array.isArray(room.map_data.cells))return null;
+  onlineGameMode=true;onlineGameRoomId=room.id;window.NASTOLKA_ONLINE_PLAYER_ID=localPlayerId;
+  activePlayMap=room.map_data;
+  openCustomGame(activePlayMap);
+  onlineGameMode=true;onlineGameRoomId=room.id;window.NASTOLKA_ONLINE_PLAYER_ID=localPlayerId;
+  const route=playableCells(activePlayMap);
+  if(!route){toast('У общей карты нет соединённого маршрута.');return null}
+  if(syncedState&&Array.isArray(syncedState.players)){
+    gameState={...syncedState,route,players:syncedState.players.map(player=>({
+      name:String(player.name||'Игрок').slice(0,24),onlinePlayerId:String(player.onlinePlayerId||''),
+      position:Math.max(0,Math.min(route.length-1,Number(player.position)||0)),
+      coins:Math.max(0,Number(player.coins)||0),skip:Boolean(player.skip)
+    })),turn:Math.max(0,Math.min(syncedState.players.length-1,Number(syncedState.turn)||0)),
+    turns:Math.max(0,Number(syncedState.turns)||0),log:Array.isArray(syncedState.log)?syncedState.log.filter(line=>typeof line==='string').slice(0,5):[],
+    finished:Boolean(syncedState.finished),recorded:false,winner:Number.isInteger(syncedState.winner)?syncedState.winner:null};
+  }else{
+    const players=(room.players||[]).slice(0,4);
+    if(players.length<2){toast('Для общей партии нужны минимум два игрока.');return null}
+    gameState={route,players:players.map(player=>({name:player.player_name,onlinePlayerId:player.id,position:0,coins:0,skip:false})),
+      turn:0,finished:false,recorded:false,turns:0,log:[],winner:null};
+    addGameLog('Онлайн-партия началась! Все игроки на старте.');
+  }
+  $('#playerCount').value=String(gameState.players.length);$('#playerCount').disabled=true;
+  $('#startGameBtn').hidden=true;$('#restartGameBtn').hidden=true;$('#resumeGameBtn').hidden=true;
+  $('#gameLog').replaceChildren();
+  gameState.log.forEach(line=>{const p=document.createElement('p');p.textContent=line;$('#gameLog').append(p)});
+  if(gameState.finished){$('#playRollBtn').disabled=true;renderFinalResults()}else updateGameStatus();
+  renderPlayBoard();
+  return serializeOnlineGameState();
+}
+window.NASTOLKA_CREATE_ONLINE_STATE=(room,localPlayerId)=>openOnlineGame(room,localPlayerId,null);
+window.NASTOLKA_APPLY_ONLINE_STATE=(room,state,localPlayerId)=>openOnlineGame(room,localPlayerId,state);
+window.NASTOLKA_GET_ONLINE_STATE=()=>serializeOnlineGameState();
 function renderFinalResults(){
   if(!gameState||!gameState.finished)return;
   const log=$('#gameLog');
@@ -487,7 +536,7 @@ async function takeGameTurn(){
 function performGameTurn(){
   if(!gameState || gameState.finished) return;
   const player=gameState.players[gameState.turn];
-  if(player.skip){player.skip=false;addGameLog(player.name+' пропускает ход.');nextPlayer();return}
+  if(player.skip){player.skip=false;addGameLog(player.name+' пропускает ход.');nextPlayer();if(onlineGameMode&&typeof window.NASTOLKA_ONLINE_STATE_CHANGED==='function')window.NASTOLKA_ONLINE_STATE_CHANGED(serializeOnlineGameState());return}
   const roll=Math.floor(Math.random()*6)+1;
   gameState.turns++;
   const from=player.position;
@@ -520,13 +569,15 @@ function performGameTurn(){
     updateGameStatus();
     renderPlayBoard();
     renderFinalResults();
-    persistGameSession();
+    if(onlineGameMode){if(typeof window.NASTOLKA_ONLINE_STATE_CHANGED==='function')window.NASTOLKA_ONLINE_STATE_CHANGED(serializeOnlineGameState())}
+    else persistGameSession();
     const resumeButton=$('#resumeGameBtn');if(resumeButton)resumeButton.hidden=true;
     return;
   }
   renderPlayBoard();
   nextPlayer();
-  persistGameSession();
+  if(onlineGameMode){if(typeof window.NASTOLKA_ONLINE_STATE_CHANGED==='function')window.NASTOLKA_ONLINE_STATE_CHANGED(serializeOnlineGameState())}
+  else persistGameSession();
 }
 
 
