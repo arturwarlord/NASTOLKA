@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10100f">
+  <meta name="description" content="NASTOLKA — открывай новые миры, создавай игровые карты и собирай компанию для приключений.">
+  <title>NASTOLKA — твой следующий игровой мир</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Unbounded:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="NASTOLKA — главная"><span class="brand-mark">N<span>·</span></span><span>NASTOLKA</span></a>
+    <nav class="desktop-nav" aria-label="Главная навигация">
+      <a class="nav-link active" href="#discover">Исследовать</a><a class="nav-link" href="#collections">Коллекции</a><a class="nav-link" href="#shop">Магазин</a>
+    </nav>
+    <div class="header-actions"><button class="icon-button search-open" aria-label="Поиск">⌕</button><button class="ghost-button" id="myMapsBtn">Мои карты <span class="tiny-count">0</span></button><button class="profile-button" aria-label="Профиль">↗</button><button class="mobile-menu" aria-label="Открыть меню">☰</button></div>
+  </header>
+
+  <main>
+    <section class="hero" id="discover">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="live-dot"></span> ТВОЙ СЛЕДУЮЩИЙ МИР ЖДЁТ</div>
+        <h1>БРОСЬ<br>КУБИК.<br><span>ИЗМЕНИ</span><br>ИСТОРИЮ<span class="lime">.</span></h1>
+        <p class="hero-description">От уютного вечера с друзьями до легендарного приключения. Находи игры, создавай собственные миры и играй по своим правилам.</p>
+        <div class="hero-actions"><a class="primary-button" href="#collections">Найти свою игру <span>↗</span></a><button class="text-button" id="rollHeroDie"><span class="die-icon">⚄</span> Испытать удачу</button></div>
+        <div class="hero-stats"><div><strong>∞</strong><span>миров для открытий</span></div><div class="stat-divider"></div><div><strong>1–12</strong><span>игроков за столом</span></div><div class="stat-divider"></div><div><strong>100%</strong><span>твоих правил</span></div></div>
+      </div>
+      <div class="hero-art" aria-label="Иллюстрация настольного игрового мира">
+        <div class="art-orbit orbit-a"></div><div class="art-orbit orbit-b"></div>
+        <div class="floating-tag tag-top"><span class="tag-dot"></span> ВЫБЕРИ СВОЁ ПРИКЛЮЧЕНИЕ</div>
+        <div class="world-card world-back"><span class="world-symbol">✳</span><small>UNKNOWN LANDS</small></div>
+        <div class="world-card world-front"><div class="card-topline"><span>CAMPAIGN № 001</span><span>✦ 4.9</span></div><div class="map-grid"><span>⌁</span><span>♜</span><span>✦</span><span>⌖</span><span>♧</span><span>◇</span><span>♜</span><span>⌁</span><span>✹</span></div><div class="map-label"><span>01 / THE BEGINNING</span><strong>Затерянные земли</strong><small>Фэнтези · Приключение</small></div></div>
+        <div class="floating-die">⚄</div><div class="floating-tag tag-bottom"><span class="dice-mini">⚅</span><span><b>Твой ход.</b><small>Твоя история.</small></span></div>
+        <div class="art-caption">ROLL THE DICE. OWN THE STORY.</div>
+      </div>
+    </section>
+
+    <section class="ticker" aria-label="Популярные игровые жанры"><div class="ticker-track"><span>✳ ФЭНТЕЗИ</span><i>✦</i><span>СТРАТЕГИИ</span><i>✦</i><span>МИСТИКА</span><i>✦</i><span>СЕМЕЙНЫЕ ИГРЫ</span><i>✦</i><span>КИБЕРПАНК</span><i>✦</i><span>✳ ФЭНТЕЗИ</span><i>✦</i><span>СТРАТЕГИИ</span><i>✦</i><span>МИСТИКА</span><i>✦</i><span>СЕМЕЙНЫЕ ИГРЫ</span><i>✦</i><span>КИБЕРПАНК</span><i>✦</i></div></section>
+
+    <section class="section collections" id="collections">
+      <div class="section-heading"><div><div class="eyebrow">ТВОЁ ПРИКЛЮЧЕНИЕ НАЧИНАЕТСЯ ЗДЕСЬ</div><h2>МИРЫ НА <span>ВЫБОР.</span></h2></div><a href="#all-games" class="view-all">Все игры <span>↗</span></a></div>
+      <div class="filter-row" role="group" aria-label="Фильтр игр"><button class="filter-chip selected" data-filter="all">Все миры <span>06</span></button><button class="filter-chip" data-filter="fantasy">Фэнтези</button><button class="filter-chip" data-filter="strategy">Стратегии</button><button class="filter-chip" data-filter="family">Для компании</button><button class="filter-chip" data-filter="mystery">Мистика</button></div>
+      <div class="game-grid" id="all-games">
+        <article class="game-card game-fantasy" data-category="fantasy"><div class="game-visual visual-forest"><span class="visual-number">01 / RPG</span><span class="visual-glyph">✳</span><span class="visual-bottom">THE WILD FRONTIER</span><span class="visual-stamp">NEW<br>WORLD</span></div><div class="game-info"><div><span class="game-type">ФЭНТЕЗИ · 2–6 ИГРОКОВ</span><h3>Дикий рубеж</h3></div><button class="save-button" aria-label="Сохранить Дикий рубеж" data-save="wild">＋</button></div><p class="game-description">Исследуй древние леса, найди артефакты и напиши собственную легенду.</p><div class="game-footer"><span class="difficulty"><i></i><i></i><i class="muted"></i> Средняя сложность</span><button class="arrow-button" data-play="wild" aria-label="Открыть Дикий рубеж">↗</button></div></article>
+        <article class="game-card game-strategy" data-category="strategy"><div class="game-visual visual-city"><span class="visual-number">02 / STRATEGY</span><span class="city-sun"></span><div class="city-silhouette"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="visual-bottom">BUILD YOUR EMPIRE</span></div><div class="game-info"><div><span class="game-type">СТРАТЕГИЯ · 2–5 ИГРОКОВ</span><h3>Город возможностей</h3></div><button class="save-button" aria-label="Сохранить Город возможностей" data-save="city">＋</button></div><p class="game-description">Покупай участки, строй империю и обойди соперников на каждом ходу.</p><div class="game-footer"><span class="difficulty"><i></i><i></i><i></i> Тактическая</span><button class="arrow-button" data-play="city" aria-label="Открыть Город возможностей">↗</button></div></article>
+        <article class="game-card game-mystery" data-category="mystery"><div class="game-visual visual-mystery"><span class="visual-number">03 / MYSTERY</span><div class="moon"></div><div class="mystery-tower">♜</div><span class="visual-bottom">THE LAST SECRET</span><span class="mystery-eye">◉</span></div><div class="game-info"><div><span class="game-type">МИСТИКА · 1–4 ИГРОКА</span><h3>Последний секрет</h3></div><button class="save-button" aria-label="Сохранить Последний секрет" data-save="secret">＋</button></div><p class="game-description">Каждая улика важна. Сможешь раскрыть тайну до последнего броска?</p><div class="game-footer"><span class="difficulty"><i></i><i></i><i class="muted"></i> Детективная</span><button class="arrow-button" data-play="secret" aria-label="Открыть Последний секрет">↗</button></div></article>
+        <article class="game-card game-family" data-category="family"><div class="game-visual visual-island"><span class="visual-number">04 / ADVENTURE</span><div class="island-shape"></div><span class="island-palm">♧</span><span class="visual-bottom">LOST IN PARADISE</span></div><div class="game-info"><div><span class="game-type">ПРИКЛЮЧЕНИЕ · 2–8 ИГРОКОВ</span><h3>Остров сокровищ</h3></div><button class="save-button" aria-label="Сохранить Остров сокровищ" data-save="island">＋</button></div><p class="game-description">Собирай команду, ищи спрятанные богатства и остерегайся ловушек.</p><div class="game-footer"><span class="difficulty"><i></i><i class="muted"></i><i class="muted"></i> Лёгкая</span><button class="arrow-button" data-play="island" aria-label="Открыть Остров сокровищ">↗</button></div></article>
+        <article class="game-card game-cyber" data-category="strategy"><div class="game-visual visual-cyber"><span class="visual-number">05 / CYBERPUNK</span><div class="cyber-sun"></div><div class="cyber-lines"></div><span class="visual-bottom">NEON NEVER SLEEPS</span></div><div class="game-info"><div><span class="game-type">КИБЕРПАНК · 2–4 ИГРОКА</span><h3>Неоновый предел</h3></div><button class="save-button" aria-label="Сохранить Неоновый предел" data-save="neon">＋</button></div><p class="game-description">В городе будущего информация дороже золота. Доверься инстинктам.</p><div class="game-footer"><span class="difficulty"><i></i><i></i><i></i> Тактическая</span><button class="arrow-button" data-play="neon" aria-label="Открыть Неоновый предел">↗</button></div></article>
+        <article class="game-card game-family" data-category="family"><div class="game-visual visual-cosmos"><span class="visual-number">06 / COSMIC</span><div class="planet planet-one"></div><div class="planet planet-two"></div><span class="visual-bottom">BEYOND THE STARS</span></div><div class="game-info"><div><span class="game-type">КОСМОС · 1–6 ИГРОКОВ</span><h3>На краю галактики</h3></div><button class="save-button" aria-label="Сохранить На краю галактики" data-save="cosmos">＋</button></div><p class="game-description">Прокладывай маршрут по звёздам и решай, что скрывается за горизонтом.</p><div class="game-footer"><span class="difficulty"><i></i><i></i><i class="muted"></i> Исследование</span><button class="arrow-button" data-play="cosmos" aria-label="Открыть На краю галактики">↗</button></div></article>
+      </div>
+      <div class="empty-state" id="emptyState" hidden>В этой категории пока нет миров. Попробуй другой фильтр.</div>
+    </section>
+
+    <section class="creator-banner" id="my-maps"><div class="creator-pattern">✳</div><div class="creator-copy"><div class="eyebrow">НЕ НАШЁЛ СВОЙ МИР?</div><h2>ПРИДУМАЙ<br><span>СВОИ ПРАВИЛА.</span></h2><p>Создавай уникальные карты, придумывай события и делись своими играми с сообществом.</p><button class="dark-button" id="createMapBtn">Создать первую карту <span>↗</span></button></div><div class="creator-preview"><div class="preview-sheet"><div class="preview-top"><span>YOUR WORLD / 001</span><span>✦</span></div><div class="preview-board"><div class="board-path"><b>СТАРТ</b><i>?</i><i>✦</i><i>!</i><i>?</i><b>ФИНИШ</b></div><div class="board-die">⚄</div></div><div class="preview-bottom"><span>ТВОЯ ИДЕЯ</span><span>ТВОИ ПРАВИЛА</span></div></div><span class="preview-orbit">MAKE<br>IT YOURS ↗</span></div></section>
+
+    <section class="section shop-section" id="shop"><div class="section-heading"><div><div class="eyebrow">СОБРАНО С ЛЮБОВЬЮ К ИГРЕ</div><h2>МАЛЕНЬКИЕ <span>СОКРОВИЩА.</span></h2></div><a href="#shop" class="view-all" id="shopViewAll">Весь магазин <span>↗</span></a></div><div class="shop-grid">
+      <article class="shop-card"><div class="product-art product-dice"><span class="product-orbit"></span><span class="product-object">⚄</span><span class="product-label">ROLL IN STYLE</span></div><div class="product-info"><div><span>АКСЕССУАРЫ</span><h3>Набор кубиков «Хаос»</h3></div><strong>12 €</strong></div><button class="product-button" data-product="Набор кубиков «Хаос»">Скоро в продаже <span>↗</span></button></article>
+      <article class="shop-card"><div class="product-art product-map"><span class="map-ring"></span><span class="map-compass">✥</span><span class="product-label">DRAW YOUR DESTINY</span></div><div class="product-info"><div><span>ЦИФРОВОЙ НАБОР</span><h3>Карта приключений</h3></div><strong>8 €</strong></div><button class="product-button" data-product="Карта приключений">Скоро в продаже <span>↗</span></button></article>
+      <article class="shop-card"><div class="product-art product-cards"><span class="playing-card card-back">✳</span><span class="playing-card card-front">♜</span><span class="product-label">DEAL YOUR FATE</span></div><div class="product-info"><div><span>КАРТОЧНАЯ ИГРА</span><h3>Колода случайностей</h3></div><strong>6 €</strong></div><button class="product-button" data-product="Колода случайностей">Скоро в продаже <span>↗</span></button></article>
+    </div></section>
+
+    <section class="dice-cta"><div class="cta-die">⚅</div><div><div class="eyebrow">МАЛЕНЬКИЙ ШАГ. БОЛЬШАЯ ИСТОРИЯ.</div><h2>ЧТО ВЫПАДЕТ <span>ТЕБЕ?</span></h2><p id="diceResult">Вселенная ждёт твоего решения.</p></div><button class="roll-button" id="rollDice">Бросить кубик <span>⚄</span></button></section>
+  </main>
+
+  <footer class="footer"><a class="brand footer-brand" href="#"><span class="brand-mark">N<span>·</span></span><span>NASTOLKA</span></a><span>МИРЫ СОЗДАЮТСЯ ЗА ОДНИМ СТОЛОМ.</span><div class="footer-links"><a href="#discover">Исследовать</a><a href="#my-maps">Создать карту</a><a href="#shop">Магазин</a></div><small>© 2026 NASTOLKA. ИГРА ТОЛЬКО НАЧИНАЕТСЯ.</small></footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog class="game-dialog" id="gameDialog"><button class="dialog-close" aria-label="Закрыть">×</button><div class="eyebrow">ТВОЁ ПРИКЛЮЧЕНИЕ</div><h2 id="dialogTitle">Дикий рубеж</h2><p id="dialogDescription"></p><div class="dialog-actions"><button class="primary-button" id="dialogRoll">Бросить кубик ⚄</button><span id="dialogRollResult">Готов к игре?</span></div><div class="dialog-board"><div class="dialog-space">СТАРТ</div><div class="dialog-space">?</div><div class="dialog-space">✦</div><div class="dialog-space">!</div><div class="dialog-space">?</div><div class="dialog-space">ФИНИШ</div></div></dialog>
+
+  <dialog class="game-dialog create-dialog" id="createDialog"><button class="dialog-close" aria-label="Закрыть">×</button><div class="eyebrow">ТВОЙ МИР — ТВОИ ПРАВИЛА</div><h2>СОЗДАТЬ КАРТУ</h2><p>Начни с идеи. Пока карты сохраняются только в этом браузере.</p><form id="mapForm"><label for="mapName">Название карты</label><input id="mapName" name="mapName" maxlength="50" placeholder="Например, Тайна старого замка" required><label for="mapGenre">Жанр</label><select id="mapGenre" name="mapGenre"><option>Фэнтези</option><option>Стратегия</option><option>Мистика</option><option>Для компании</option><option>Космос</option><option>Другое</option></select><label for="mapDescription">Короткое описание</label><textarea id="mapDescription" name="mapDescription" maxlength="180" placeholder="Какое приключение ждёт игроков?"></textarea><button class="primary-button form-submit" type="submit">Сохранить карту ↗</button></form></dialog>
+
+  <dialog class="game-dialog search-dialog" id="searchDialog"><button class="dialog-close" aria-label="Закрыть">×</button><div class="eyebrow">НАЙДИ СВОЙ МИР</div><h2>ПОИСК</h2><input id="searchInput" class="search-input" placeholder="Название игры или жанр..." autocomplete="off"><div id="searchResults" class="search-results"></div></dialog>
+  <script src="app.js"></script>
+</body>
+</html>
