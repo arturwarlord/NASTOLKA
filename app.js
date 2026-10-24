@@ -160,6 +160,7 @@ $('#saveBoardBtn').addEventListener('click', () => {
   const maps = getSavedMaps();
   const map = maps.find(item => item.id === activeMapId);
   if(!map) {toast('Не удалось найти карту для сохранения');return}
+  map.cells = normalizeBoard(map);
   map.rules = $('#mapRules').value.trim();
   map.updatedAt = new Date().toISOString();
   setSavedMaps(maps);
