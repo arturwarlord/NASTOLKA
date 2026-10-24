@@ -36,11 +36,12 @@ begin
   if coalesce(array_length(p_player_ids,1),0) <> v_player_count or p_player_ids <> v_expected_ids then
     raise exception 'Список игроков изменился. Обнови комнату и попробуй снова';
   end if;
-  if jsonb_typeof(p_initial_state) <> 'object'
-     or jsonb_typeof(p_initial_state->'players') <> 'array'
-     or jsonb_array_length(p_initial_state->'players') <> v_player_count
-     or jsonb_typeof(p_initial_state->'route') <> 'array'
-     or jsonb_array_length(p_initial_state->'route') < 2 then
+  if p_initial_state is null
+     or jsonb_typeof(p_initial_state) is distinct from 'object'
+     or jsonb_typeof(p_initial_state->'players') is distinct from 'array'
+     or jsonb_array_length(coalesce(p_initial_state->'players','[]'::jsonb)) <> v_player_count
+     or jsonb_typeof(p_initial_state->'route') is distinct from 'array'
+     or jsonb_array_length(coalesce(p_initial_state->'route','[]'::jsonb)) < 2 then
     raise exception 'Некорректное начальное состояние игры';
   end if;
 
@@ -90,15 +91,16 @@ begin
   if v_turn < 0 or v_turn >= coalesce(array_length(v_ids,1),0) or v_ids[v_turn+1] <> p_player_id then
     raise exception 'Сейчас ход другого игрока';
   end if;
-  if jsonb_typeof(p_next_state) <> 'object'
-     or jsonb_typeof(p_next_state->'players') <> 'array'
-     or jsonb_array_length(p_next_state->'players') <> array_length(v_ids,1)
-     or jsonb_typeof(p_next_state->'route') <> 'array'
+  if p_next_state is null
+     or jsonb_typeof(p_next_state) is distinct from 'object'
+     or jsonb_typeof(p_next_state->'players') is distinct from 'array'
+     or jsonb_array_length(coalesce(p_next_state->'players','[]'::jsonb)) <> array_length(v_ids,1)
+     or jsonb_typeof(p_next_state->'route') is distinct from 'array'
      or p_next_state->'route' <> v_room.game_state->'route'
-     or (p_next_state->>'turn')::integer < 0
-     or (p_next_state->>'turn')::integer >= array_length(v_ids,1)
+     or coalesce((p_next_state->>'turn')::integer,-1) < 0
+     or coalesce((p_next_state->>'turn')::integer,-1) >= array_length(v_ids,1)
      or p_next_state->'online_player_ids' <> v_room.game_state->'online_player_ids'
-     or (p_next_state->>'turns')::integer <> (v_room.game_state->>'turns')::integer + 1 then
+     or coalesce((p_next_state->>'turns')::integer,-1) <> coalesce((v_room.game_state->>'turns')::integer,0) + 1 then
     raise exception 'Некорректный ход';
   end if;
 
