@@ -27,7 +27,6 @@ jobs:
           test -s supabase-config.js
           test -s supabase/schema.sql
           test -s supabase/multiplayer.sql
-          test -s assets/adventure-atmosphere.svg
           grep -q 'styles.css' index.html
           grep -q 'app.js' index.html
           echo "Основные файлы найдены."
@@ -59,7 +58,7 @@ jobs:
               'id="playBoard"', 'id="playRollBtn"', 'id="restartGameBtn"', 'id="resumeGameBtn"',
               'id="gameStatsSummary"', 'id="gameHistoryList"', 'id="gameHistoryTitle"',
               'id="playerNameFields"', 'id="playerStatsList"', 'id="current-games"', 'id="createRoomDialog"', 'id="createRoomForm"', 'id="roomsList"', 'id="roomLobby"',
-              'game-mode', 'game-world-props', 'adventure-table-2', 'game-world-topbar', 'game-world-back', 'game-world-ambient', 'gameWorldPopout', 'onlineRoom',
+              'game-mode', 'game-world-props', 'illustrated-world-4', 'game-world-topbar', 'game-world-back', 'game-world-ambient', 'gameWorldPopout', 'onlineRoom',
           ]
           missing = [item for item in required if item not in html]
           if missing:
