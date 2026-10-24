@@ -17,6 +17,23 @@ let activePlayMap = null;
 let gameState = null;
 const playerColors = ['#d8ff3e','#7ec8ff','#ff9b82','#c4a7ff'];
 const playerNames = ['Игрок 1','Игрок 2','Игрок 3','Игрок 4'];
+function getLastPlayerNames(){
+  const saved=readStorage('nastolka-player-names',[]);
+  return playerNames.map((fallback,index)=>typeof saved[index]==='string'&&saved[index].trim()?saved[index].trim().slice(0,18):fallback);
+}
+function renderPlayerNameFields(){
+  const host=$('#playerNameFields');
+  if(!host)return;
+  const count=Number($('#playerCount').value)||2;
+  const names=getLastPlayerNames();
+  host.replaceChildren();
+  for(let i=0;i<count;i++){
+    const field=document.createElement('label');field.className='player-name-field';
+    const caption=document.createElement('span');caption.textContent='Игрок '+(i+1);
+    const input=document.createElement('input');input.type='text';input.name='playerName'+(i+1);input.maxLength=18;input.autocomplete='off';input.value=names[i]||playerNames[i];input.setAttribute('aria-label','Имя игрока '+(i+1));input.placeholder=playerNames[i];
+    field.append(caption,input);host.append(field);
+  }
+}
 const tileInfo = {
   empty:{label:'Пусто',symbol:''},
   path:{label:'Путь',symbol:'·'},
@@ -120,9 +137,13 @@ function renderGameStats(){
   const history=getGameHistory();
   const completed=history.length;
   const coins=history.reduce((sum,game)=>sum+(Number(game.totalCoins)||0),0);
-  const winsByPlayer=history.reduce((totals,game)=>{const name=game.winner||'Неизвестно';totals[name]=(totals[name]||0)+1;return totals},{});
-  const leader=Object.entries(winsByPlayer).sort((a,b)=>b[1]-a[1])[0];
-  const leaderLabel=leader?leader[0]+' · '+leader[1]:'—';
+  const playerTotals={};
+  history.forEach(game=>{
+    if(Array.isArray(game.players))game.players.forEach(player=>{const name=String(player.name||'Неизвестно');if(!playerTotals[name])playerTotals[name]={wins:0,coins:0};playerTotals[name].coins+=Number(player.coins)||0;if(player.winner)playerTotals[name].wins++});
+    else if(game.winner){const name=String(game.winner);if(!playerTotals[name])playerTotals[name]={wins:0,coins:0};playerTotals[name].wins++;playerTotals[name].coins+=Number(game.winnerCoins)||0}
+  });
+  const leader=Object.entries(playerTotals).sort((a,b)=>b[1].wins-a[1].wins||b[1].coins-a[1].coins)[0];
+  const leaderLabel=leader?leader[0]+' · '+leader[1].wins:'—';
   summary.replaceChildren();
   [[completed,'Завершённых партий'],[coins,'Монет собрано'],[leaderLabel,'Чаще побеждает']].forEach(([value,label])=>{
     const item=document.createElement('div');item.className='game-stat';
@@ -130,6 +151,14 @@ function renderGameStats(){
     const caption=document.createElement('span');caption.textContent=label;
     item.append(strong,caption);summary.append(item);
   });
+  const playerList=$('#playerStatsList');
+  if(playerList){
+    playerList.replaceChildren();
+    const heading=document.createElement('h4');heading.className='player-stats-heading';heading.textContent='РЕЙТИНГ ИГРОКОВ';playerList.append(heading);
+    const ranked=Object.entries(playerTotals).sort((a,b)=>b[1].wins-a[1].wins||b[1].coins-a[1].coins);
+    if(!ranked.length){const empty=document.createElement('p');empty.className='game-history-empty';empty.textContent='Рейтинг появится после первой завершённой партии.';playerList.append(empty)}
+    ranked.slice(0,8).forEach(([name,stats],index)=>{const row=document.createElement('div');row.className='player-stats-row';const rank=document.createElement('span');rank.className='player-stats-rank';rank.textContent=String(index+1).padStart(2,'0');const player=document.createElement('strong');player.textContent=name;const detail=document.createElement('span');detail.textContent=stats.wins+' побед · '+stats.coins+' монет';row.append(rank,player,detail);playerList.append(row)});
+  }
   recent.replaceChildren();
   if(!history.length){const empty=document.createElement('p');empty.className='game-history-empty';empty.textContent='Здесь появятся результаты после первой завершённой партии.';recent.append(empty);return}
   history.slice(0,5).forEach(game=>{
@@ -188,6 +217,7 @@ function openCustomGame(map){
   $('#dialogRoll').hidden = true;
   $('#dialogRollResult').textContent = 'Сначала начни партию.';
   $('#playerCount').value = '2';
+  renderPlayerNameFields();
   $('#playRollBtn').disabled = true;
   $('#playBoard').replaceChildren();
   $('#turnStatus').textContent = 'Выбери число игроков и нажми «Начать партию».';
@@ -272,7 +302,11 @@ function startCustomGame(){
     return;
   }
   const count=Number($('#playerCount').value)||2;
-  gameState={route,players:Array.from({length:count},(_,i)=>({name:playerNames[i],position:0,coins:0,skip:false})),turn:0,finished:false,recorded:false,turns:0,log:[]};
+  const names=$('#playerNameFields input').slice(0,count).map((input,index)=>input.value.trim().slice(0,18)||playerNames[index]);
+  const normalized=names.map(name=>name.toLocaleLowerCase('ru-RU'));
+  if(new Set(normalized).size!==normalized.length){toast('У каждого игрока должно быть своё имя.');return}
+  try{localStorage.setItem('nastolka-player-names',JSON.stringify(names.concat(playerNames.slice(count))))}catch{toast('Имена не удалось сохранить, но партия может начаться.')}
+  gameState={route,players:Array.from({length:count},(_,i)=>({name:names[i],position:0,coins:0,skip:false})),turn:0,finished:false,recorded:false,turns:0,log:[]};
   $('#playRollBtn').disabled=false;
   $('#gameLog').replaceChildren();
   addGameLog('Партия началась! Все игроки на старте. Маршрут: '+route.length+' клеток.');
@@ -328,7 +362,7 @@ function takeGameTurn(){
       gameState.recorded=true;
       const totalCoins=gameState.players.reduce((sum,item)=>sum+item.coins,0);
       const history=getGameHistory();
-      history.unshift({date:new Date().toISOString(),mapName:activePlayMap.name||'Авторская карта',playerCount:gameState.players.length,winner:player.name,winnerCoins:player.coins,totalCoins,turns:gameState.turns});
+      history.unshift({date:new Date().toISOString(),mapName:activePlayMap.name||'Авторская карта',playerCount:gameState.players.length,winner:player.name,winnerCoins:player.coins,totalCoins,turns:gameState.turns,players:gameState.players.map((item,index)=>({name:item.name,coins:item.coins,winner:index===gameState.winner}))});
       saveGameHistory(history);
       renderGameStats();
       toast('Результат сохранён в истории партий!');
@@ -373,6 +407,7 @@ $('#rollHeroDie').addEventListener('click', () => {
 });
 $('#dialogRoll').addEventListener('click', () => rollDice($('#dialogRollResult')));
 $('#startGameBtn').addEventListener('click', startCustomGame);
+$('#playerCount').addEventListener('change',renderPlayerNameFields);
 $('#playRollBtn').addEventListener('click', takeGameTurn);
 $('#restartGameBtn').addEventListener('click', startCustomGame);
 $$('.dialog-close').forEach(btn => btn.addEventListener('click', () => btn.closest('dialog').close()));
