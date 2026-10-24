@@ -58,6 +58,7 @@ jobs:
               'id="playBoard"', 'id="playRollBtn"', 'id="restartGameBtn"', 'id="resumeGameBtn"',
               'id="gameStatsSummary"', 'id="gameHistoryList"', 'id="gameHistoryTitle"',
               'id="playerNameFields"', 'id="playerStatsList"', 'id="current-games"', 'id="createRoomDialog"', 'id="createRoomForm"', 'id="roomsList"', 'id="roomLobby"',
+              'game-mode', 'game-world-topbar', 'game-world-back', 'game-world-ambient',
           ]
           missing = [item for item in required if item not in html]
           if missing:
