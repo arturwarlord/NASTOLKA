@@ -81,5 +81,10 @@ jobs:
           for feature in ["createInitialState", "showOnline", "nastolka_submit_turn", "game_state", "game_version"]:
               if feature not in rooms and feature not in js:
                   raise SystemExit(f"Не найдена синхронизация онлайн-партии: {feature}")
-          print("Проверка структуры страницы, истории партий и онлайн-комнат пройдена.")
+          for feature in ["setInterval", "visibilitychange", "loadRoomsInProgress"]:
+              if feature not in rooms:
+                  raise SystemExit(f"Не найдена защита переподключения: {feature}")
+          if "incomingVersion <= Number(onlineGameContext.version || 0)" not in js:
+              raise SystemExit("Не найдена защита от устаревшего состояния партии.")
+          print("Проверка структуры страницы, истории партий, онлайн-синхронизации и восстановления соединения пройдена.")
           PY
