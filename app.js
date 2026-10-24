@@ -252,7 +252,15 @@ function buildPresetMap(game){
 function openGame(id){
   const game=games.find(item=>item.id===id);
   if(!game)return;
-  openCustomGame(buildPresetMap(game));
+  const params=new URLSearchParams(window.location.search);
+  if(params.has('play')) {
+    openCustomGame(buildPresetMap(game));
+    return;
+  }
+  const url=new URL(window.location.href);
+  url.search='';
+  url.searchParams.set('play',id);
+  window.open(url.toString(),'_blank','noopener');
 }
 function openCustomGame(map){
   activePlayMap = map;
@@ -468,7 +476,22 @@ function takeGameTurn(){
   persistGameSession();
 }
 
-$$('.filter-chip').forEach(btn => btn.addEventListener('click', () => {
+// Open requested game in the newly opened tab; saved custom maps are shared through localStorage.
+(function openRequestedGame(){
+  const params=new URLSearchParams(window.location.search);
+  const presetId=params.get('play');
+  const customMapId=params.get('customMap');
+  if(presetId){
+    const game=games.find(item=>item.id===presetId);
+    if(game)openCustomGame(buildPresetMap(game));
+  }else if(customMapId){
+    const map=getSavedMaps().find(item=>item.id===customMapId);
+    if(map)openCustomGame(map);
+    else toast('Эта карта не найдена в сохранённых картах браузера.');
+  }
+})();
+
+$('.filter-chip').forEach(btn => btn.addEventListener('click', () => {
   $$('.filter-chip').forEach(b => b.classList.toggle('selected', b === btn));
   let shown = 0;
   $$('.game-card').forEach(card => {
@@ -487,7 +510,7 @@ $$('.save-button').forEach(btn => btn.addEventListener('click', () => {
   setSavedGames(ids);
   updateSavedUI();
 }));
-$$('[data-play]').forEach(btn => btn.addEventListener('click', () => openGame(btn.dataset.play)));
+$('[data-play]').forEach(btn => btn.addEventListener('click', () => openGame(btn.dataset.play)));
 $('#rollDice').addEventListener('click', () => {
   const result = rollDice($('#diceResult'));
   $('#diceResult').textContent = 'Выпало ' + result + '! ' + rollMessages[result-1];
@@ -664,7 +687,7 @@ function renderSearchResults(items, isMaps = false){
       play.addEventListener('click', () => {
         $('#searchDialog').close();
         const current = getSavedMaps().find(map => map.id === item.id);
-        if(current) openCustomGame(current);
+        if(current){const url=new URL(window.location.href);url.search='';url.searchParams.set('customMap',current.id);window.open(url.toString(),'_blank','noopener');}
       });
       const remove = document.createElement('button');
       remove.type = 'button';
