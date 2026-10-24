@@ -244,3 +244,24 @@ html.game-mode #customGamePanel[hidden],html.game-mode #customGamePanel>.game-se
 
 html.game-mode [hidden]{display:none!important}
 html.game-mode body>.ambient{display:none!important}
+
+
+/* Adventure-scene polish: terrain details, readable route steps and tabletop miniatures. */
+html.game-mode[data-game-scene="wild"] body{background:radial-gradient(ellipse at 14% 20%,#294b35aa,transparent 34%),radial-gradient(ellipse at 88% 78%,#384d27aa,transparent 36%),linear-gradient(135deg,#09110c,#17281a 52%,#080e0a)}
+html.game-mode[data-game-scene="island"] body{background:radial-gradient(ellipse at 16% 18%,#9a783555,transparent 35%),radial-gradient(ellipse at 86% 72%,#246b65aa,transparent 38%),linear-gradient(135deg,#0b1717,#16352f 52%,#09110f)}
+html.game-mode[data-game-scene="city"] body{background:radial-gradient(ellipse at 18% 12%,#9aa84733,transparent 30%),radial-gradient(ellipse at 85% 80%,#53683e88,transparent 36%),linear-gradient(135deg,#0b100d,#20271c 52%,#090d0b)}
+html.game-mode[data-game-scene="mystery"] body{background:radial-gradient(ellipse at 16% 20%,#684c8b77,transparent 34%),radial-gradient(ellipse at 85% 75%,#253c56aa,transparent 38%),linear-gradient(135deg,#0d0c16,#21182b 52%,#080b11)}
+html.game-mode[data-game-scene="neon"] body{background:radial-gradient(ellipse at 18% 15%,#0b9e9b55,transparent 34%),radial-gradient(ellipse at 84% 76%,#7b3a9a66,transparent 37%),linear-gradient(135deg,#080e15,#101c25 52%,#090b12)}
+html.game-mode[data-game-scene="cosmos"] body{background:radial-gradient(ellipse at 20% 12%,#425aa088,transparent 32%),radial-gradient(ellipse at 82% 80%,#65438b88,transparent 38%),linear-gradient(135deg,#080b17,#151a31 52%,#080a11)}
+html.game-mode #playBoard{background-image:radial-gradient(circle at 12% 18%,#d8ff3e10 0 2px,transparent 3px),radial-gradient(circle at 82% 74%,#e8f4d110 0 2px,transparent 3px),linear-gradient(145deg,#26392a,#111a13 62%,#0a100c)}
+html.game-mode .play-cell.route-cell:before{content:"";position:absolute;inset:5px;border:1px dashed #d8ff3e20;border-radius:inherit;pointer-events:none}
+html.game-mode .play-cell.current-player-cell{outline:2px solid #d8ff3e;outline-offset:1px;box-shadow:0 0 0 4px #d8ff3e16,0 0 22px #d8ff3e2c,inset 0 1px #fff8}
+html.game-mode .route-step{position:absolute;top:4px;left:5px;font-size:clamp(5px,.65vw,8px);font-weight:800;letter-spacing:.4px;color:#dbe8d3;opacity:.46;z-index:1}
+html.game-mode .play-cell-symbol{position:relative;z-index:1}
+html.game-mode .play-tokens{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;position:absolute;right:3px;bottom:3px;max-width:88%;gap:3px}
+html.game-mode .player-token{position:relative;display:grid;place-items:center;flex:0 0 auto;width:clamp(16px,2.1vw,29px);height:clamp(17px,2.25vw,31px);border:1px solid #f5ffe6;background:radial-gradient(circle at 34% 20%,#fff,var(--token-color) 30%,color-mix(in srgb,var(--token-color),#151a12 38%) 100%);border-radius:45% 45% 38% 38%;color:#172015;font-family:Georgia,serif;font-size:clamp(12px,1.55vw,22px);line-height:1;text-shadow:0 1px #fff8;box-shadow:0 4px 0 #080d09,0 5px 5px #0009,0 0 0 2px #111b12,0 0 14px color-mix(in srgb,var(--token-color),transparent 45%);transform:translateY(-2px)}
+html.game-mode .player-token:after{content:"";position:absolute;left:-3px;right:-3px;bottom:-5px;height:5px;border-radius:50%;background:var(--token-color);border:1px solid #f5ffe6aa;box-shadow:0 2px 2px #0008}
+html.game-mode .player-token-1{border-radius:50% 50% 35% 35%;transform:translateY(-2px) rotate(-4deg)}
+html.game-mode .player-token-2{border-radius:35% 35% 45% 45%;transform:translateY(-2px) rotate(3deg)}
+html.game-mode .player-token-3{border-radius:50%;transform:translateY(-2px)}
+@media(max-width:620px){html.game-mode .route-step{top:2px;left:2px;font-size:5px}html.game-mode .play-tokens{right:1px;bottom:3px;gap:1px}html.game-mode .player-token{width:clamp(11px,3.2vw,18px);height:clamp(12px,3.4vw,19px);font-size:clamp(9px,2.7vw,14px);box-shadow:0 2px 0 #080d09,0 3px 3px #0009,0 0 0 1px #111b12}html.game-mode .player-token:after{left:-2px;right:-2px;bottom:-3px;height:3px}}
