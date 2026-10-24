@@ -27,6 +27,14 @@ jobs:
           grep -q 'app.js' index.html
           echo "Основные файлы найдены."
 
+      - name: Проверить интерфейс резервного копирования карт
+        run: |
+          grep -q "function exportMaps" app.js
+          grep -q "function importMapsFile" app.js
+          grep -q "nastolka-maps" app.js
+          grep -q "new Set(Object.keys(tileInfo))" app.js
+          echo "Экспорт, импорт и проверка формата карт найдены."
+
       - name: Проверить синтаксис JavaScript
         run: node --check app.js
 
@@ -37,7 +45,7 @@ jobs:
           html = Path("index.html").read_text(encoding="utf-8")
           required = [
               'id="collections"', 'id="shop"', 'id="my-maps"',
-              'id="gameDialog"', 'id="createDialog"', 'id="searchDialog"',
+              'id="gameDialog"', 'id="mapBackupTools"', 'id="exportMapsBtn"', 'id="importMapsFile"', 'id="createDialog"', 'id="searchDialog"',
               'id="rollDice"', 'id="mapForm"', 'id="all-games"',
               'id="customGamePanel"', 'id="playerCount"', 'id="startGameBtn"',
               'id="playBoard"', 'id="playRollBtn"', 'id="restartGameBtn"',
