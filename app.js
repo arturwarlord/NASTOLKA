@@ -271,6 +271,17 @@ function setGameScene(map){
     /secret|мистик|тайн/.test(source)?'mystery':
     /island|остров|сокровищ/.test(source)?'island':'wild';
   document.documentElement.dataset.gameScene=scene;
+  const sceneProps={
+    wild:['🌲','🪨','🌿','💎'],
+    island:['🌴','🐚','🦜','💰'],
+    city:['🏙️','🏛️','🪙','🏮'],
+    mystery:['🗿','🕯️','🕸️','🔮'],
+    neon:['🌆','💠','🦾','⚡'],
+    cosmos:['🪐','🌌','☄️','✨']
+  };
+  document.querySelectorAll('.game-world-props span').forEach((prop,index)=>{
+    prop.textContent=(sceneProps[scene]||sceneProps.wild)[index];
+  });
 }
 function openCustomGame(map){
   setGameScene(map);
