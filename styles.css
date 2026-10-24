@@ -103,3 +103,48 @@
 .game-result-heading{color:var(--accent,#d8ff3e);font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
 .game-result-row{margin:6px 0;padding:9px 12px;border:1px solid #34362b;border-radius:10px;background:#171812;color:#e9eadf}
 .game-result-row.is-winner{border-color:#d8ff3e;background:rgba(216,255,62,.09);font-weight:800}
+
+
+/* Online rooms and lobby */
+.current-games-section{border-top:1px solid #ffffff0c;background:linear-gradient(180deg,#151611 0%,#10100f 100%)}
+.section-intro{max-width:670px;margin:-8px 0 26px;color:#a7a79d;font-size:12px;line-height:1.8}
+.room-toolbar{display:flex;align-items:end;gap:10px;max-width:900px;margin:20px 0 14px;flex-wrap:wrap}
+.room-search-label{width:100%;font-size:10px;color:#a5a699}
+.room-search{flex:1;min-width:180px;background:#151611;border:1px solid #3b3d33;border-radius:3px;color:var(--text);padding:13px 14px;font-size:11px;outline:none}
+.room-search:focus{border-color:var(--lime)}
+.room-connection-status{display:flex;align-items:center;gap:9px;padding:12px 14px;background:#1a1b16;border:1px solid #303228;color:#a5a699;font-size:10px;line-height:1.6;margin:0 0 16px}
+.room-connection-status.is-connected{border-color:#52602d;color:#d6e9a1}
+.room-connection-status.is-error{border-color:#70473a;color:#ffb5a1}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#a5a699;flex-shrink:0}
+.is-connected .status-dot{background:var(--lime);box-shadow:0 0 10px #d8ff3e66}
+.is-error .status-dot{background:#ff9b82}
+.rooms-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.room-empty{grid-column:1/-1;display:flex;align-items:center;flex-direction:column;text-align:center;padding:34px 18px;border:1px dashed #3a3c31;background:#151611}
+.room-empty>span{font-size:32px;color:var(--lime);margin-bottom:12px}
+.room-empty strong{font-family:var(--display);font-size:12px}
+.room-empty p{max-width:430px;color:#96988b;font-size:10px;line-height:1.7}
+.room-card{min-width:0;padding:17px;background:#1a1b16;border:1px solid #34362b;border-radius:4px}
+.room-card-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.room-card h3{font-family:var(--display);font-size:12px;line-height:1.5;margin:0 0 7px;overflow-wrap:anywhere}
+.room-card-map{font-size:10px;color:#a5a699}
+.room-status-pill{white-space:nowrap;font-size:8px;letter-spacing:.7px;padding:5px 7px;border:1px solid #4a5332;color:var(--lime);border-radius:2px}
+.room-card-meta{display:flex;gap:12px;flex-wrap:wrap;color:#a5a699;font-size:9px;margin:16px 0}
+.room-card-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.room-card-actions button{font-size:10px}
+.room-lobby{margin-top:22px;padding:20px;background:#1a1b16;border:1px solid #424632;border-top:2px solid var(--lime)}
+.room-lobby[hidden]{display:none}
+.room-lobby-heading{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.room-lobby h3{font-family:var(--display);font-size:15px;margin:0 0 6px;overflow-wrap:anywhere}
+.room-lobby-subtitle{color:#a5a699;font-size:10px;line-height:1.7}
+.room-player-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:18px 0}
+.room-player{display:flex;align-items:center;gap:10px;padding:11px;background:#24261e;border:1px solid #34362b;font-size:10px;min-width:0}
+.room-player-icon{display:grid;place-items:center;width:27px;height:27px;background:#d8ff3e;color:#171812;border-radius:50%;font-weight:800;flex-shrink:0}
+.room-player span:last-child{overflow-wrap:anywhere}
+.room-lobby-actions{display:flex;gap:9px;flex-wrap:wrap}
+.room-form-note{font-size:9px;line-height:1.6;color:#a5a699;padding:10px 12px;background:#20211d;border-left:2px solid #777b68}
+.room-dialog form>label{display:block;font-size:10px;color:#c4c5b9;margin:15px 0 7px}
+.room-dialog form>input,.room-dialog form>select{width:100%;background:#10110e;color:var(--text);border:1px solid #3b3d33;border-radius:3px;padding:12px;font-size:11px;outline:none}
+.room-dialog form>input:focus,.room-dialog form>select:focus{border-color:var(--lime)}
+.room-dialog .form-submit{margin-top:10px}
+@media(max-width:760px){.desktop-nav{gap:15px;margin-left:10px}.nav-link{font-size:10px}.rooms-list{grid-template-columns:1fr}}
+@media(max-width:620px){.topbar{padding:0 5%;height:70px}.desktop-nav{gap:12px}.header-actions{gap:6px}.room-toolbar>*:not(label){flex:1}.room-player-list{grid-template-columns:1fr}.room-lobby{padding:14px}.room-card{padding:14px}}
