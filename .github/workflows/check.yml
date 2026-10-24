@@ -48,7 +48,7 @@ jobs:
               'id="gameDialog"', 'id="mapBackupTools"', 'id="exportMapsBtn"', 'id="importMapsFile"', 'id="createDialog"', 'id="searchDialog"',
               'id="rollDice"', 'id="mapForm"', 'id="all-games"',
               'id="customGamePanel"', 'id="playerCount"', 'id="startGameBtn"',
-              'id="playBoard"', 'id="playRollBtn"', 'id="restartGameBtn"',
+              'id="playBoard"', 'id="playRollBtn"', 'id="restartGameBtn"', 'id="resumeGameBtn"',
               'id="gameStatsSummary"', 'id="gameHistoryList"', 'id="gameHistoryTitle"',
               'id="playerNameFields"', 'id="playerStatsList"',
           ]
@@ -56,7 +56,7 @@ jobs:
           if missing:
               raise SystemExit(f"Не найдены элементы: {', '.join(missing)}")
           js = Path("app.js").read_text(encoding="utf-8")
-          for feature in ["nastolka-game-history", "function renderGameStats()", "gameState.recorded=true", "nastolka-player-names", "function renderPlayerNameFields()", "playerStatsList"]:
+          for feature in ["nastolka-game-history", "function renderGameStats()", "gameState.recorded=true", "nastolka-player-names", "function renderPlayerNameFields()", "playerStatsList", "function buildPresetMap(game)", "function persistGameSession()", "function resumeCustomGame()", "nastolka-active-session"]:
               if feature not in js:
                   raise SystemExit(f"Не найдена логика истории партий: {feature}")
           print("Проверка структуры страницы и истории партий пройдена.")
