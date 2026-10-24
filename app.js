@@ -194,18 +194,65 @@ function rollDice(target){
   if(target) target.textContent = faces[value-1] + '  Выпало ' + value + '!';
   return value;
 }
+function buildPresetMap(game){
+  const cells=Array.from({length:64},()=>'empty');
+  const route=[];
+  for(let row=0;row<8;row++){
+    if(row%2===0){
+      for(let col=0;col<8;col++)route.push(row*8+col);
+    }else{
+      const connectorCol=(row===1||row===5)?7:0;
+      route.push(row*8+connectorCol);
+      if(row<7){
+        for(let col=(connectorCol===7?6:1);connectorCol===7?col>=0:col<8;col+=(connectorCol===7?-1:1)){
+          route.push(row*8+col);
+        }
+      }
+    }
+  }
+  // The corridor runs across four alternating rows; connector rows stay narrow.
+  const corridor=[];
+  for(let row=0;row<8;row+=2){
+    if(row===0){for(let col=0;col<8;col++)corridor.push(row*8+col)}
+    else{
+      const previousEnd=corridor[corridor.length-1]%8;
+      corridor.push((row-1)*8+previousEnd);
+      if(row%4===2){for(let col=7;col>=0;col--)corridor.push(row*8+col)}
+      else{for(let col=0;col<8;col++)corridor.push(row*8+col)}
+    }
+  }
+  // Keep the route inside the 8x8 board and make every turn reachable in order.
+  const path=[];
+  for(let row=0;row<8;row+=2){
+    const leftToRight=(row/2)%2===0;
+    const cols=leftToRight?[0,1,2,3,4,5,6,7]:[7,6,5,4,3,2,1,0];
+    cols.forEach(col=>path.push(row*8+col));
+    if(row<6){
+      const edge=leftToRight?7:0;
+      path.push((row+1)*8+edge);
+    }
+  }
+  path.forEach(index=>cells[index]='path');
+  cells[path[0]]='start';
+  cells[path[path.length-1]]='finish';
+  const layouts={
+    wild:{treasure:[4,12,21],trap:[8,25],event:[16,28]},
+    city:{treasure:[6,18],trap:[11,24],event:[3,15,27]},
+    secret:{treasure:[9,22],trap:[5,19],event:[13,25,29]},
+    island:{treasure:[3,10,17,26],trap:[8,21],event:[14,24]},
+    neon:{treasure:[7,20],trap:[12,23],event:[4,16,28]},
+    cosmos:{treasure:[5,14,27],trap:[10,22],event:[3,18,25]}
+  };
+  const layout=layouts[game.id]||layouts.wild;
+  Object.entries(layout).forEach(([type,positions])=>positions.forEach(position=>{
+    if(position>0&&position<path.length-1)cells[path[position]]=type;
+  }));
+  return {id:'builtin-'+game.id,name:game.name,genre:game.genre,description:game.description,rules:'Бросай кубик по очереди. ✦ Сокровище: +3 монеты. ! Ловушка: отступи на 2 клетки. ? Событие: случайная удача или потеря шага.',cells,kind:'builtin'};
+}
 function openGame(id){
-  const game = games.find(g => g.id === id);
-  if(!game) return;
-  activePlayMap = null;
-  gameState = null;
-  $('#dialogTitle').textContent = game.name;
-  $('#dialogDescription').textContent = game.description + ' Жанр: ' + game.genre + '. Это демонстрационный бросок кубика.';
-  $('#dialogRollResult').textContent = 'Готов к игре?';
-  $('#demoBoard').hidden = false;
-  $('#customGamePanel').hidden = true;
-  $('#dialogRoll').hidden = false;
-  $('#gameDialog').showModal();
+  const game=games.find(item=>item.id===id);
+  if(!game)return;
+  openCustomGame(buildPresetMap(game));
 }
 function openCustomGame(map){
   activePlayMap = map;
@@ -222,6 +269,9 @@ function openCustomGame(map){
   $('#playBoard').replaceChildren();
   $('#turnStatus').textContent = 'Выбери число игроков и нажми «Начать партию».';
   $('#gameLog').replaceChildren();
+  const saved=getSavedSession();
+  const resumeButton=$('#resumeGameBtn');
+  if(resumeButton)resumeButton.hidden=!(saved&&saved.map&&saved.map.id===map.id&&!saved.state?.finished);
   renderGameStats();
   $('#gameDialog').showModal();
 }
@@ -290,6 +340,42 @@ function renderPlayBoard(){
     board.append(tile);
   });
 }
+function getSavedSession(){
+  const saved=readStorage('nastolka-active-session',null);
+  if(!saved||!saved.map||!saved.state||!Array.isArray(saved.state.players)||!Array.isArray(saved.state.route))return null;
+  return saved;
+}
+function persistGameSession(){
+  if(!gameState||gameState.finished||!activePlayMap){
+    try{localStorage.removeItem('nastolka-active-session')}catch{}
+    return;
+  }
+  const payload={map:{id:activePlayMap.id,name:activePlayMap.name,genre:activePlayMap.genre||'',description:activePlayMap.description||'',rules:activePlayMap.rules||'',cells:normalizeBoard(activePlayMap),kind:activePlayMap.kind||'custom'},state:gameState,savedAt:new Date().toISOString()};
+  try{localStorage.setItem('nastolka-active-session',JSON.stringify(payload))}catch{toast('Не удалось сохранить партию. Освободи место в браузере.')}
+}
+function resumeCustomGame(){
+  const saved=getSavedSession();
+  if(!saved||saved.map.id!==activePlayMap?.id){toast('Сохранённая партия для этой карты не найдена.');return}
+  const route=playableCells(saved.map);
+  if(!route){toast('Карта изменилась и маршрут больше не соединён.');return}
+  const state=saved.state;
+  if(!Array.isArray(state.players)||state.players.length<2||state.players.length>4||!Number.isInteger(state.turn)||state.turn<0||state.turn>=state.players.length){toast('Сохранённая партия повреждена. Начни новую.');return}
+  state.route=route;
+  state.players=state.players.map(player=>({name:String(player.name||'Игрок').slice(0,18),position:Math.max(0,Math.min(route.length-1,Number(player.position)||0)),coins:Math.max(0,Number(player.coins)||0),skip:Boolean(player.skip)}));
+  state.turns=Math.max(0,Number(state.turns)||0);
+  state.log=Array.isArray(state.log)?state.log.filter(line=>typeof line==='string').slice(0,5):[];
+  state.finished=false;state.recorded=false;
+  activePlayMap=saved.map;
+  gameState=state;
+  $('#playerCount').value=String(state.players.length);
+  renderPlayerNameFields();
+  $('#playRollBtn').disabled=false;
+  $('#gameLog').replaceChildren();
+  state.log.forEach(line=>{const p=document.createElement('p');p.textContent=line;$('#gameLog').append(p)});
+  updateGameStatus();renderPlayBoard();
+  $('#resumeGameBtn').hidden=true;
+  toast('Партия восстановлена!');
+}
 function startCustomGame(){
   if(!activePlayMap) return;
   const route = playableCells(activePlayMap);
@@ -307,11 +393,13 @@ function startCustomGame(){
   if(new Set(normalized).size!==normalized.length){toast('У каждого игрока должно быть своё имя.');return}
   try{localStorage.setItem('nastolka-player-names',JSON.stringify(names.concat(playerNames.slice(count))))}catch{toast('Имена не удалось сохранить, но партия может начаться.')}
   gameState={route,players:Array.from({length:count},(_,i)=>({name:names[i],position:0,coins:0,skip:false})),turn:0,finished:false,recorded:false,turns:0,log:[]};
+  $('#resumeGameBtn').hidden=true;
   $('#playRollBtn').disabled=false;
   $('#gameLog').replaceChildren();
   addGameLog('Партия началась! Все игроки на старте. Маршрут: '+route.length+' клеток.');
   updateGameStatus();
   renderPlayBoard();
+  persistGameSession();
 }
 function addGameLog(message){
   if(!gameState) return;
@@ -371,10 +459,13 @@ function takeGameTurn(){
     updateGameStatus();
     renderPlayBoard();
     addGameLog('Партия завершена. Поздравляем победителя!');
+    persistGameSession();
+    const resumeButton=$('#resumeGameBtn');if(resumeButton)resumeButton.hidden=true;
     return;
   }
   renderPlayBoard();
   nextPlayer();
+  persistGameSession();
 }
 
 $$('.filter-chip').forEach(btn => btn.addEventListener('click', () => {
@@ -407,6 +498,7 @@ $('#rollHeroDie').addEventListener('click', () => {
 });
 $('#dialogRoll').addEventListener('click', () => rollDice($('#dialogRollResult')));
 $('#startGameBtn').addEventListener('click', startCustomGame);
+$('#resumeGameBtn').addEventListener('click',resumeCustomGame);
 $('#playerCount').addEventListener('change',renderPlayerNameFields);
 $('#playRollBtn').addEventListener('click', takeGameTurn);
 $('#restartGameBtn').addEventListener('click', startCustomGame);
