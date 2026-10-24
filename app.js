@@ -396,7 +396,7 @@ function startCustomGame(){
     return;
   }
   const count=Number($('#playerCount').value)||2;
-  const names=$('#playerNameFields input').slice(0,count).map((input,index)=>input.value.trim().slice(0,18)||playerNames[index]);
+  const names=$$('#playerNameFields input').slice(0,count).map((input,index)=>input.value.trim().slice(0,18)||playerNames[index]);
   const normalized=names.map(name=>name.toLocaleLowerCase('ru-RU'));
   if(new Set(normalized).size!==normalized.length){toast('У каждого игрока должно быть своё имя.');return}
   try{localStorage.setItem('nastolka-player-names',JSON.stringify(names.concat(playerNames.slice(count))))}catch{toast('Имена не удалось сохранить, но партия может начаться.')}
