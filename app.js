@@ -56,7 +56,7 @@ function normalizeBoard(map){
 function openEditor(map){
   activeMapId = map.id;
   selectedTile = 'path';
-  $('.tile-tool').forEach(button => button.classList.toggle('selected', button.dataset.tile === selectedTile));
+  $$('.tile-tool').forEach(button => button.classList.toggle('selected', button.dataset.tile === selectedTile));
   $('#editorTitle').textContent = map.name.toLocaleUpperCase('ru');
   $('#mapRules').value = map.rules || '';
   map.cells = normalizeBoard(map);
@@ -491,7 +491,7 @@ function takeGameTurn(){
   }
 })();
 
-$('.filter-chip').forEach(btn => btn.addEventListener('click', () => {
+$$('.filter-chip').forEach(btn => btn.addEventListener('click', () => {
   $$('.filter-chip').forEach(b => b.classList.toggle('selected', b === btn));
   let shown = 0;
   $$('.game-card').forEach(card => {
@@ -510,7 +510,7 @@ $$('.save-button').forEach(btn => btn.addEventListener('click', () => {
   setSavedGames(ids);
   updateSavedUI();
 }));
-$('[data-play]').forEach(btn => btn.addEventListener('click', () => openGame(btn.dataset.play)));
+$$('[data-play]').forEach(btn => btn.addEventListener('click', () => openGame(btn.dataset.play)));
 $('#rollDice').addEventListener('click', () => {
   const result = rollDice($('#diceResult'));
   $('#diceResult').textContent = 'Выпало ' + result + '! ' + rollMessages[result-1];
@@ -527,9 +527,9 @@ $('#playRollBtn').addEventListener('click', takeGameTurn);
 $('#restartGameBtn').addEventListener('click', startCustomGame);
 $$('.dialog-close').forEach(btn => btn.addEventListener('click', () => btn.closest('dialog').close()));
 $('#createMapBtn').addEventListener('click', () => $('#createDialog').showModal());
-$('.tile-tool').forEach(button => button.addEventListener('click', () => {
+$$('.tile-tool').forEach(button => button.addEventListener('click', () => {
   selectedTile = button.dataset.tile;
-  $('.tile-tool').forEach(tool => tool.classList.toggle('selected', tool === button));
+  $$('.tile-tool').forEach(tool => tool.classList.toggle('selected', tool === button));
 }));
 $('#clearBoardBtn').addEventListener('click', () => {
   const maps = getSavedMaps();
