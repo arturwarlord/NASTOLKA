@@ -410,3 +410,31 @@ html.game-mode[data-game-scene="city"] .game-world-ambient{filter:hue-rotate(325
 html.game-mode[data-game-scene="mystery"] .game-world-ambient{filter:hue-rotate(35deg) saturate(.85)}
 html.game-mode[data-game-scene="neon"] .game-world-ambient{filter:hue-rotate(250deg) saturate(1.7)}
 html.game-mode[data-game-scene="cosmos"] .game-world-ambient{filter:hue-rotate(185deg) saturate(1.4)}
+
+
+/* World dressing visibility and illustrated board surface */
+html.game-mode .game-world-props{z-index:2;overflow:visible;inset:70px 0 0}
+html.game-mode .game-world-props span{opacity:.92;filter:drop-shadow(0 16px 18px #000d) drop-shadow(0 0 12px var(--scene-glow,#8bb86b));font-family:"Apple Color Emoji","Segoe UI Emoji",sans-serif}
+html.game-mode .game-world-props .prop-left{left:0;top:27%;font-size:clamp(58px,8vw,124px);transform:rotate(-9deg)}
+html.game-mode .game-world-props .prop-right{right:0;top:35%;font-size:clamp(54px,7.4vw,112px);transform:rotate(8deg)}
+html.game-mode .game-world-props .prop-bottom-left{left:3%;bottom:8%;font-size:clamp(43px,5.5vw,82px)}
+html.game-mode .game-world-props .prop-bottom-right{right:4%;bottom:7%;font-size:clamp(42px,5.2vw,78px)}
+html.game-mode .game-world-props .prop-left,html.game-mode .game-world-props .prop-right{pointer-events:none}
+html.game-mode #customGamePanel,html.game-mode .game-dialog>.eyebrow,html.game-mode .game-dialog>#dialogTitle,html.game-mode .game-dialog>#dialogDescription,html.game-mode .game-dialog>.dialog-actions{position:relative;z-index:1}
+html.game-mode #playBoard{border:3px solid #b88a52;border-radius:17px;padding:clamp(11px,1.5vw,21px);background:repeating-linear-gradient(2deg,#69452d 0 3px,#785137 3px 8px,#5d3b27 8px 12px);box-shadow:0 38px 75px #000d,0 9px 0 #3b2418,0 14px 0 #1b100b,inset 0 3px 0 #f0c38b88,inset 0 -10px 18px #1a0e09}
+html.game-mode #playBoard:before{inset:6px;border:1px solid #f0c38b99;border-radius:10px;box-shadow:inset 0 0 0 4px #3a241666}
+html.game-mode .play-cell{border-radius:clamp(5px,.8vw,11px);box-shadow:inset 0 2px 0 #fff4,inset 0 -7px 10px #0006,0 4px 3px #0007}
+html.game-mode .play-cell.route-cell{transform:translateZ(3px)}
+html.game-mode .play-cell.route-cell.tile-path{background:radial-gradient(ellipse at 25% 16%,#fff7,transparent 31%),repeating-linear-gradient(125deg,transparent 0 7px,#4b311e2e 8px 10px),linear-gradient(145deg,#bba174,#89704b 58%,#5c452e);border-color:#f0d5a0;box-shadow:inset 0 2px 0 #fff8,inset 0 -7px 11px #3b2416aa,0 4px 5px #100a06aa}
+html.game-mode .play-cell.route-cell.tile-path:before{inset:8%;border:1px dashed #fff0c67d;background:radial-gradient(circle at 75% 70%,#f3d59a88 0 2px,transparent 3px),radial-gradient(circle at 23% 36%,#513a2355 0 1px,transparent 2px)}
+html.game-mode .play-cell.tile-empty{background:radial-gradient(ellipse at 30% 20%,#a4c97555,transparent 45%),radial-gradient(ellipse at 78% 76%,#355a3688,transparent 54%),repeating-linear-gradient(35deg,#304832 0 5px,#263c2e 6px 10px);border-color:#789565}
+html.game-mode .play-cell.tile-empty:before{inset:9%;border:0;background:radial-gradient(ellipse at 25% 70%,#a8d36a88 0 2px,transparent 3px),radial-gradient(ellipse at 72% 28%,#b9d58a77 0 1px,transparent 3px),radial-gradient(ellipse at 58% 84%,#d2c18b55 0 2px,transparent 3px)}
+html.game-mode .play-cell.tile-treasure{background:radial-gradient(circle at 50% 34%,#fff5c5 0 5%,#f0bd50 13%,#9c6b24 43%,#483016 100%);border-color:#ffe28c;box-shadow:0 0 20px #ffd35b55,inset 0 2px #fff9,inset 0 -7px 10px #3b210d}
+html.game-mode .play-cell.tile-trap{background:radial-gradient(ellipse at 50% 42%,#ffb092 0 5%,#9d4438 26%,#54272b 65%,#24151b);border-color:#eaa08a;box-shadow:0 0 14px #e65c4c22,inset 0 2px #ffe0bd44}
+html.game-mode .play-cell.tile-event{background:radial-gradient(circle at 50% 35%,#f4e9ff 0 4%,#b49bff 18%,#6550a4 48%,#28203f);border-color:#cfc0ff;box-shadow:0 0 18px #a88cff55,inset 0 2px #fff9,inset 0 -7px 10px #17112b}
+html.game-mode .play-cell-symbol{font-size:clamp(20px,2.8vw,40px);filter:drop-shadow(0 3px 3px #000b)}
+html.game-mode .route-step{top:5px;left:6px;color:#fff0d4dd;font-size:clamp(6px,.75vw,10px)}
+html.game-mode .player-token{width:clamp(22px,2.7vw,38px);height:clamp(22px,2.7vw,38px);font-size:clamp(14px,1.9vw,24px);box-shadow:0 5px 0 color-mix(in srgb,var(--token-color) 45%,#080808),0 9px 12px #000d,inset 0 2px 2px #fff9}
+html.game-mode .play-cell.current-player-cell{box-shadow:0 0 0 3px #f4ffb0,0 0 28px #d8ff3ecc,inset 0 0 24px #eaff9b44}
+@media(max-width:900px){html.game-mode .game-world-props{z-index:0;opacity:.38}html.game-mode #customGamePanel{z-index:1}}
+@media(max-width:620px){html.game-mode .game-world-props{z-index:0;opacity:.24}html.game-mode .game-world-props .prop-left{left:-15%;top:28%;font-size:56px}html.game-mode .game-world-props .prop-right{right:-15%;top:37%;font-size:52px}html.game-mode #playBoard{border-width:2px;padding:7px;box-shadow:0 18px 35px #000b,0 5px 0 #3b2418,inset 0 2px 0 #f0c38b66}html.game-mode .play-cell.route-cell.tile-path:before{inset:4%}}
