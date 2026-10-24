@@ -282,8 +282,16 @@
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && client) loadRooms().catch(() => {});
       });
+      const requestedRoomId=new URLSearchParams(window.location.search).get('onlineRoom');
       const session=restoreSession();
-      if(session){const room=roomsCache.find(item=>item.id===session.roomId);if(room){currentRoom=room;const player=room.players.find(item=>item.id===session.playerId);if(player){currentPlayer={...player,is_host:player.is_host};renderLobby(room);if(room.status==='playing'&&room.game_state)syncOnlineGame(room)}}}
+      if(requestedRoomId){
+        const requestedRoom=roomsCache.find(item=>item.id===requestedRoomId);
+        if(requestedRoom) resumeRoom(requestedRoom);
+        else setStatus('Не удалось найти эту онлайн-комнату. Обнови список или вернись в текущие игры.','error');
+      }else if(session){
+        const room=roomsCache.find(item=>item.id===session.roomId);
+        if(room){currentRoom=room;const player=room.players.find(item=>item.id===session.playerId);if(player){currentPlayer={...player,is_host:player.is_host};renderLobby(room);if(room.status==='playing'&&room.game_state)syncOnlineGame(room)}}
+      }
     }catch(error){setStatus('Не удалось подключиться к базе комнат: '+(error.message||'проверь настройки Supabase'),'error')}
   }
   $room('#createRoomDialog .dialog-close').addEventListener('click',()=>createDialog.close());
