@@ -26,6 +26,7 @@ jobs:
           test -s rooms.js
           test -s supabase-config.js
           test -s supabase/schema.sql
+          test -s supabase/game-sync.sql
           grep -q 'styles.css' index.html
           grep -q 'app.js' index.html
           echo "Основные файлы найдены."
@@ -73,5 +74,9 @@ jobs:
           for feature in ["nastolka_rooms", "nastolka_room_players", "nastolka_player_secrets", "nastolka_create_room", "nastolka_join_room", "nastolka_start_room", "nastolka_leave_room", "enable row level security"]:
               if feature.lower() not in sql.lower():
                   raise SystemExit(f"Не найдена схема онлайн-комнат: {feature}")
+          sync_sql = Path("supabase/game-sync.sql").read_text(encoding="utf-8")
+          for feature in ["nastolka_room_game_states", "nastolka_init_game_state", "nastolka_submit_game_state", "expected_revision", "onlinePlayerId", "supabase_realtime"]:
+              if feature.lower() not in sync_sql.lower():
+                  raise SystemExit(f"Не найдена логика синхронизации партии: {feature}")
           print("Проверка структуры страницы, истории партий и онлайн-комнат пройдена.")
           PY
