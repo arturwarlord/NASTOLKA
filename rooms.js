@@ -75,7 +75,7 @@
   }
   async function loadRooms() {
     if (!client) return;
-    const {data,error} = await client.from('nastolka_rooms').select('id,room_name,map_id,map_name,max_players,status,created_at,host_player_id').in('status',['waiting','playing']).order('created_at',{ascending:false}).limit(100);
+    const {data,error} = await client.from('nastolka_rooms').select('id,room_name,map_id,map_name,map_data,game_state,game_version,max_players,status,created_at,host_player_id').in('status',['waiting','playing']).order('created_at',{ascending:false}).limit(100);
     if (error) throw error;
     const ids=(data||[]).map(room=>room.id);
     let playerRows=[];
@@ -88,7 +88,7 @@
     renderRooms();
     if(currentRoom) {
       const latest=roomsCache.find(room=>room.id===currentRoom.id);
-      if(latest) { currentRoom=latest; renderLobby(latest); }
+      if(latest) { currentRoom=latest; renderLobby(latest); if(latest.status==='playing'&&latest.game_state) syncOnlineGame(latest); }
       else { currentRoom=null; lobbyEl.hidden=true; setStatus('Комната закрыта или больше недоступна.',''); }
     }
   }
@@ -124,6 +124,23 @@
       card.append(top,meta,actions); listEl.append(card);
     });
   }
+  function syncOnlineGame(room) {
+    if(!room || room.status!=='playing' || !room.game_state || !currentPlayer || !currentToken || !window.NASTOLKA_GAME) return;
+    const playerIds=room.players.map(player=>player.id);
+    if(!playerIds.includes(currentPlayer.id)) return;
+    const context={
+      roomId:room.id,
+      playerId:currentPlayer.id,
+      playerIds,
+      version:Number(room.game_version)||Number(room.game_state.version)||1,
+      submitTurn:(expectedVersion,nextState)=>rpc('nastolka_submit_turn',{
+        p_room_id:room.id,p_player_id:currentPlayer.id,p_token:currentToken,
+        p_expected_version:expectedVersion,p_next_state:nextState
+      }),
+      refresh:()=>loadRooms().catch(error=>setStatus(error.message||'Не удалось синхронизировать партию.','error'))
+    };
+    window.NASTOLKA_GAME.showOnline(room.map_data,room.game_state,context);
+  }
   function renderLobby(room) {
     if(!room) {lobbyEl.hidden=true;return}
     lobbyEl.hidden=false; lobbyEl.replaceChildren();
@@ -141,7 +158,15 @@
     if(currentPlayer&&currentRoom&&currentPlayer.is_host&&room.status==='waiting'){
       const start=document.createElement('button');start.type='button';start.className='primary-button';start.textContent='Начать партию ↗';start.disabled=room.players.length<2;
       start.title=room.players.length<2?'Нужен хотя бы один присоединившийся игрок':'';
-      start.addEventListener('click',async()=>{try{await rpc('nastolka_start_room',{p_room_id:room.id,p_player_id:currentPlayer.id,p_token:currentToken});await loadRooms();setStatus('Партия запущена. Следующий этап — синхронизация игрового поля и ходов.','connected')}catch(error){setStatus(error.message||'Не удалось запустить партию.','error')}});
+      start.addEventListener('click',async()=>{
+        try{
+          const playerIds=room.players.map(player=>player.id);
+          const initialState=window.NASTOLKA_GAME.createInitialState(room.map_data,room.players);
+          await rpc('nastolka_begin_game',{p_room_id:room.id,p_player_id:currentPlayer.id,p_token:currentToken,p_initial_state:initialState,p_player_ids:playerIds});
+          await loadRooms();
+          setStatus('Партия запущена. Поле и ходы синхронизируются между участниками.','connected');
+        }catch(error){setStatus(error.message||'Не удалось запустить партию.','error')}
+      });
       actions.append(start);
     }
     const leave=document.createElement('button');leave.type='button';leave.className='secondary-editor-button';leave.textContent='Выйти из комнаты';
@@ -200,7 +225,7 @@
       setStatus('Подключено к онлайн-комнатам. Список обновляется автоматически.','connected');
       roomChannel=client.channel('nastolka-room-updates').on('postgres_changes',{event:'*',schema:'public',table:'nastolka_rooms'},()=>loadRooms().catch(()=>{})).on('postgres_changes',{event:'*',schema:'public',table:'nastolka_room_players'},()=>loadRooms().catch(()=>{})).subscribe();
       const session=restoreSession();
-      if(session){const room=roomsCache.find(item=>item.id===session.roomId);if(room){currentRoom=room;const player=room.players.find(item=>item.id===session.playerId);if(player){currentPlayer={...player,is_host:player.is_host};renderLobby(room)}}}
+      if(session){const room=roomsCache.find(item=>item.id===session.roomId);if(room){currentRoom=room;const player=room.players.find(item=>item.id===session.playerId);if(player){currentPlayer={...player,is_host:player.is_host};renderLobby(room);if(room.status==='playing'&&room.game_state)syncOnlineGame(room)}}}
     }catch(error){setStatus('Не удалось подключиться к базе комнат: '+(error.message||'проверь настройки Supabase'),'error')}
   }
   $room('#createRoomDialog .dialog-close').addEventListener('click',()=>createDialog.close());
