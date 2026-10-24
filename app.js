@@ -263,7 +263,17 @@ function openGame(id){
   url.searchParams.set('play',id);
   window.open(url.toString(),'_blank','noopener');
 }
+function setGameScene(map){
+  const source=String([map?.id,map?.genre,map?.name].filter(Boolean).join(' ')).toLowerCase();
+  const scene=/cosmos|космос|галактик|звезд/.test(source)?'cosmos':
+    /neon|киберпанк|неонов/.test(source)?'neon':
+    /city|город|стратег/.test(source)?'city':
+    /secret|мистик|тайн/.test(source)?'mystery':
+    /island|остров|сокровищ/.test(source)?'island':'wild';
+  document.documentElement.dataset.gameScene=scene;
+}
 function openCustomGame(map){
+  setGameScene(map);
   onlineGameContext = null;
   const setup = $('.game-setup'); if(setup) setup.hidden = false;
   $('#playerNameFields').hidden = false;
@@ -323,26 +333,36 @@ function renderPlayBoard(){
   const route = gameState.route;
   const board = $('#playBoard');
   const cells = normalizeBoard(activePlayMap);
+  const miniatures = ['♟','♞','♜','♛'];
   board.replaceChildren();
   cells.forEach((originalType,boardIndex)=>{
     const routeIndex = route.findIndex(cell=>cell.index===boardIndex);
     const type = routeIndex >= 0 ? route[routeIndex].type : originalType;
+    const isCurrent = routeIndex >= 0 && gameState.players[gameState.turn]?.position === routeIndex;
     const tile = document.createElement('div');
-    tile.className = 'play-cell tile-' + type + (routeIndex < 0 ? ' off-route' : '');
-    tile.title = 'Клетка ' + (boardIndex+1) + ': ' + (tileInfo[type]?.label || 'Путь') + (routeIndex < 0 ? ' — вне маршрута' : '');
+    tile.className = 'play-cell tile-' + type + (routeIndex < 0 ? ' off-route' : ' route-cell') + (isCurrent ? ' current-player-cell' : '');
+    if(routeIndex >= 0) tile.dataset.step = String(routeIndex + 1);
+    tile.title = 'Клетка ' + (boardIndex+1) + ': ' + (tileInfo[type]?.label || 'Путь') + (routeIndex < 0 ? ' — вне маршрута' : ' · Шаг ' + (routeIndex+1));
     const label = document.createElement('span');
     label.className = 'play-cell-symbol';
     label.textContent = tileInfo[type]?.symbol || '·';
     tile.append(label);
+    if(routeIndex > 0 && routeIndex < route.length - 1 && ['path','empty'].includes(type)){
+      const step = document.createElement('span');
+      step.className = 'route-step';
+      step.textContent = String(routeIndex + 1).padStart(2,'0');
+      tile.append(step);
+    }
     const tokens = document.createElement('div');
     tokens.className = 'play-tokens';
     gameState.players.forEach((player,playerIndex)=>{
       if(routeIndex >= 0 && player.position===routeIndex){
         const token=document.createElement('span');
-        token.className='player-token';
-        token.style.background=playerColors[playerIndex];
-        token.textContent=String(playerIndex+1);
-        token.title=player.name;
+        token.className='player-token player-token-' + playerIndex;
+        token.style.setProperty('--token-color', playerColors[playerIndex]);
+        token.textContent=miniatures[playerIndex];
+        token.setAttribute('aria-label',player.name);
+        token.title=player.name + ' · игрок ' + (playerIndex+1);
         tokens.append(token);
       }
     });
