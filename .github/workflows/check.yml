@@ -81,9 +81,9 @@ jobs:
           for feature in ["createInitialState", "showOnline", "nastolka_submit_turn", "game_state", "game_version"]:
               if feature not in rooms and feature not in js:
                   raise SystemExit(f"Не найдена синхронизация онлайн-партии: {feature}")
-          for feature in ["setInterval", "visibilitychange", "loadRoomsInProgress"]:
+          for feature in ["setInterval", "visibilitychange", "loadRoomsInProgress", "function resumeRoom(room)", "Вернуться в игру", "localStorage.getItem(roomIdKey)"]:
               if feature not in rooms:
-                  raise SystemExit(f"Не найдена защита переподключения: {feature}")
+                  raise SystemExit(f"Не найдена защита переподключения и возврат в комнату: {feature}")
           if "incomingVersion <= Number(onlineGameContext.version || 0)" not in js:
               raise SystemExit("Не найдена защита от устаревшего состояния партии.")
           print("Проверка структуры страницы, истории партий, онлайн-синхронизации и восстановления соединения пройдена.")
