@@ -398,3 +398,15 @@ html.game-mode[data-game-scene="neon"] .game-world-props span{filter:drop-shadow
  .game-world-props .prop-right{right:-12%;font-size:48px}
  .game-world-props .prop-bottom-left,.game-world-props .prop-bottom-right{display:none}
 }
+
+/* Illustrated SVG environment behind the physical board */
+html.game-mode .game-world-ambient{
+ background-image:linear-gradient(180deg,#07110c55 0%,#07110c08 38%,#07110c66 100%),url("./assets/adventure-atmosphere.svg");
+ background-size:cover,cover;background-position:center,center 44%;background-repeat:no-repeat;
+ opacity:.78;
+}
+html.game-mode[data-game-scene="island"] .game-world-ambient{filter:hue-rotate(105deg) saturate(1.15)}
+html.game-mode[data-game-scene="city"] .game-world-ambient{filter:hue-rotate(325deg) saturate(1.18)}
+html.game-mode[data-game-scene="mystery"] .game-world-ambient{filter:hue-rotate(35deg) saturate(.85)}
+html.game-mode[data-game-scene="neon"] .game-world-ambient{filter:hue-rotate(250deg) saturate(1.7)}
+html.game-mode[data-game-scene="cosmos"] .game-world-ambient{filter:hue-rotate(185deg) saturate(1.4)}
