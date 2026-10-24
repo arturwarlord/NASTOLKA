@@ -410,8 +410,63 @@ function openMyMaps(){
   $('#searchDialog').querySelector('.eyebrow').textContent = 'ТВОЯ ЛИЧНАЯ БИБЛИОТЕКА';
   $('#searchDialog').querySelector('h2').textContent = 'МОИ КАРТЫ';
   $('#searchInput').placeholder = 'Найти свою карту...';
+  $('#mapBackupTools').hidden = false;
   renderSearchResults(getSavedMaps(), true);
   $('#searchDialog').showModal();
+}
+function exportMaps(){
+  const maps=getSavedMaps();
+  if(!maps.length){toast('Пока нечего экспортировать — сначала создай карту.');return}
+  const backup={format:'nastolka-maps',version:1,exportedAt:new Date().toISOString(),maps};
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;
+  link.download='nastolka-maps-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  toast('Экспортировано карт: '+maps.length);
+}
+function importMapsFile(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const parsed=JSON.parse(String(reader.result||''));
+      const imported=Array.isArray(parsed)?parsed:(parsed && parsed.format==='nastolka-maps' && Array.isArray(parsed.maps)?parsed.maps:null);
+      if(!imported || !imported.length)throw new Error('В файле не найден список карт.');
+      if(imported.length>200)throw new Error('В одном файле допускается не более 200 карт.');
+      const allowedTiles=new Set(Object.keys(tileInfo));
+      const clean=imported.map((map,index)=>{
+        if(!map || typeof map!=='object' || typeof map.name!=='string' || !map.name.trim())throw new Error('Карта №'+(index+1)+' не содержит названия.');
+        if(map.cells!==undefined && (!Array.isArray(map.cells)||map.cells.length!==64||map.cells.some(cell=>!allowedTiles.has(cell))))throw new Error('У карты «'+map.name+'» некорректное игровое поле.');
+        return {
+          id:(typeof crypto!=='undefined'&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+index+'-'+Math.random().toString(16).slice(2),
+          name:map.name.trim().slice(0,50),
+          genre:typeof map.genre==='string'?map.genre.slice(0,40):'Другое',
+          description:typeof map.description==='string'?map.description.slice(0,180):'',
+          rules:typeof map.rules==='string'?map.rules.slice(0,1000):'',
+          cells:Array.isArray(map.cells)?map.cells:[...blankBoard()],
+          createdAt:typeof map.createdAt==='string'?map.createdAt:new Date().toISOString(),
+          updatedAt:typeof map.updatedAt==='string'?map.updatedAt:undefined
+        };
+      });
+      const existing=getSavedMaps();
+      setSavedMaps([...clean,...existing]);
+      updateSavedUI();
+      $('#searchInput').value='';
+      renderSearchResults(getSavedMaps(),true);
+      toast('Импортировано карт: '+clean.length);
+    }catch(error){
+      toast('Не удалось импортировать: '+(error && error.message?error.message:'проверь JSON-файл.'));
+    }finally{
+      $('#importMapsFile').value='';
+    }
+  };
+  reader.onerror=()=>{toast('Не удалось прочитать файл.');$('#importMapsFile').value=''};
+  reader.readAsText(file);
 }
 $('#mapForm').addEventListener('submit', event => {
   event.preventDefault();
@@ -507,6 +562,7 @@ function renderSearchResults(items, isMaps = false){
 }
 function openSearch(){
   searchMode = 'games';
+  $('#mapBackupTools').hidden = true;
   $('#searchDialog').querySelector('.eyebrow').textContent = 'НАЙДИ СВОЙ МИР';
   $('#searchDialog').querySelector('h2').textContent = 'ПОИСК';
   $('#searchInput').placeholder = 'Название игры или жанр...';
@@ -534,8 +590,11 @@ $('.mobile-menu').addEventListener('click', () => {
   if(!visible) Object.assign(nav.style, {position:'absolute',top:'67px',left:'0',right:'0',padding:'22px 6%',background:'#151612',borderBottom:'1px solid #33342e',flexDirection:'column',gap:'20px',margin:'0'});
 });
 $$('.nav-link').forEach(link => link.addEventListener('click', () => $$('.nav-link').forEach(a => a.classList.toggle('active', a === link))));
+$('#exportMapsBtn').addEventListener('click', exportMaps);
+$('#importMapsFile').addEventListener('change', event => importMapsFile(event.currentTarget.files && event.currentTarget.files[0]));
 $('#searchDialog').addEventListener('close', () => {
   searchMode = 'games';
+  $('#mapBackupTools').hidden = true;
   $('#searchDialog').querySelector('.eyebrow').textContent = 'НАЙДИ СВОЙ МИР';
   $('#searchDialog').querySelector('h2').textContent = 'ПОИСК';
   $('#searchInput').placeholder = 'Название игры или жанр...';
