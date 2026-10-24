@@ -76,3 +76,11 @@
 
 /* Local game history and statistics */
 .game-history{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}.game-history-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}.game-history-heading h3{font-family:var(--display);font-size:11px;letter-spacing:.2px;margin:0}.game-history-heading>span{font-size:8px;letter-spacing:1px;color:var(--muted)}.game-stats-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:13px 0}.game-stat{background:#22241c;border:1px solid #ffffff0c;padding:11px 8px;display:flex;flex-direction:column;gap:5px;min-width:0}.game-stat strong{font-family:var(--display);font-size:17px;color:var(--lime)}.game-stat span{font-size:9px;color:#a5a699;line-height:1.4}.game-history-list{display:flex;flex-direction:column;gap:7px}.game-history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 11px;background:#20211d;border-radius:3px}.game-history-info,.game-history-result{display:flex;flex-direction:column;gap:4px;min-width:0}.game-history-info strong,.game-history-result strong{font-size:10px;overflow-wrap:anywhere}.game-history-info span,.game-history-result span{font-size:9px;color:var(--muted);line-height:1.4}.game-history-result{text-align:right;flex-shrink:0}.game-history-result span{color:var(--lime)}.game-history-empty,.game-history-note{font-size:10px;line-height:1.6;color:var(--muted)}.game-history-note{margin:10px 0 0;font-size:9px}@media(max-width:420px){.game-stats-summary{gap:5px}.game-stat{padding:9px 6px}.game-stat strong{font-size:14px}.game-stat span{font-size:8px}.game-history-row{padding:9px 8px}}
+
+/* Personal map backup and transfer */
+.map-backup-tools{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:13px 0 5px;border-bottom:1px solid #34362d}
+.map-backup-tools[hidden]{display:none}
+.map-backup-tools button,.import-maps-label{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px}
+.map-backup-tools p{flex-basis:100%;margin:0 0 10px;color:#939688;font-size:9px;line-height:1.6}
+.import-maps-label{margin:0}
+@media(max-width:480px){.map-backup-tools>*:not(p){flex:1;text-align:center}.map-backup-tools p{font-size:8px}}
