@@ -49,13 +49,22 @@ function openEditor(map){
 function renderEditorBoard(cells){
   const board = $('#editorBoard');
   board.replaceChildren();
+  const previewRoute = playableCells({cells});
+  const routeIndices = new Set((previewRoute || []).map(cell => cell.index));
+  const specialTypes = new Set(['treasure','trap','event']);
+  const specialOnRoute = cells.filter((type, index) => specialTypes.has(type) && routeIndices.has(index)).length;
+  const specialOffRoute = cells.filter((type, index) => specialTypes.has(type) && !routeIndices.has(index)).length;
+
   cells.forEach((type, index) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'editor-cell tile-' + (tileInfo[type] ? type : 'path');
+    if(previewRoute && routeIndices.has(index)) button.classList.add('editor-route-cell');
+    else if(type !== 'empty') button.classList.add('editor-off-route-cell');
     button.textContent = tileInfo[type] ? tileInfo[type].symbol : '·';
-    button.setAttribute('aria-label', 'Клетка ' + (index + 1) + ': ' + (tileInfo[type] ? tileInfo[type].label : 'Путь'));
-    button.title = 'Клетка ' + (index + 1) + ' — ' + (tileInfo[type] ? tileInfo[type].label : 'Путь');
+    const label = 'Клетка ' + (index + 1) + ': ' + (tileInfo[type] ? tileInfo[type].label : 'Путь');
+    button.setAttribute('aria-label', label + (routeIndices.has(index) ? ', на маршруте' : ''));
+    button.title = label + (routeIndices.has(index) ? ' — на маршруте' : ' — вне маршрута');
     button.addEventListener('click', () => {
       const maps = getSavedMaps();
       const map = maps.find(item => item.id === activeMapId);
@@ -72,6 +81,18 @@ function renderEditorBoard(cells){
     board.append(button);
   });
   $('#tileCount').textContent = cells.length;
+  const status = $('#editorRouteStatus');
+  if(status){
+    if(!previewRoute){
+      status.textContent = 'Маршрут не соединён: поставь Старт и Финиш и соедини их соседними клетками без пустых разрывов.';
+      status.className = 'editor-route-status is-invalid';
+    }else{
+      const routeText = 'Маршрут найден: ' + previewRoute.length + ' клеток. События на маршруте: ' + specialOnRoute + '.';
+      const warning = specialOffRoute ? ' Вне маршрута: ' + specialOffRoute + ' событий — они не сработают.' : '';
+      status.textContent = routeText + warning;
+      status.className = 'editor-route-status' + (specialOffRoute ? ' has-warning' : ' is-valid');
+    }
+  }
 }
 
 function toast(message){
