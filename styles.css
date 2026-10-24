@@ -38,3 +38,27 @@
 .map-row-actions>button:first-of-type{border-color:#59633a;color:var(--lime)}
 .map-row-actions>button:first-of-type:hover{background:var(--lime);color:#171812}
 @media(max-width:620px){.editor-dialog{padding:18px}.editor-toolbar{gap:5px}.tile-tool{padding:8px;font-size:9px}.editor-board-wrap{padding:7px}.editor-board{gap:3px;min-width:250px}.editor-legend{font-size:8px}.editor-footer>*{flex:1;justify-content:center}.editor-footer .primary-button{font-size:9px;padding:12px 8px}}
+
+
+/* Playable custom map sessions */
+.game-setup{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:20px 0 14px}
+.game-setup label{font-size:10px;color:#c4c5b9}
+.game-setup select{background:#10110e;color:var(--text);border:1px solid #414338;padding:12px;border-radius:3px}
+.turn-status{padding:13px 15px;background:#25291d;border-left:3px solid var(--lime);color:var(--lime);font-size:11px;margin:14px 0}
+.play-board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;padding:8px;background:#10110e;border:1px solid #36382e;border-radius:4px}
+.play-cell{position:relative;aspect-ratio:1;min-width:0;border:1px solid #414438;border-radius:3px;background:#22251d;display:flex;align-items:center;justify-content:center;flex-direction:column;overflow:hidden}
+.play-cell.tile-empty{background:#141510}
+.play-cell.tile-start{background:var(--lime);color:#171812}
+.play-cell.tile-finish{background:#d5c7a0;color:#24251b}
+.play-cell.tile-treasure{background:#4a4125;color:#ffdc73}
+.play-cell.tile-trap{background:#492c2b;color:#ff9b82}
+.play-cell.tile-event{background:#302b4c;color:#c4b7ff}
+.play-cell-symbol{font-size:clamp(10px,2vw,19px);line-height:1}
+.play-cell>small{font-size:clamp(4px,.7vw,7px);letter-spacing:.3px;margin-top:2px}
+.play-tokens{position:absolute;right:2px;bottom:2px;display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end;max-width:90%}
+.player-token{width:clamp(12px,1.8vw,19px);height:clamp(12px,1.8vw,19px);border-radius:50%;display:grid;place-items:center;color:#171812;font-size:clamp(7px,1vw,10px);font-weight:800;border:1px solid #fff7;box-shadow:0 1px 4px #0008}
+.game-actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.game-log{display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.game-log p{font-size:10px;color:#b8bbaa;background:#20221b;padding:9px 11px;margin:0;border-radius:3px;line-height:1.6}
+#customGamePanel[hidden],#demoBoard[hidden],#dialogRoll[hidden]{display:none}
+@media(max-width:620px){.game-setup>*{flex:1}.game-setup label{flex-basis:100%}.play-board{gap:2px;padding:5px}.play-cell{border-radius:2px}.game-actions>*{flex:1;justify-content:center}}
