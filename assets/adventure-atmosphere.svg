@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+<defs>
+ <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a6d47a" stop-opacity=".16"/><stop offset="1" stop-color="#08110c" stop-opacity="0"/></linearGradient>
+ <linearGradient id="mountain" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#476d49"/><stop offset="1" stop-color="#101f19"/></linearGradient>
+ <linearGradient id="stone" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9aaf7a"/><stop offset="1" stop-color="#263c2d"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0a4"/><stop offset=".45" stop-color="#d7a84d"/><stop offset="1" stop-color="#71411d"/></linearGradient>
+ <filter id="glow"><feGaussianBlur stdDeviation="12"/></filter>
+</defs>
+<ellipse cx="810" cy="360" rx="470" ry="300" fill="#b7e66e" opacity=".08" filter="url(#glow)"/>
+<path d="M0 460 130 290 220 390 360 210 515 420 650 280 800 420 950 250 1080 410 1250 190 1420 390 1600 240V1000H0Z" fill="url(#mountain)" opacity=".55"/>
+<path d="M0 540 180 390 310 500 460 335 610 520 790 370 940 510 1120 340 1300 510 1460 350 1600 460V1000H0Z" fill="#203d2d" opacity=".72"/>
+<path d="M0 620Q250 500 470 620T900 590T1250 610T1600 540V1000H0Z" fill="url(#mist)"/>
+<!-- left ancient forest -->
+<g opacity=".92">
+ <path d="M0 680 85 440 170 680Z" fill="#142b21"/><path d="M30 590 105 360 185 590Z" fill="#254a31"/><path d="M70 520 113 400 160 520Z" fill="#71905a" opacity=".55"/>
+ <path d="M105 760 220 430 335 760Z" fill="#12271e"/><path d="M175 665 250 470 325 665Z" fill="#315438"/><path d="M250 810 360 500 470 810Z" fill="#172e22"/>
+ <path d="M0 810 100 570 205 810Z" fill="#0b1c15"/><path d="M25 730 95 560 160 730Z" fill="#35583b"/>
+ <path d="M0 850Q160 790 300 870T570 830L620 1000H0Z" fill="#101f17"/>
+</g>
+<!-- right ruins -->
+<g transform="translate(1180 340)" opacity=".85">
+ <path d="M30 350V115L70 80 110 115V350Z" fill="#1a3026" stroke="#6b8860" stroke-width="5"/>
+ <path d="M20 115 70 60 120 115Z" fill="url(#stone)" stroke="#82996d" stroke-width="4"/>
+ <path d="M55 350V195Q70 165 85 195V350" fill="#07120c" stroke="#4b6a4c" stroke-width="5"/>
+ <path d="M125 350V170L160 145 195 170V350Z" fill="#263e2d" stroke="#6b8860" stroke-width="4"/>
+ <path d="M112 170 160 120 208 170Z" fill="#6d8960" stroke="#8fa776" stroke-width="4"/>
+ <path d="M215 350V220L250 195 285 220V350Z" fill="#182c22" stroke="#526e4b" stroke-width="4"/>
+ <path d="M204 220 250 170 296 220Z" fill="#4a6547" stroke="#79936b" stroke-width="4"/>
+ <path d="M0 350 35 315 65 350 95 305 130 350 165 320 205 350 245 310 285 350V410H0Z" fill="#0b1911"/>
+</g>
+<!-- floating runes -->
+<g fill="none" stroke="#d8ff7a" stroke-width="2" opacity=".52">
+ <circle cx="330" cy="330" r="24"/><path d="M330 310V350M310 330H350M315 315 345 345M345 315 315 345"/>
+ <circle cx="1310" cy="280" r="17"/><path d="M1310 265V295M1295 280H1325"/>
+ <path d="M1070 180l12 22 25 4-18 17 4 25-23-12-22 12 4-25-18-17 25-4Z"/>
+</g>
+<!-- treasure chest at lower right -->
+<g transform="translate(1320 735) rotate(-7)" stroke-linejoin="round">
+ <ellipse cx="95" cy="125" rx="120" ry="25" fill="#000" opacity=".35"/>
+ <path d="M15 40Q15 -15 95 -15T175 40V75H15Z" fill="#8a572a" stroke="#d8b36a" stroke-width="5"/>
+ <path d="M15 40Q95 65 175 40V80H15Z" fill="#5b371e" stroke="#d8b36a" stroke-width="5"/>
+ <path d="M15 65H175V125H15Z" fill="#6d431f" stroke="#d8b36a" stroke-width="5"/>
+ <path d="M38 65V125M95 65V125M150 65V125" stroke="#c79749" stroke-width="5"/>
+ <rect x="77" y="65" width="36" height="38" rx="5" fill="url(#gold)" stroke="#fff0a4" stroke-width="3"/>
+ <circle cx="95" cy="84" r="5" fill="#4b2a15"/>
+ <path d="M30 15 30 105M160 15V105" stroke="#f1d28b" stroke-width="5"/>
+ <path d="M30 15Q95 -15 160 15" fill="none" stroke="#f1d28b" stroke-width="5"/>
+</g>
+<!-- foreground stones and glowing mushrooms -->
+<g opacity=".9">
+ <path d="M0 930 55 860 130 875 175 950 245 935 300 1000H0Z" fill="#233c2c" stroke="#4e6c48" stroke-width="4"/>
+ <path d="M1090 1000 1150 900 1240 920 1280 1000Z" fill="#1a3022" stroke="#456442" stroke-width="4"/>
+ <g transform="translate(260 850)"><path d="M25 55V20M58 58V34" stroke="#b7c98a" stroke-width="5"/><path d="M0 22Q25 -8 50 22Z" fill="#e4d8a1"/><path d="M42 36Q58 16 75 36Z" fill="#a5dc7b"/><circle cx="25" cy="17" r="28" fill="#e7f5a2" opacity=".15" filter="url(#glow)"/></g>
+</g>
+</svg>
