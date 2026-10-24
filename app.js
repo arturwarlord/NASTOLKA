@@ -421,6 +421,27 @@ function updateGameStatus(){
   const player=gameState.players[gameState.turn];
   $('#turnStatus').textContent=gameState.finished?'🏆 '+player.name+' победил!':player.name+' — твой ход · монеты: '+player.coins;
 }
+function renderFinalResults(){
+  if(!gameState||!gameState.finished)return;
+  const log=$('#gameLog');
+  log.replaceChildren();
+  const heading=document.createElement('p');
+  heading.className='game-result-heading';
+  heading.textContent='🏆 Итоги партии';
+  log.append(heading);
+  const ranked=gameState.players.map((player,index)=>({...player,index})).sort((a,b)=>{
+    if(a.index===gameState.winner)return -1;
+    if(b.index===gameState.winner)return 1;
+    return b.coins-a.coins||a.index-b.index;
+  });
+  ranked.forEach((player,position)=>{
+    const row=document.createElement('p');
+    row.className='game-result-row'+(player.index===gameState.winner?' is-winner':'');
+    row.textContent=(position+1)+'. '+player.name+' — '+player.coins+' монет'+(player.index===gameState.winner?' · победитель':'');
+    log.append(row);
+  });
+  gameState.log=ranked.map((player,position)=>(position+1)+'. '+player.name+' — '+player.coins+' монет'+(player.index===gameState.winner?' · победитель':'' )).slice(0,5);
+}
 function nextPlayer(){
   if(!gameState || gameState.finished) return;
   for(let i=0;i<gameState.players.length;i++){
@@ -466,7 +487,7 @@ function takeGameTurn(){
     $('#playRollBtn').disabled=true;
     updateGameStatus();
     renderPlayBoard();
-    addGameLog('Партия завершена. Поздравляем победителя!');
+    renderFinalResults();
     persistGameSession();
     const resumeButton=$('#resumeGameBtn');if(resumeButton)resumeButton.hidden=true;
     return;
