@@ -239,3 +239,5 @@ html.game-mode .game-history-heading span,.game-history-note{font-size:8px}
  html.game-mode #gameLog{min-height:0}
 }
 @media(prefers-reduced-motion:reduce){.game-world-live i{animation:none}html.game-mode .play-cell{transition:none}}
+
+html.game-mode #customGamePanel[hidden],html.game-mode #customGamePanel>.game-setup[hidden]{display:none!important}
