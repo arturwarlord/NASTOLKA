@@ -23,6 +23,9 @@ jobs:
           test -s index.html
           test -s styles.css
           test -s app.js
+          test -s rooms.js
+          test -s supabase-config.js
+          test -s supabase/schema.sql
           grep -q 'styles.css' index.html
           grep -q 'app.js' index.html
           echo "Основные файлы найдены."
@@ -36,7 +39,10 @@ jobs:
           echo "Экспорт, импорт и проверка формата карт найдены."
 
       - name: Проверить синтаксис JavaScript
-        run: node --check app.js
+        run: |
+          node --check app.js
+          node --check rooms.js
+          node --check supabase-config.js
 
       - name: Проверить обязательные элементы страницы
         run: |
@@ -50,7 +56,7 @@ jobs:
               'id="customGamePanel"', 'id="playerCount"', 'id="startGameBtn"',
               'id="playBoard"', 'id="playRollBtn"', 'id="restartGameBtn"', 'id="resumeGameBtn"',
               'id="gameStatsSummary"', 'id="gameHistoryList"', 'id="gameHistoryTitle"',
-              'id="playerNameFields"', 'id="playerStatsList"',
+              'id="playerNameFields"', 'id="playerStatsList"', 'id="current-games"', 'id="createRoomDialog"', 'id="createRoomForm"', 'id="roomsList"', 'id="roomLobby"',
           ]
           missing = [item for item in required if item not in html]
           if missing:
@@ -59,5 +65,13 @@ jobs:
           for feature in ["nastolka-game-history", "function renderGameStats()", "gameState.recorded=true", "nastolka-player-names", "function renderPlayerNameFields()", "playerStatsList", "function buildPresetMap(game)", "function persistGameSession()", "function resumeCustomGame()", "nastolka-active-session", "function renderFinalResults()", "game-result-row"]:
               if feature not in js:
                   raise SystemExit(f"Не найдена логика истории партий: {feature}")
-          print("Проверка структуры страницы и истории партий пройдена.")
+          rooms = Path("rooms.js").read_text(encoding="utf-8")
+          for feature in ["nastolka_create_room", "nastolka_join_room", "nastolka_start_room", "nastolka_leave_room", "roomConnectionStatus"]:
+              if feature not in rooms:
+                  raise SystemExit(f"Не найдена логика онлайн-комнат: {feature}")
+          sql = Path("supabase/schema.sql").read_text(encoding="utf-8")
+          for feature in ["nastolka_rooms", "nastolka_room_players", "nastolka_player_secrets", "nastolka_create_room", "nastolka_join_room", "nastolka_start_room", "nastolka_leave_room", "enable row level security"]:
+              if feature.lower() not in sql.lower():
+                  raise SystemExit(f"Не найдена схема онлайн-комнат: {feature}")
+          print("Проверка структуры страницы, истории партий и онлайн-комнат пройдена.")
           PY
