@@ -99,3 +99,7 @@
 .player-stats-row strong{font-size:10px;overflow-wrap:anywhere}
 .player-stats-row>span:last-child{font-size:9px;color:#a5a699;text-align:right}
 @media(max-width:420px){.player-name-fields{gap:7px}.player-name-field input{padding:10px 8px;font-size:10px}.player-stats-row{grid-template-columns:22px minmax(0,1fr);gap:6px}.player-stats-row>span:last-child{grid-column:2;text-align:left}}
+
+.game-result-heading{color:var(--accent,#d8ff3e);font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
+.game-result-row{margin:6px 0;padding:9px 12px;border:1px solid #34362b;border-radius:10px;background:#171812;color:#e9eadf}
+.game-result-row.is-winner{border-color:#d8ff3e;background:rgba(216,255,62,.09);font-weight:800}
