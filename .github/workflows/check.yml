@@ -39,6 +39,8 @@ jobs:
               'id="collections"', 'id="shop"', 'id="my-maps"',
               'id="gameDialog"', 'id="createDialog"', 'id="searchDialog"',
               'id="rollDice"', 'id="mapForm"', 'id="all-games"',
+              'id="customGamePanel"', 'id="playerCount"', 'id="startGameBtn"',
+              'id="playBoard"', 'id="playRollBtn"', 'id="restartGameBtn"',
           ]
           missing = [item for item in required if item not in html]
           if missing:
