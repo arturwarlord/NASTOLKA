@@ -172,19 +172,22 @@ function playableCells(map){
 function renderPlayBoard(){
   const route = gameState.route;
   const board = $('#playBoard');
+  const cells = normalizeBoard(activePlayMap);
   board.replaceChildren();
-  route.forEach((cell,index)=>{
+  cells.forEach((originalType,boardIndex)=>{
+    const routeIndex = route.findIndex(cell=>cell.index===boardIndex);
+    const type = routeIndex >= 0 ? route[routeIndex].type : originalType;
     const tile = document.createElement('div');
-    tile.className = 'play-cell tile-' + cell.type;
-    tile.title = 'Клетка ' + (cell.index >= 0 ? cell.index+1 : 'дополнительная') + ': ' + (tileInfo[cell.type]?.label || 'Путь');
+    tile.className = 'play-cell tile-' + type + (routeIndex < 0 ? ' off-route' : '');
+    tile.title = 'Клетка ' + (boardIndex+1) + ': ' + (tileInfo[type]?.label || 'Путь') + (routeIndex < 0 ? ' — вне маршрута' : '');
     const label = document.createElement('span');
     label.className = 'play-cell-symbol';
-    label.textContent = tileInfo[cell.type]?.symbol || '·';
+    label.textContent = tileInfo[type]?.symbol || '·';
     tile.append(label);
     const tokens = document.createElement('div');
     tokens.className = 'play-tokens';
     gameState.players.forEach((player,playerIndex)=>{
-      if(player.position===index){
+      if(routeIndex >= 0 && player.position===routeIndex){
         const token=document.createElement('span');
         token.className='player-token';
         token.style.background=playerColors[playerIndex];
@@ -194,8 +197,8 @@ function renderPlayBoard(){
       }
     });
     tile.append(tokens);
-    if(index===0){const tag=document.createElement('small');tag.textContent='СТАРТ';tile.append(tag)}
-    if(cell.type==='finish'){const tag=document.createElement('small');tag.textContent='ФИНИШ';tile.append(tag)}
+    if(type==='start'){const tag=document.createElement('small');tag.textContent='СТАРТ';tile.append(tag)}
+    if(type==='finish'){const tag=document.createElement('small');tag.textContent='ФИНИШ';tile.append(tag)}
     board.append(tile);
   });
 }
