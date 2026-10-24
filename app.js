@@ -15,6 +15,7 @@ let activeMapId = null;
 let selectedTile = 'path';
 let activePlayMap = null;
 let gameState = null;
+let onlineGameContext = null;
 const playerColors = ['#d8ff3e','#7ec8ff','#ff9b82','#c4a7ff'];
 const playerNames = ['Игрок 1','Игрок 2','Игрок 3','Игрок 4'];
 function getLastPlayerNames(){
@@ -263,6 +264,9 @@ function openGame(id){
   window.open(url.toString(),'_blank','noopener');
 }
 function openCustomGame(map){
+  onlineGameContext = null;
+  const setup = $('.game-setup'); if(setup) setup.hidden = false;
+  $('#playerNameFields').hidden = false;
   activePlayMap = map;
   gameState = null;
   $('#dialogTitle').textContent = map.name;
@@ -452,7 +456,35 @@ function nextPlayer(){
   }
   updateGameStatus();
 }
-function takeGameTurn(){
+async function takeGameTurn(){
+  if(!onlineGameContext) { performGameTurn(); return; }
+  if(!gameState || gameState.finished) return;
+  if(onlineGameContext.playerIds[gameState.turn] !== onlineGameContext.playerId) {
+    toast('Сейчас ход другого игрока.');
+    return;
+  }
+  const previousState = JSON.parse(JSON.stringify(gameState));
+  const expectedVersion = onlineGameContext.version;
+  $('#playRollBtn').disabled = true;
+  performGameTurn();
+  const nextState = JSON.parse(JSON.stringify(gameState));
+  nextState.online_player_ids = onlineGameContext.playerIds;
+  try {
+    const result = await onlineGameContext.submitTurn(expectedVersion, nextState);
+    onlineGameContext.version = Number(result.version) || expectedVersion + 1;
+    gameState.version = onlineGameContext.version;
+    $('#playRollBtn').disabled = gameState.finished || onlineGameContext.playerIds[gameState.turn] !== onlineGameContext.playerId;
+  } catch(error) {
+    gameState = previousState;
+    renderPlayBoard(); updateGameStatus();
+    $('#gameLog').replaceChildren();
+    gameState.log.forEach(line=>{const p=document.createElement('p');p.textContent=line;$('#gameLog').append(p)});
+    $('#playRollBtn').disabled = onlineGameContext.playerIds[gameState.turn] !== onlineGameContext.playerId;
+    toast(error && error.message ? error.message : 'Ход не синхронизирован. Обновляю состояние.');
+    if(typeof onlineGameContext.refresh === 'function') onlineGameContext.refresh();
+  }
+}
+function performGameTurn(){
   if(!gameState || gameState.finished) return;
   const player=gameState.players[gameState.turn];
   if(player.skip){player.skip=false;addGameLog(player.name+' пропускает ход.');nextPlayer();return}
@@ -496,6 +528,43 @@ function takeGameTurn(){
   nextPlayer();
   persistGameSession();
 }
+
+
+window.NASTOLKA_GAME = {
+  createInitialState(map, players) {
+    const route = playableCells(map);
+    if(!route) throw new Error('На выбранной карте нет непрерывного маршрута от старта до финиша.');
+    return {
+      route,
+      players: players.map(player=>({name:String(player.player_name||'Игрок').slice(0,18),position:0,coins:0,skip:false})),
+      turn:0,finished:false,recorded:false,turns:0,
+      log:['Партия началась! Все игроки на старте. Маршрут: '+route.length+' клеток.']
+    };
+  },
+  showOnline(map, state, context) {
+    const sameRoom = onlineGameContext && onlineGameContext.roomId === context.roomId;
+    if(!sameRoom) openCustomGame(map);
+    activePlayMap = map;
+    gameState = {...state,route:playableCells(map),online_player_ids:context.playerIds,version:Number(state.version)||context.version||1};
+    onlineGameContext = {...context,version:gameState.version};
+    const setup=$('.game-setup'); if(setup) setup.hidden=true;
+    $('#playerNameFields').hidden=true;
+    $('#resumeGameBtn').hidden=true;
+    $('#dialogTitle').textContent=map.name||'Онлайн-партия';
+    $('#dialogDescription').textContent=(map.description||'Общая онлайн-партия')+(map.rules?' Правила: '+map.rules:'');
+    $('#playRollBtn').hidden=false;
+    $('#playRollBtn').disabled=gameState.finished||onlineGameContext.playerIds[gameState.turn]!==onlineGameContext.playerId;
+    $('#dialogRoll').hidden=true;
+    $('#dialogRollResult').textContent='Общая онлайн-партия';
+    $('#gameLog').replaceChildren();
+    (gameState.log||[]).forEach(line=>{const p=document.createElement('p');p.textContent=line;$('#gameLog').append(p)});
+    updateGameStatus();renderPlayBoard();
+    if(gameState.finished) renderFinalResults();
+    if(!$('#gameDialog').open) $('#gameDialog').showModal();
+  },
+  closeOnline() { onlineGameContext=null; },
+  isOnline() { return Boolean(onlineGameContext); }
+};
 
 // Open requested game in the newly opened tab; saved custom maps are shared through localStorage.
 (function openRequestedGame(){
