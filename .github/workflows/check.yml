@@ -41,9 +41,14 @@ jobs:
               'id="rollDice"', 'id="mapForm"', 'id="all-games"',
               'id="customGamePanel"', 'id="playerCount"', 'id="startGameBtn"',
               'id="playBoard"', 'id="playRollBtn"', 'id="restartGameBtn"',
+              'id="gameStatsSummary"', 'id="gameHistoryList"', 'id="gameHistoryTitle"',
           ]
           missing = [item for item in required if item not in html]
           if missing:
               raise SystemExit(f"Не найдены элементы: {', '.join(missing)}")
-          print("Проверка структуры страницы пройдена.")
+          js = Path("app.js").read_text(encoding="utf-8")
+          for feature in ["nastolka-game-history", "function renderGameStats()", "gameState.recorded=true"]:
+              if feature not in js:
+                  raise SystemExit(f"Не найдена логика истории партий: {feature}")
+          print("Проверка структуры страницы и истории партий пройдена.")
           PY
