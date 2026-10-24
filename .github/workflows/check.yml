@@ -87,5 +87,7 @@ jobs:
                   raise SystemExit(f"Не найдена защита переподключения и возврат в комнату: {feature}")
           if "incomingVersion <= Number(onlineGameContext.version || 0)" not in js:
               raise SystemExit("Не найдена защита от устаревшего состояния партии.")
+          if "document.documentElement.classList.add('game-mode')" not in js:
+              raise SystemExit("Онлайн-партия не переключает интерфейс в полноэкранный режим.")
           print("Проверка структуры страницы, истории партий, онлайн-синхронизации и восстановления соединения пройдена.")
           PY
