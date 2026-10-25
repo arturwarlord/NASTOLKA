@@ -244,6 +244,30 @@
       const chunk=boardMesh(new THREE.DodecahedronGeometry(size,1),stone,x,.055+size*.45,z+.05+(rand()-.5)*.2,.9+rand()*.6,.65+rand()*.5,.8+rand()*.5);
       chunk.rotation.set(rand()*.3,rand()*Math.PI,rand()*.2);
     }
+    // Creeping ivy and weather stains visually age the masonry.
+    const ivy=forestMat(0x354b2b,1),ivyLight=forestMat(0x526a37,1);
+    for(const side of [-1,1]){
+      const x=side*2.48,rand=seeded(880+(side+1)*17);
+      for(let vine=0;vine<2;vine++){
+        const points=[];
+        const startY=.12+rand()*.18,span=.42+rand()*.3;
+        for(let k=0;k<5;k++){
+          const t=k/4;
+          points.push(new THREE.Vector3(x+side*(.09+Math.sin(t*5+vine)*.055),startY+span*t,z+.105+vine*.035));
+        }
+        const curve=new THREE.CatmullRomCurve3(points);
+        const stem=boardMesh(new THREE.TubeGeometry(curve,12,.012,4,false),ivy,0,0,0);
+        stem.castShadow=false;
+        for(let leaf=1;leaf<5;leaf+=2){
+          const p=curve.getPoint(leaf/5);
+          const sprout=boardMesh(new THREE.IcosahedronGeometry(.045,0),leaf%3===0?ivyLight:ivy,p.x+side*.045,p.y,p.z,.8,.45,1.15);
+          sprout.rotation.y=rand()*Math.PI;
+        }
+      }
+      // Water-darkened streaks break up the uniform stone surface.
+      const stain=boardMesh(new THREE.BoxGeometry(.025,.28,.012),forestMat(0x343d30,1),x+side*.055,.43,z+.165,.7+rand()*.8,1,.7);
+      stain.rotation.z=(rand()-.5)*.18;
+    }
   }
   function addTopDownTree(x,z,seed){addCanopy(x,z,1.15,seed);}
   function addForestRoots(x,z,seed){
@@ -358,6 +382,18 @@
           for(let n=0;n<2;n++){
             const patch=boardMesh(irregularPatch(.24+rand()*.12,seed+n+291,16),boardMaterials.path,x+(rand()-.5)*.38,.063,z+(rand()-.5)*.38,.8+rand()*.5,1,.65+rand()*.6);
             patch.rotation.x=-Math.PI/2;
+          }
+          // Embedded pebbles and thin worn ruts make the trail read as compacted earth.
+          for(let n=0;n<4;n++){
+            const px=x+(rand()-.5)*.78,pz=z+(rand()-.5)*.72,size=.018+rand()*.025;
+            const pebble=boardMesh(new THREE.DodecahedronGeometry(size,0),forestMat(n%2?0x766650:0x5c503e,1),px,.071,pz,1.3,.55,.9);
+            pebble.rotation.y=rand()*Math.PI;
+          }
+          for(let rut=0;rut<2;rut++){
+            const rutMesh=boardMesh(new THREE.CapsuleGeometry(.012,.25,2,4),forestMat(0x6e5236,1),x+(rut===0?-.17:.17),.063,z+(rand()-.5)*.12,.75,1,1.15);
+            rutMesh.rotation.x=Math.PI/2;
+            rutMesh.rotation.z=(rand()-.5)*.22;
+            rutMesh.castShadow=false;
           }
         }
         // Uneven dirt edge stones, scattered rather than arranged as decorative beads.
