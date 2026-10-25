@@ -590,3 +590,115 @@ html.game-mode #playBoard.board-3d-ready{
 }
 html.game-mode #playBoard.board-3d-ready:before{inset:3px!important;border:1px solid #a8b18a22!important;border-radius:3px!important;box-shadow:none!important}
 html.game-mode #playBoard.board-3d-ready:after{display:none!important}
+
+
+/* Full-screen map mode: the playable world owns the viewport; navigation stays on top. */
+html.game-mode .game-dialog{padding:0!important;overflow:hidden!important;isolation:isolate}
+html.game-mode .game-dialog>.game-world-topbar{
+  position:fixed;top:0;left:0;right:0;width:100%;max-width:none;margin:0;
+  padding:12px 22px;border-bottom:1px solid #d9e8c52b;
+  background:linear-gradient(180deg,#080d0bdc,#080d0b88);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  z-index:30;pointer-events:auto
+}
+html.game-mode .game-world-topbar .game-world-back,
+html.game-mode .game-world-topbar .game-world-brand,
+html.game-mode .game-world-topbar .game-world-live,
+html.game-mode .game-world-topbar .game-world-popout{pointer-events:auto}
+html.game-mode .game-world-topbar .game-world-live{display:flex}
+html.game-mode .game-dialog>.eyebrow,
+html.game-mode .game-dialog>#dialogTitle,
+html.game-mode .game-dialog>#dialogDescription,
+html.game-mode .game-dialog>.dialog-actions,
+html.game-mode .game-dialog>#demoBoard{display:none!important}
+html.game-mode .game-world-ambient{position:fixed;inset:0;z-index:0}
+html.game-mode #customGamePanel{display:block!important;position:static!important;width:100%;max-width:none;margin:0;padding:0}
+html.game-mode #playBoard.board-3d-ready{
+  position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;
+  max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;gap:0!important;
+  grid-template-columns:repeat(8,minmax(0,1fr))!important;grid-template-rows:repeat(8,minmax(0,1fr))!important;
+  border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+  z-index:2!important;pointer-events:none!important;overflow:hidden!important
+}
+html.game-mode #playBoard.board-3d-ready:before,
+html.game-mode #playBoard.board-3d-ready:after{display:none!important}
+html.game-mode #playBoard.board-3d-ready .route-step{display:none!important}
+html.game-mode #nastolkaBoard3D{z-index:1!important;pointer-events:none!important}
+html.game-mode #customGamePanel>.game-setup{
+  position:fixed;top:76px;left:16px;z-index:25;max-width:min(390px,calc(100vw - 90px));
+  padding:9px 11px;gap:8px;background:#0b120ee0;border:1px solid #c4d8b23a;
+  border-radius:8px;box-shadow:0 12px 30px #0005
+}
+html.game-mode #customGamePanel>.game-setup label{font-size:8px}
+html.game-mode #customGamePanel>.game-setup select{min-width:75px;padding:7px;font-size:10px}
+html.game-mode #customGamePanel>.game-setup button{padding:9px 11px;font-size:9px;gap:8px;min-height:0}
+html.game-mode #playerNameFields{
+  position:fixed;top:76px;right:72px;z-index:25;width:min(230px,24vw);max-height:31vh;overflow:auto;
+  display:flex;flex-direction:column;gap:5px;padding:7px;background:#0b120edb;
+  border:1px solid #c4d8b22b;border-radius:8px;backdrop-filter:blur(12px)
+}
+html.game-mode .player-name-field{min-width:0;flex:none;padding:5px 8px}
+html.game-mode .player-name-field span{font-size:7px}
+html.game-mode .player-name-field input{font-size:10px;margin-top:3px;padding:3px 0}
+html.game-mode #turnStatus{
+  position:fixed;left:16px;bottom:18px;z-index:25;width:min(300px,calc(50vw - 26px));
+  padding:11px 13px;margin:0;font-size:10px;background:#0b120ee8;border:1px solid #c4d8b244;
+  border-left:3px solid var(--lime);border-radius:7px;box-shadow:0 12px 30px #0006
+}
+html.game-mode .game-actions{
+  position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:26;
+  display:flex;justify-content:center;gap:8px;width:max-content;max-width:calc(100vw - 24px);
+  padding:8px;background:#0b120ee8;border:1px solid #c4d8b23a;border-radius:10px;
+  backdrop-filter:blur(12px);box-shadow:0 12px 30px #0007
+}
+html.game-mode .game-actions .primary-button{min-height:42px;padding:11px 16px;font-size:10px}
+html.game-mode #restartGameBtn{padding:10px 12px;font-size:9px}
+html.game-mode #gameLog{
+  position:fixed;right:16px;bottom:18px;z-index:25;width:min(270px,24vw);min-height:0;max-height:132px;
+  overflow:auto;margin:0;padding:10px 12px;background:#0b120ee8;border:1px solid #c4d8b22b;
+  border-radius:8px;box-shadow:0 12px 30px #0006
+}
+html.game-mode #gameLog:before{font-size:7px;margin-bottom:5px}
+html.game-mode #gameLog p{font-size:9px;line-height:1.45;margin:4px 0;padding:5px 7px}
+html.game-mode .map-navigation{
+  position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:35;
+  display:flex;flex-direction:column;gap:7px;padding:6px;
+  background:#0b120edb;border:1px solid #d4e4c72c;border-radius:12px;
+  box-shadow:0 12px 32px #0008;backdrop-filter:blur(12px)
+}
+html.game-mode .map-navigation button{
+  display:grid;place-items:center;width:38px;height:38px;padding:0;
+  border:1px solid #c4d8b22c;border-radius:8px;background:#17221a;color:#eaf1df;
+  font-size:21px;line-height:1;transition:background .15s,border-color .15s,transform .15s
+}
+html.game-mode .map-navigation button:hover,
+html.game-mode .map-navigation button[aria-pressed="true"]{background:var(--lime);border-color:var(--lime);color:#11170c}
+html.game-mode .map-navigation button:active{transform:scale(.94)}
+html.game-mode .game-history{display:none!important}
+html.game-mode.map-history-open .game-history{
+  display:block!important;position:fixed;top:76px;right:66px;bottom:16px;z-index:50;
+  width:min(440px,calc(100vw - 86px));max-height:none;overflow:auto;margin:0;padding:16px;
+  background:#0b120ef5;border:1px solid #c4d8b255;border-radius:10px;
+  box-shadow:0 20px 70px #000b;backdrop-filter:blur(18px)
+}
+html.game-mode.map-history-open #gameLog{display:none}
+html.game-mode.map-history-open #mapHistoryToggle{background:var(--lime);color:#11170c;border-color:var(--lime)}
+@media(max-width:760px){
+  html.game-mode .game-dialog>.game-world-topbar{padding:10px 12px}
+  html.game-mode .game-world-brand{font-size:9px;gap:7px}
+  html.game-mode .game-world-brand small{font-size:6px}
+  html.game-mode .game-world-emblem{width:28px;height:28px}
+  html.game-mode .game-world-live{display:none}
+  html.game-mode #customGamePanel>.game-setup{top:60px;left:8px;max-width:calc(100vw - 64px);flex-wrap:wrap}
+  html.game-mode #playerNameFields{top:117px;right:58px;width:min(190px,45vw);max-height:22vh}
+  html.game-mode #turnStatus{left:8px;bottom:76px;width:min(220px,calc(100vw - 100px));font-size:9px;padding:8px 10px}
+  html.game-mode .game-actions{bottom:8px;left:8px;right:8px;transform:none;width:auto;max-width:none;justify-content:center;gap:6px;padding:6px}
+  html.game-mode .game-actions .primary-button{flex:1;min-width:0;min-height:40px;padding:9px 8px;font-size:9px}
+  html.game-mode #restartGameBtn{flex:0 0 auto;padding:9px 10px}
+  html.game-mode #gameLog{right:58px;bottom:76px;width:min(180px,42vw);max-height:96px;padding:7px 8px}
+  html.game-mode #gameLog:before{font-size:6px}
+  html.game-mode #gameLog p{font-size:8px}
+  html.game-mode .map-navigation{right:7px;gap:5px;padding:4px}
+  html.game-mode .map-navigation button{width:34px;height:34px;border-radius:7px;font-size:18px}
+  html.game-mode.map-history-open .game-history{top:60px;right:48px;bottom:8px;width:calc(100vw - 56px);padding:11px}
+}
