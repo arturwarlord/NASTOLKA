@@ -330,7 +330,9 @@
     const ground=new THREE.Mesh(new THREE.PlaneGeometry(100,100,1,1),mat(p.ground));ground.rotation.x=-Math.PI/2;ground.position.y=-.1;ground.receiveShadow=true;world.add(ground);
     // Broken terrain shelves create depth and catch directional shadows.
     for(let i=0;i<17;i++){
-      const x=(Math.random()-.5)*39,z=-7-Math.random()*24,w=2+Math.random()*7,h=.35+Math.random()*1.5,d=2+Math.random()*5;
+      const side=Math.random()<.5?-1:1;
+      const x=sceneName==='wild'?side*(4.8+Math.random()*14):(Math.random()-.5)*39;
+      const z=-7-Math.random()*24,w=2+Math.random()*7,h=.35+Math.random()*1.5,d=2+Math.random()*5;
       const shelf=box(world,x,-.2+h/2,z,w,h,d,mat(i%3===0?p.accent:p.rock));shelf.material.color.multiplyScalar(i%3===0?.32:.8);
     }
     const wood=mat(0x49382a);
