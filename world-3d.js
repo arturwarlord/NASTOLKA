@@ -74,37 +74,69 @@
     const box3=new THREE.Box3().setFromObject(detailedTreeModel);
     const size=box3.getSize(new THREE.Vector3()),center=box3.getCenter(new THREE.Vector3());
     if(!size.y||!Number.isFinite(size.y))return;
-    // Reuse the loaded GLB's geometry/materials across instances; only transforms differ.
-    for(const record of treeRecords){
+    // Use a small number of high-detail scanned trees as hero props; keep the rest lightweight.
+    // This avoids multiplying a photogrammetry mesh across the entire forest.
+    const heroTrees=treeRecords.slice().sort((a,b)=>b.scale-a.scale).slice(0,8);
+    for(const record of heroTrees){
       if(!record.group.parent)continue;
       const instance=detailedTreeModel.clone(true);
       const targetHeight=2.55*record.scale,fit=targetHeight/size.y;
       instance.scale.setScalar(fit);
       instance.position.set(record.x-center.x*fit,-box3.min.y*fit,record.z-center.z*fit);
-      instance.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;}});
+      instance.traverse(node=>{
+        if(node.isMesh){
+          node.castShadow=true;node.receiveShadow=true;
+          if(node.material){
+            const materials=Array.isArray(node.material)?node.material:[node.material];
+            for(const material of materials){material.side=THREE.DoubleSide;}
+          }
+        }
+      });
       record.parent.remove(record.group);
       record.parent.add(instance);
       record.group=instance;
     }
   }
+  function findPolyHavenModelFile(node,path,result){
+    if(!node||typeof node!=='object')return result;
+    if(typeof node.url==='string'&&/\\.(gltf|glb)(?:[?#].*)?$/i.test(node.url)){
+      result.push({url:node.url,path:path.join('/').toLowerCase()});
+    }
+    for(const [key,value] of Object.entries(node)){
+      if(key==='url')continue;
+      findPolyHavenModelFile(value,path.concat(key),result);
+    }
+    return result;
+  }
   function loadDetailedTreeModel(){
     if(treeAssetAttempted)return;
     treeAssetAttempted=true;
-    // CC0 oak with branching hierarchy and a light canopy; keep the detailed fallback
-    // if the third-party model host or module CDN is unavailable.
-    const modelUrl='https://www.innerscene.com/api/library/oak-street-tree-light-canopy-a469b6df/download';
-    treeLoaderPromise=import('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js')
-      .then(({GLTFLoader})=>new Promise((resolve,reject)=>{
-        new GLTFLoader().load(modelUrl,gltf=>resolve(gltf.scene),undefined,reject);
-      }))
-      .then(model=>{
-        detailedTreeModel=model;
-        applyDetailedTreeModel();
+    // Load a genuine CC0 broadleaf tree from Poly Haven. The API manifest is searched
+    // for its 1K glTF file so textures stay linked relative to the model; no ZIP is
+    // passed to GLTFLoader. If the network/model host fails, the local fallback remains.
+    treeLoaderPromise=Promise.all([
+      import('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js'),
+      fetch('https://api.polyhaven.com/files/jacaranda_tree').then(response=>{
+        if(!response.ok)throw new Error('Poly Haven asset manifest HTTP '+response.status);
+        return response.json();
       })
-      .catch(error=>{
-        console.warn('NASTOLKA: CC0 tree model unavailable; keeping procedural forest.',error);
-        treeLoaderPromise=null;
-      });
+    ]).then(([{GLTFLoader},manifest])=>{
+      const candidates=findPolyHavenModelFile(manifest,[],[])
+        .sort((a,b)=>{
+          const a1=a.path.includes('1k')?0:a.path.includes('2k')?1:2;
+          const b1=b.path.includes('1k')?0:b.path.includes('2k')?1:2;
+          return a1-b1;
+        });
+      if(!candidates.length)throw new Error('No direct glTF model URL in Poly Haven manifest');
+      return new GLTFLoader().loadAsync(candidates[0].url).then(gltf=>gltf.scene);
+    }).then(model=>{
+      detailedTreeModel=model;
+      applyDetailedTreeModel();
+      console.info('NASTOLKA: loaded Poly Haven CC0 Jacaranda hero trees.');
+    }).catch(error=>{
+      console.warn('NASTOLKA: Poly Haven tree asset unavailable; keeping local fallback.',error);
+      treeLoaderPromise=null;
+    });
   }
   function build(sceneName){
     treeRecords=[];
