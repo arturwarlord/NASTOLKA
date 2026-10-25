@@ -216,9 +216,20 @@
       const cell=board.children[i*8+j];if(!cell||!cell.classList.contains('play-cell'))continue;
       const type=['start','finish','treasure','trap','event','empty'].find(t=>cell.classList.contains('tile-'+t))||'path';
       const x=j-3.5,z=i-3.5,seed=i*8+j+1;
-      const terrain=boardMesh(new THREE.PlaneGeometry(1.015,1.015),boardMaterials[type],x,.055,z);
+      // Forest ground is continuous grass; dirt paths are irregular overlays, not square tiles.
+      const terrainType=root.dataset.gameScene==='wild'?'empty':type;
+      const terrain=boardMesh(new THREE.PlaneGeometry(1.015,1.015),boardMaterials[terrainType],x,.055,z);
       terrain.rotation.x=-Math.PI/2;terrain.receiveShadow=true;terrain.castShadow=false;
       if(type==='path'){
+        if(root.dataset.gameScene==='wild'){
+          const rand=seeded(seed+173);
+          const dirt=boardMesh(new THREE.CircleGeometry(.61,18),boardMaterials.path,x,.062,z, .9+rand()*.2,1,.78+rand()*.25);
+          dirt.rotation.x=-Math.PI/2;dirt.rotation.z=rand()*.3;
+          for(let n=0;n<2;n++){
+            const patch=boardMesh(new THREE.CircleGeometry(.27+rand()*.13,12),boardMaterials.path,x+(rand()-.5)*.42,.063,z+(rand()-.5)*.42,.8+rand()*.5,1,.65+rand()*.6);
+            patch.rotation.x=-Math.PI/2;patch.rotation.z=rand()*Math.PI;
+          }
+        }
         // Uneven dirt edge stones, scattered rather than arranged as decorative beads.
         for(let k=0;k<3;k++){
           const px=x+Math.sin(seed*2.1+k*4.3)*.34,pz=z+Math.cos(seed*1.7+k*3.7)*.34;
