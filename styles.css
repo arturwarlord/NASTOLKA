@@ -613,16 +613,16 @@ html.game-mode .game-dialog>.dialog-actions,
 html.game-mode .game-dialog>#demoBoard{display:none!important}
 html.game-mode .game-world-ambient{position:fixed;inset:0;z-index:0}
 html.game-mode #customGamePanel{display:block!important;position:static!important;width:100%;max-width:none;margin:0;padding:0}
-html.game-mode #playBoard.board-3d-ready{
+html.game-mode #playBoard{
   position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;
   max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;gap:0!important;
   grid-template-columns:repeat(8,minmax(0,1fr))!important;grid-template-rows:repeat(8,minmax(0,1fr))!important;
   border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
   z-index:2!important;pointer-events:none!important;overflow:hidden!important
 }
-html.game-mode #playBoard.board-3d-ready:before,
-html.game-mode #playBoard.board-3d-ready:after{display:none!important}
-html.game-mode #playBoard.board-3d-ready .route-step{display:none!important}
+html.game-mode #playBoard:before,
+html.game-mode #playBoard:after{display:none!important}
+html.game-mode #playBoard .route-step{display:none!important}
 html.game-mode #nastolkaBoard3D{z-index:1!important;pointer-events:none!important}
 html.game-mode #customGamePanel>.game-setup{
   position:fixed;top:76px;left:16px;z-index:25;max-width:min(390px,calc(100vw - 90px));
