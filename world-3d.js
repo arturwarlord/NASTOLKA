@@ -99,7 +99,7 @@
   }
   function findPolyHavenModelFile(node,path,result){
     if(!node||typeof node!=='object')return result;
-    if(typeof node.url==='string'&&/\\.(gltf|glb)(?:[?#].*)?$/i.test(node.url)){
+    if(typeof node.url==='string'&&/\.(gltf|glb)(?:[?#].*)?$/i.test(node.url)){
       result.push({url:node.url,path:path.join('/').toLowerCase()});
     }
     for(const [key,value] of Object.entries(node)){
