@@ -4,7 +4,8 @@
   'use strict';
   const root=document.documentElement;
   let renderer,scene,camera,world,raf,resizeObserver;
-  let detailedTreeModel=null,treeLoaderPromise=null,treeAssetAttempted=false;\n  window.__nastolkaAssetStatus={tree:'pending',rock:'pending'};
+  let detailedTreeModel=null,treeLoaderPromise=null,treeAssetAttempted=false;
+  window.__nastolkaAssetStatus={tree:'pending',rock:'pending'};
   let detailedRockModel=null,rockAssetAttempted=false,boardAssetDecorations=null,boardRockDecorations=null,boardTreeDecorations=null;
   let treeRecords=[];
   const palettes={
