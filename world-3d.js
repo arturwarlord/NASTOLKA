@@ -113,8 +113,32 @@
         c.beginPath();c.moveTo(rand()*256,rand()*256);c.lineTo(rand()*256,rand()*256);c.stroke();
       }
     }
-    const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=2;
-    return new THREE.MeshStandardMaterial({map:tex,color:0xffffff,roughness:kind==='stone'?.88:1});
+    const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=4;
+    // Derive a separate height field from the same procedural surface. Fine relief catches
+    // grazing light and breaks the flat painted look without adding thousands of meshes.
+    const heightCanvas=document.createElement('canvas');heightCanvas.width=heightCanvas.height=256;
+    const h=heightCanvas.getContext('2d');h.fillStyle=kind==='soil'?'#777777':kind==='stone'?'#888888':'#808080';h.fillRect(0,0,256,256);
+    let hs=(seed+911)*2246822519>>>0;
+    const hr=()=>{hs=(hs*1664525+1013904223)>>>0;return hs/4294967296;};
+    for(let i=0;i<7200;i++){
+      const v=Math.floor(hr()*100)+75,rad=kind==='soil'?1+hr()*4:kind==='stone'?1+hr()*3:.5+hr()*1.7;
+      h.fillStyle='rgba('+v+','+v+','+v+','+(.12+hr()*.35)+')';
+      h.beginPath();h.ellipse(hr()*256,hr()*256,rad,rad*(.35+hr()),hr()*Math.PI,0,Math.PI*2);h.fill();
+    }
+    if(kind==='grass'){
+      for(let i=0;i<950;i++){
+        const x=hr()*256,y=hr()*256;
+        h.strokeStyle=hr()>.5?'rgba(205,205,205,.28)':'rgba(48,48,48,.32)';
+        h.lineWidth=.4+hr()*.8;h.beginPath();h.moveTo(x,y);h.lineTo(x-2+hr()*4,y-3-hr()*8);h.stroke();
+      }
+    } else if(kind==='soil'){
+      for(let i=0;i<220;i++){
+        h.strokeStyle=hr()>.5?'rgba(220,220,220,.35)':'rgba(35,35,35,.42)';h.lineWidth=.5+hr()*1.5;
+        h.beginPath();h.moveTo(hr()*256,hr()*256);h.quadraticCurveTo(hr()*256,hr()*256,hr()*256,hr()*256);h.stroke();
+      }
+    }
+    const heightTex=new THREE.CanvasTexture(heightCanvas);heightTex.wrapS=heightTex.wrapT=THREE.RepeatWrapping;heightTex.anisotropy=4;
+    return new THREE.MeshStandardMaterial({map:tex,bumpMap:heightTex,bumpScale:kind==='grass'?.045:kind==='soil'?.065:.035,color:0xffffff,roughness:kind==='stone'?.94:1,metalness:0});
   }
   function createBoardMaterials(){
     const key=root.dataset.gameScene||'wild';activeBoardLook=boardLooks[key]||boardLooks.wild;
