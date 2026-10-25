@@ -642,13 +642,38 @@
     if(boardRoot){boardScene.remove(boardRoot);boardRoot.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&& !Object.values(boardMaterials).includes(o.material)){if(Array.isArray(o.material))o.material.forEach(m=>{if(m.map)m.map.dispose();m.dispose();});else{if(o.material.map)o.material.map.dispose();o.material.dispose();}}});}
     boardRoot=new THREE.Group();boardScene.add(boardRoot);
     const look=activeBoardLook;
-    const baseMat=new THREE.MeshStandardMaterial({color:look.base,roughness:.96,metalness:.015});
-    boardMesh(new THREE.BoxGeometry(8.3,.08,8.3),baseMat,0,-.065,0);
-    // Theme-specific edge finish keeps the board feeling like a physical miniature terrain.
-    const rimMat=new THREE.MeshStandardMaterial({color:look.rim,roughness:.78,metalness:(root.dataset.gameScene==='neon'||root.dataset.gameScene==='cosmos')?.18:.02});
-    boardMesh(new THREE.BoxGeometry(8.36,.045,8.36),rimMat,0,-.005,0);
-    const insetMat=new THREE.MeshStandardMaterial({color:look.inset,roughness:.94});
-    boardMesh(new THREE.BoxGeometry(8.12,.018,8.12),insetMat,0,.025,0);
+    const baseMat=new THREE.MeshStandardMaterial({color:look.base,roughness:.98,metalness:0});
+    const rimMat=new THREE.MeshStandardMaterial({color:look.rim,roughness:.96,metalness:(root.dataset.gameScene==='neon'||root.dataset.gameScene==='cosmos')?.08:0});
+    // Replace the clean rectangular tabletop with an irregular landmass and exposed earth strata.
+    // The playable 8x8 grid stays aligned on the flatter center; only the outer silhouette changes.
+    const outline=[
+      [-3.72,-4.18],[-3.12,-4.34],[-2.24,-4.27],[-1.48,-4.43],[-.58,-4.31],[.25,-4.42],[1.16,-4.27],[2.08,-4.36],[2.92,-4.22],[3.76,-4.29],
+      [4.22,-3.78],[4.34,-2.96],[4.24,-2.13],[4.42,-1.24],[4.28,-.34],[4.4,.55],[4.25,1.38],[4.34,2.22],[4.15,3.08],[4.2,3.76],
+      [3.68,4.2],[2.84,4.29],[2.03,4.17],[1.18,4.39],[.31,4.22],[-.56,4.36],[-1.39,4.2],[-2.24,4.32],[-3.07,4.15],[-3.82,4.23],
+      [-4.25,3.7],[-4.17,2.84],[-4.36,2.02],[-4.2,1.17],[-4.34,.28],[-4.19,-.55],[-4.36,-1.4],[-4.18,-2.25],[-4.3,-3.08],[-4.14,-3.78]
+    ];
+    const shape=new THREE.Shape();
+    shape.moveTo(outline[0][0],outline[0][1]);
+    for(let i=1;i<outline.length;i++)shape.lineTo(outline[i][0],outline[i][1]);
+    shape.closePath();
+    const top=new THREE.Mesh(new THREE.ShapeGeometry(shape,1),baseMat);
+    top.rotation.x=-Math.PI/2;top.position.y=-.012;top.receiveShadow=true;boardRoot.add(top);
+    const sidePositions=[],sideIndices=[];
+    for(let i=0;i<outline.length;i++){
+      const a=outline[i],b=outline[(i+1)%outline.length],base=i*4;
+      sidePositions.push(a[0],-.012,a[1], b[0],-.012,b[1], b[0],-.245,b[1], a[0],-.245,a[1]);
+      sideIndices.push(base,base+1,base+2,base,base+2,base+3);
+    }
+    const sideGeometry=new THREE.BufferGeometry();
+    sideGeometry.setAttribute('position',new THREE.Float32BufferAttribute(sidePositions,3));
+    sideGeometry.setIndex(sideIndices);sideGeometry.computeVertexNormals();
+    const sideMesh=new THREE.Mesh(sideGeometry,rimMat);sideMesh.castShadow=true;sideMesh.receiveShadow=true;boardRoot.add(sideMesh);
+    // A thin soil lip softens the join between playable terrain and the broken cliff edge.
+    const insetMat=new THREE.MeshStandardMaterial({color:look.inset,roughness:1,metalness:0});
+    const insetShape=new THREE.Shape();
+    insetShape.moveTo(-3.98,-3.98);insetShape.lineTo(3.98,-3.98);insetShape.lineTo(3.98,3.98);insetShape.lineTo(-3.98,3.98);insetShape.closePath();
+    const inset=new THREE.Mesh(new THREE.ShapeGeometry(insetShape),insetMat);
+    inset.rotation.x=-Math.PI/2;inset.position.y=.012;inset.receiveShadow=true;boardRoot.add(inset);
     if(root.dataset.gameScene==='wild'){addAncientRuin();addAncientStump();addPerimeterOutcrops();}
     // One uninterrupted forest floor removes visible cell seams; the DOM grid still owns gameplay.
     if(root.dataset.gameScene==='wild'){
