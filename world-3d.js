@@ -160,7 +160,7 @@
     if(!board||boardCanvas)return;
     boardCanvas=document.createElement('canvas');boardCanvas.id='nastolkaBoard3D';boardCanvas.setAttribute('aria-hidden','true');
     Object.assign(boardCanvas.style,{position:'fixed',pointerEvents:'none',zIndex:'1'});
-    document.body.appendChild(boardCanvas);
+    (document.getElementById('gameDialog')||document.body).appendChild(boardCanvas);
     createBoardMaterials();
     boardScene=new THREE.Scene();boardScene.background=null;
     boardCamera=new THREE.OrthographicCamera(-4.18,4.18,4.18,-4.18,.1,40);
