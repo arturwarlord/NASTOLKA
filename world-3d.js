@@ -78,7 +78,7 @@
     if(!size.y||!Number.isFinite(size.y))return;
     // Use a small number of high-detail scanned trees as hero props; keep the rest lightweight.
     // This avoids multiplying a photogrammetry mesh across the entire forest.
-    const heroTrees=treeRecords.slice().sort((a,b)=>b.scale-a.scale).slice(0,8);
+    const heroTrees=treeRecords.slice().sort((a,b)=>b.scale-a.scale).slice(0,12);
     for(const record of heroTrees){
       if(!record.group.parent)continue;
       const instance=detailedTreeModel.clone(true);
@@ -214,13 +214,32 @@
     });
     boardAssetDecorations.add(boardTreeDecorations);
   }
+  let worldRockDecorations=null;
+  function applyWorldRockModel(){
+    if(!detailedRockModel||!world)return;
+    if(worldRockDecorations&&worldRockDecorations.parent)worldRockDecorations.parent.remove(worldRockDecorations);
+    worldRockDecorations=new THREE.Group();
+    const bounds=new THREE.Box3().setFromObject(detailedRockModel);
+    const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
+    if(!size.x||!Number.isFinite(size.x))return;
+    [[-8.2,3.5,.25,2.25],[8.1,2.4,1.15,2.0],[-11.4,-1.8,2.2,2.5],[11.1,-2.2,.65,2.3]].forEach(([x,z,rotation,width],index)=>{
+      const model=detailedRockModel.clone(true),scale=width/size.x;
+      model.scale.setScalar(scale);
+      model.position.set(x-center.x*scale,-bounds.min.y*scale,z-center.z*scale);
+      model.rotation.y=rotation;
+      model.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;}});
+      worldRockDecorations.add(model);
+    });
+    world.add(worldRockDecorations);
+  }
   function loadBoardRockModel(){
     if(rockAssetAttempted||root.dataset.gameScene!=='wild')return;
     rockAssetAttempted=true;
     // Two instances of a scanned six-stone CC0 set enrich the outer rim without crowding the grid.
     loadPolyHavenModel('rock_moss_set_02').then(model=>{
-      detailedRockModel=model;applyBoardRockDecorations();
-      console.info('NASTOLKA: loaded Poly Haven CC0 mossy rock decorations.');
+      detailedRockModel=model;applyBoardRockDecorations();applyWorldRockModel();
+      window.__nastolkaAssetStatus.rock='loaded';
+      console.info('NASTOLKA: loaded Poly Haven CC0 mossy rock model for world scenery.');
     }).catch(error=>{window.__nastolkaAssetStatus.rock='failed';console.error('NASTOLKA: real rock model failed to load.',error);});
   }
   function build(sceneName){
@@ -264,6 +283,7 @@
       if(sceneName==='mystery')for(let i=0;i<6;i++){box(world,(Math.random()-.5)*25,.9,-7-Math.random()*14,1.1,1.8,1.1,mat(0x5d5867));}
     }
     if(treeRecords.length){if(detailedTreeModel)applyDetailedTreeModel();else loadDetailedTreeModel();}
+    if(sceneName==='wild'){if(detailedRockModel)applyWorldRockModel();else loadBoardRockModel();}
   }
 
   // A separate real 3D tabletop, aligned to the existing accessible DOM grid.
