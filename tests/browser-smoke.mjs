@@ -68,6 +68,7 @@ try {
         board: rect('#playBoard'),
         locationBar: rect('#playerLocationBar'),
         roadCells: document.querySelectorAll('#playBoard .road-cell').length,
+        playerButtons: document.querySelectorAll('#playerLocationBar .player-location').length,
         topbar: rect('.game-world-topbar'),
         navigation: rect('#mapNavigation'),
         navigationDisplay: getComputedStyle(document.querySelector('#mapNavigation')).display,
@@ -75,7 +76,7 @@ try {
     });
 
     if (!layout.board || layout.board.width < viewport.width * 0.85 || layout.board.height < 120 ||
-        !layout.locationBar || layout.roadCells < 2) {
+        !layout.locationBar || layout.roadCells < 2 || layout.playerButtons < 2) {
       throw new Error(`${viewport.name}: дорожный маршрут или панель игроков не отображаются: ${JSON.stringify(layout)}`);
     }
     if (!layout.topbar || layout.topbar.height < 1 ||
