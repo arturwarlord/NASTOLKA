@@ -61,7 +61,7 @@
     for(let i=0;i<6;i++){
       const angle=i*2.39996+rand()*.25,ring=(i===0?0:.22+rand()*.12)*scale;
       const cy=(1.82+rand()*.24)*scale,radius=(.39+rand()*.12)*scale;
-      const crown=new THREE.Mesh(new THREE.SphereGeometry(radius,12,9),foliageMaterial(Number(canopyColors[i%canopyColors.length].slice(1),16)));
+      const crown=new THREE.Mesh(new THREE.SphereGeometry(radius,12,9),foliageMaterial(parseInt(canopyColors[i%canopyColors.length].slice(1),16)));
       crown.position.set(x+Math.cos(angle)*ring,cy+(rand()-.5)*.12*scale,z+Math.sin(angle)*ring);
       crown.scale.set(1.08,.9,1.02);crown.rotation.y=rand()*Math.PI;
       crown.castShadow=true;crown.receiveShadow=true;group.add(crown);
