@@ -581,25 +581,36 @@
     const chip=boardMesh(weatheredRockGeometry(size*.42,seed+29,1),rockMat,x+(rand()-.5)*.18,.085,z+(rand()-.5)*.15,.9,.72,1.1);
     chip.rotation.y=rand()*Math.PI;
   }
-  function addGrassTuft(x,z,seed,scale=1){
-    // Curved, tapered grass blades replace the repeated cone/sphere tufts.
-    const rand=seeded(seed+8117),greens=[0x294b29,0x3e6534,0x587b3d,0x78904a];
-    for(let n=0;n<4+(seed%3);n++){
-      const h=(.075+rand()*.12)*scale,w=(.012+rand()*.009)*scale;
-      const angle=rand()*Math.PI*2,bend=(rand()-.5)*.09*scale,lean=(.018+rand()*.035)*scale;
-      const verts=[
-        -w,0,0, w,0,0,
-        -w*.58,h*.52,bend*.35, w*.58,h*.52,bend*.35,
-        bend+lean,h,lean*.18
-      ];
-      const geo=new THREE.BufferGeometry();
-      geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
-      geo.setIndex([0,2,1,1,2,3,2,4,3]);
-      geo.computeVertexNormals();
-      const blade=new THREE.Mesh(geo,forestMat(greens[(seed+n)%greens.length],1));
-      blade.position.set(x+(rand()-.5)*.11*scale,.065,z+(rand()-.5)*.11*scale);
-      blade.rotation.y=angle;blade.castShadow=false;blade.receiveShadow=false;boardRoot.add(blade);
+  let grassCardTexture=null;
+  const grassCardMaterials={};
+  function grassCardMaterial(){
+    if(grassCardMaterials.material)return grassCardMaterials.material;
+    const canvas=document.createElement('canvas');canvas.width=128;canvas.height=192;
+    const c=canvas.getContext('2d');
+    let state=48017;
+    const rand=()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};
+    const colors=['#294b29','#3e6534','#587b3d','#78904a','#48652f'];
+    for(let i=0;i<24;i++){
+      const x=64+(rand()-.5)*74,h=45+rand()*125,w=5+rand()*12;
+      c.fillStyle=colors[i%colors.length];c.beginPath();
+      c.moveTo(x-w*.5,192);c.quadraticCurveTo(x-w*.35,192-h*.5,x+(rand()-.5)*24,192-h);
+      c.quadraticCurveTo(x+w*.6,192-h*.58,x+w*.5,192);c.closePath();c.fill();
+      c.strokeStyle='rgba(170,190,105,.28)';c.lineWidth=1;c.beginPath();c.moveTo(x,190);c.lineTo(x+(rand()-.5)*15,192-h*.72);c.stroke();
     }
+    grassCardTexture=new THREE.CanvasTexture(canvas);grassCardTexture.colorSpace=THREE.SRGBColorSpace;
+    grassCardMaterials.material=new THREE.MeshStandardMaterial({map:grassCardTexture,transparent:true,alphaTest:.16,side:THREE.DoubleSide,roughness:1,depthWrite:false});
+    return grassCardMaterials.material;
+  }
+  function addGrassTuft(x,z,seed,scale=1){
+    // Two crossed textured decoration cards replace many tiny cone/triangle meshes.
+    const rand=seeded(seed+8117),group=new THREE.Group(),material=grassCardMaterial();
+    for(let n=0;n<2;n++){
+      const card=new THREE.Mesh(new THREE.PlaneGeometry(.19*scale,.23*scale),material);
+      card.position.set((rand()-.5)*.035*scale,.11*scale,(rand()-.5)*.035*scale);
+      card.rotation.y=n*Math.PI/2+rand()*.25;
+      card.castShadow=false;card.receiveShadow=false;group.add(card);
+    }
+    group.position.set(x,.058,z);group.rotation.y=rand()*Math.PI;boardRoot.add(group);
   }
   function addPathGrassTransition(x,z,seed,side){
     // Soft, broken grass fringes grow into the dirt only where the trail meets empty forest.
