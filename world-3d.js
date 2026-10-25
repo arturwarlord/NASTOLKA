@@ -252,6 +252,22 @@
     positions.needsUpdate=true;geometry.computeVertexNormals();return geometry;
   }
   let barkMaterial3D=null;
+  function weatheredRockGeometry(radius,seed,detail=2){
+    // Natural fractured stone silhouette: subtly displaced vertices and muted mineral variation,
+    // avoiding the clean, repeated low-poly dodecahedrons that made the terrain feel like a toy.
+    const geometry=new THREE.IcosahedronGeometry(radius,detail);
+    const pos=geometry.attributes.position,rand=seeded(seed+6029),colors=[];
+    for(let i=0;i<pos.count;i++){
+      const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
+      const n=.84+rand()*.29+.035*Math.sin(x*37+seed)*Math.cos(z*31-seed);
+      pos.setXYZ(i,x*n,y*n*(.84+rand()*.28),z*n);
+      const shade=.76+rand()*.28;
+      colors.push(shade,shade*(.985+rand()*.035),shade*(.96+rand()*.07));
+    }
+    geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+    geometry.computeVertexNormals();
+    return geometry;
+  }
   function treeBark(){
     if(barkMaterial3D)return barkMaterial3D;
     const canvas=document.createElement('canvas');canvas.width=128;canvas.height=256;
@@ -344,7 +360,7 @@
     // Irregular layered outcrops, partly buried in soil instead of a clean board rim.
     for(let n=0;n<3+(seed%3);n++){
       const px=x+(rand()-.5)*.78,pz=z+(rand()-.5)*.78,size=.12+rand()*.23;
-      const b=boardMesh(new THREE.DodecahedronGeometry(size,1),rock,px,.035+size*.3,pz,.85+rand()*.75,.58+rand()*.72,.78+rand()*.62);
+      const b=boardMesh(weatheredRockGeometry(size,seed*31+n),rock,px,.035+size*.3,pz,.85+rand()*.75,.58+rand()*.72,.78+rand()*.62);
       b.rotation.set(rand()*.32,rand()*Math.PI,rand()*.26);
     }
     // Exposed roots and moss visually stitch the rocks into the forest floor.
@@ -366,20 +382,20 @@
       const pillar=boardMesh(new THREE.CylinderGeometry(.105,.16,height,7),stone,x,.055+height/2,z);
       pillar.rotation.z=side===-1?-.035:.08;
       boardMesh(new THREE.CylinderGeometry(.18,.2,.12,7),stone,x,.105,z,1,.55,1);
-      const cap=boardMesh(new THREE.DodecahedronGeometry(.19,1),stone,x,.055+height,z,.95,.65,1.05);
+      const cap=boardMesh(weatheredRockGeometry(.19,seed+side*13),stone,x,.055+height,z,.95,.65,1.05);
       cap.rotation.set(.1,side*.3,.08);
       if(side===-1){
         const lintel=boardMesh(new THREE.BoxGeometry(.62,.16,.2),stone,x+.31,.055+height+.02,z);
         lintel.rotation.z=-.16;
       }else{
-        const fragment=boardMesh(new THREE.DodecahedronGeometry(.23,1),stone,x-.23,.16,z,.95,.65,1.15);
+        const fragment=boardMesh(weatheredRockGeometry(.23,seed+side*19),stone,x-.23,.16,z,.95,.65,1.15);
         fragment.rotation.set(.1,.7,.24);
       }
       boardMesh(new THREE.SphereGeometry(.12,7,5),moss,x-side*.08,.12,z+.09,1.5,.16,.8);
     }
     for(let n=0;n<5;n++){
       const x=-.8+n*.38,rand=seeded(730+n),size=.09+rand()*.11;
-      const chunk=boardMesh(new THREE.DodecahedronGeometry(size,1),stone,x,.055+size*.45,z+.05+(rand()-.5)*.2,.9+rand()*.6,.65+rand()*.5,.8+rand()*.5);
+      const chunk=boardMesh(weatheredRockGeometry(size,730+n),stone,x,.055+size*.45,z+.05+(rand()-.5)*.2,.9+rand()*.6,.65+rand()*.5,.8+rand()*.5);
       chunk.rotation.set(rand()*.3,rand()*Math.PI,rand()*.2);
     }
     // Creeping ivy and weather stains visually age the masonry.
@@ -462,7 +478,7 @@
       const x=side*4.02;
       for(let n=0;n<3;n++){
         const z=-1.65+n*.72+(side===1?.13:0),size=[.25,.34,.21][n];
-        const rock=boardMesh(new THREE.DodecahedronGeometry(size,1),n===1?lightStone:stone,x+(n%2)*side*.08,.09+size*.28,z,
+        const rock=boardMesh(weatheredRockGeometry(size,920+n+side*7),n===1?lightStone:stone,x+(n%2)*side*.08,.09+size*.28,z,
           .9+(n*.13),.75+(n%2)*.18,.9+(n*.1));
         rock.rotation.set(.12*(n+1),side*.7+n*.46,.08*(n-1));
         if(n===1){
@@ -527,9 +543,9 @@
   }
   function addBoulderDetail(x,z,seed){
     const rand=seeded(seed+1601),rockMat=forestMat(seed%2?0x62675a:0x777969,.98),size=.105+rand()*.095;
-    const b=boardMesh(new THREE.DodecahedronGeometry(size,1),rockMat,x,.11,z,1.25,.75,.95);
+    const b=boardMesh(weatheredRockGeometry(size,seed+13),rockMat,x,.11,z,1.25,.75,.95);
     b.rotation.set(rand()*.2,rand()*Math.PI,rand()*.18);
-    const chip=boardMesh(new THREE.DodecahedronGeometry(size*.42,0),rockMat,x+(rand()-.5)*.18,.085,z+(rand()-.5)*.15,.9,.72,1.1);
+    const chip=boardMesh(weatheredRockGeometry(size*.42,seed+29,1),rockMat,x+(rand()-.5)*.18,.085,z+(rand()-.5)*.15,.9,.72,1.1);
     chip.rotation.y=rand()*Math.PI;
   }
   function addPathGrassTransition(x,z,seed,side){
