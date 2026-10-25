@@ -41,7 +41,6 @@ try {
     // The forward road is DOM-driven; the environment canvas supplies the 3D scenery.
     await page.waitForSelector('#playerLocationBar', { state: 'attached', timeout: 15000 });
     await page.waitForSelector('#playBoard .road-cell', { state: 'attached', timeout: 15000 });
-    await page.waitForSelector('#nastolka3D', { state: 'attached', timeout: 15000 });
     await page.waitForTimeout(250);
 
     if (viewport.name === 'desktop') {
