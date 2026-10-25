@@ -109,27 +109,31 @@
     board.classList.add('board-3d-ready');
     if(boardRoot){boardScene.remove(boardRoot);boardRoot.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&& !Object.values(boardMaterials).includes(o.material)){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});}
     boardRoot=new THREE.Group();boardScene.add(boardRoot);
-    const baseMat=new THREE.MeshStandardMaterial({color:0x17231a,roughness:1});
-    boardMesh(new THREE.BoxGeometry(8.18,.24,8.18),baseMat,0,-.17,0);
-    const gridLines=new THREE.MeshStandardMaterial({color:0x8c9c76,roughness:.9});
+    const baseMat=new THREE.MeshStandardMaterial({color:0x17231a,roughness:.96,metalness:.015});
+    boardMesh(new THREE.BoxGeometry(8.3,.34,8.3),baseMat,0,-.2,0);
+    // Dark wood-like rim and a narrow inset border make the board read as a physical tabletop.
+    const rimMat=new THREE.MeshStandardMaterial({color:0x514333,roughness:.78});
+    boardMesh(new THREE.BoxGeometry(8.36,.1,8.36),rimMat,0,-.015,0);
+    const insetMat=new THREE.MeshStandardMaterial({color:0x283b29,roughness:.94});
+    boardMesh(new THREE.BoxGeometry(8.12,.035,8.12),insetMat,0,.045,0);
     for(let i=0;i<8;i++)for(let j=0;j<8;j++){
       const cell=board.children[i*8+j];if(!cell||!cell.classList.contains('play-cell'))continue;
       const type=['start','finish','treasure','trap','event','empty'].find(t=>cell.classList.contains('tile-'+t))||'path';
       const x=j-3.5,z=i-3.5;
-      boardMesh(new THREE.BoxGeometry(.94,.18,.94),boardMaterials[type],x,0,z);
+      boardMesh(new THREE.BoxGeometry(.94,.2,.94),boardMaterials[type],x,.075,z);
       // Fine bevel-like inset and natural surface variation.
       if(type==='path'){
         for(let k=0;k<3;k++){
           const pebble=new THREE.Mesh(new THREE.DodecahedronGeometry(.075+(k%2)*.025,0),new THREE.MeshStandardMaterial({color:k===1?0xb8a17b:0x64523a,roughness:1}));
-          pebble.position.set(x+(Math.random()-.5)*.58,.105,z+(Math.random()-.5)*.58);pebble.scale.y=.38;pebble.castShadow=true;boardRoot.add(pebble);
+          pebble.position.set(x+(Math.random()-.5)*.58,.19,z+(Math.random()-.5)*.58);pebble.scale.y=.38;pebble.castShadow=true;boardRoot.add(pebble);
         }
       } else if(type==='empty'){
         const rockMat=new THREE.MeshStandardMaterial({color:0x4a6044,roughness:1});
         for(let k=0;k<2;k++){
           const bush=new THREE.Mesh(new THREE.IcosahedronGeometry(.19+Math.random()*.13,1),new THREE.MeshStandardMaterial({color:k?0x34583a:0x54734a,roughness:1}));
-          bush.position.set(x+(k?-.2:.2),.2,z+(Math.random()-.5)*.3);bush.scale.y=1.35;bush.castShadow=true;boardRoot.add(bush);
+          bush.position.set(x+(k?-.2:.2),.27,z+(Math.random()-.5)*.3);bush.scale.y=1.35;bush.castShadow=true;boardRoot.add(bush);
         }
-        if((i*8+j)%3===0)boardMesh(new THREE.DodecahedronGeometry(.13,1),rockMat,x+.25,.19,z+.24,.9,.65,.8);
+        if((i*8+j)%3===0)boardMesh(new THREE.DodecahedronGeometry(.13,1),rockMat,x+.25,.25,z+.24,.9,.65,.8);
       } else if(type==='treasure'){
         const gold=new THREE.MeshStandardMaterial({color:0xe0b64d,metalness:.35,roughness:.36});
         boardMesh(new THREE.BoxGeometry(.36,.25,.28),gold,x,.27,z);
@@ -168,14 +172,15 @@
     (document.getElementById('gameDialog')||document.body).appendChild(boardCanvas);
     createBoardMaterials();
     boardScene=new THREE.Scene();boardScene.background=null;
-    boardCamera=new THREE.OrthographicCamera(-4.18,4.18,4.18,-4.18,.1,40);
-    boardCamera.position.set(0,13,.001);boardCamera.lookAt(0,0,0);
+    boardCamera=new THREE.OrthographicCamera(-4.4,4.4,4.4,-4.4,.1,40);
+    // A low, oblique tabletop angle gives visible tile thickness and depth instead of a flat overhead grid.
+    boardCamera.position.set(0,13,4.6);boardCamera.lookAt(0,0,0);
     boardRenderer=new THREE.WebGLRenderer({canvas:boardCanvas,antialias:true,alpha:true,powerPreference:'low-power'});
     boardRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));boardRenderer.setClearColor(0x000000,0);
     boardRenderer.shadowMap.enabled=true;boardRenderer.shadowMap.type=THREE.PCFSoftShadowMap;
     boardRenderer.outputColorSpace=THREE.SRGBColorSpace;boardRenderer.toneMapping=THREE.ACESFilmicToneMapping;
     boardScene.add(new THREE.HemisphereLight(0xe5efdc,0x263326,2.3));
-    const sun=new THREE.DirectionalLight(0xffe8c4,3.4);sun.position.set(-4,10,5);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);boardScene.add(sun);
+    const sun=new THREE.DirectionalLight(0xffe8c4,3.1);sun.position.set(-5,11,7);sun.castShadow=true;sun.shadow.mapSize.set(768,768);sun.shadow.camera.left=-7;sun.shadow.camera.right=7;sun.shadow.camera.top=7;sun.shadow.camera.bottom=-7;sun.shadow.bias=-.00025;boardScene.add(sun);
     const sync=()=>{
       if(boardSyncQueued)return;
       boardSyncQueued=true;
