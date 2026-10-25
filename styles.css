@@ -550,3 +550,33 @@ html.game-mode .game-world-topbar,html.game-mode .game-layout,html.game-mode .ga
 html.game-mode .game-world-props{opacity:.18;mix-blend-mode:screen;}
 html.game-mode .game-world-props span{filter:blur(1px) drop-shadow(0 12px 16px #0009);}
 html.no-webgl-world #nastolka3D{display:none;}
+
+
+/* Real 3D board surface: WebGL supplies terrain, raised tiles and miniature tokens.
+   The DOM grid remains in place for layout, accessibility and game-state labels. */
+html.game-mode #playBoard.board-3d-ready{
+  position:relative;z-index:2;background:transparent!important;
+  border-color:#83967555;box-shadow:0 14px 32px #0005;
+}
+html.game-mode #playBoard.board-3d-ready .play-cell{
+  background:transparent!important;background-image:none!important;
+  border-color:transparent!important;box-shadow:none!important;
+  opacity:1!important;filter:none!important;transform:none!important;
+  overflow:visible;isolation:auto;
+}
+html.game-mode #playBoard.board-3d-ready .play-cell:before,
+html.game-mode #playBoard.board-3d-ready .play-cell:after{display:none!important;content:none!important}
+html.game-mode #playBoard.board-3d-ready .play-cell-symbol,
+html.game-mode #playBoard.board-3d-ready .cell-terrain,
+html.game-mode #playBoard.board-3d-ready .path-inlay,
+html.game-mode #playBoard.board-3d-ready .play-tokens,
+html.game-mode #playBoard.board-3d-ready .play-cell>small{display:none!important}
+html.game-mode #playBoard.board-3d-ready .route-step{
+  display:block!important;position:absolute;left:3px;bottom:3px;z-index:3;
+  padding:2px 4px;border-radius:3px;background:#10170fc9;color:#f0e6c8;
+  font-size:clamp(6px,.65vw,9px);text-shadow:none;
+}
+html.game-mode #playBoard.board-3d-ready .play-cell.current-player-cell{
+  outline:1px solid #d8ff3e99;outline-offset:-4px;animation:none;
+}
+#nastolkaBoard3D{touch-action:none}
