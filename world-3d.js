@@ -145,7 +145,7 @@
       candidates.sort((a,b)=>rank(a)-rank(b));
       if(!candidates.length)throw new Error('Poly Haven returned no glTF/GLB file for '+assetId);
       const candidate=candidates[0],loader=new GLTFLoader();
-      if(/\\.glb(?:[?#].*)?$/i.test(candidate.url)){
+      if(/\.glb(?:[?#].*)?$/i.test(candidate.url)){
         const gltf=await loader.loadAsync(candidate.url);
         return gltf.scene;
       }
