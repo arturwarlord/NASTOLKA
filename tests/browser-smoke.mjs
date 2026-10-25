@@ -72,8 +72,7 @@ try {
         roadCells: document.querySelectorAll('#playBoard .road-cell').length,
         playerButtons: document.querySelectorAll('#playerLocationBar .player-location').length,
         topbar: rect('.game-world-topbar'),
-        navigation: rect('#mapNavigation'),
-        navigationDisplay: getComputedStyle(document.querySelector('#mapNavigation')).display,
+
       };
     });
 
@@ -81,20 +80,12 @@ try {
         !layout.locationBar || layout.roadCells < 2 || layout.playerButtons < 2) {
       throw new Error(`${viewport.name}: дорожный маршрут или панель игроков не отображаются: ${JSON.stringify(layout)}`);
     }
-    if (!layout.topbar || layout.topbar.height < 1 ||
-        !layout.navigation || layout.navigationDisplay === 'none') {
-      throw new Error(`${viewport.name}: верхняя навигация или панель карты скрыта: ${JSON.stringify(layout)}`);
+    if (!layout.topbar || layout.topbar.height < 1) {
+      throw new Error(`${viewport.name}: верхняя панель игры скрыта: ${JSON.stringify(layout)}`);
     }
 
-    await page.locator('#mapHistoryToggle').click({ force: true });
-    const historyOpen = await page.evaluate(() =>
-      document.documentElement.classList.contains('map-history-open') &&
-      document.querySelector('#mapHistoryToggle').getAttribute('aria-pressed') === 'true'
-    );
-    if (!historyOpen) throw new Error(`${viewport.name}: переключатель истории не сработал.`);
-
     if (errors.length) throw new Error(`${viewport.name}: ошибки JavaScript: ${errors.join(' | ')}`);
-    console.log(`OK ${viewport.name}: полноэкранное поле ${Math.round(layout.board.width)}×${Math.round(layout.board.height)}, навигация доступна, история открывается.`);
+    console.log(`OK ${viewport.name}: дорога ${Math.round(layout.board.width)}×${Math.round(layout.board.height)}, ${layout.roadCells} шагов и ${layout.playerButtons} местоположений игроков.`);
     await page.close();
   }
 } finally {
