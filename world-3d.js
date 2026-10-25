@@ -278,6 +278,7 @@
           const grassMat=forestMat(0x516b37);
           for(let k=0;k<3;k++){const blade=boardMesh(new THREE.ConeGeometry(.018,.12,4),grassMat,x+Math.sin(seed+k)*.37,.11,z+Math.cos(seed*2+k)*.34);blade.rotation.z=(k-1)*.32;}
         }
+        if(seed%5===0)addForestFloorDetail(x,z,seed);
       } else if(type==='empty'){
         const rand=seeded(seed+211);
         if(seed%3!==0)addCanopy(x+((seed%3)-1)*.12,z+((seed%5)-2)*.07,.7+(seed%4)*.08,seed);
