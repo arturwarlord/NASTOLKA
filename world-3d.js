@@ -275,7 +275,7 @@
     boardScene=new THREE.Scene();boardScene.background=null;
     boardCamera=new THREE.OrthographicCamera(-4.4,4.4,4.4,-4.4,.1,40);
     // True orthographic overhead camera: a MOBA-style map view, not a tilted tabletop.
-    boardCamera.position.set(0,24,0.001);boardCamera.lookAt(0,0,0);
+    boardCamera.position.set(0,24,0.001);boardCamera.up.set(0,0,-1);boardCamera.lookAt(0,0,0);
     boardRenderer=new THREE.WebGLRenderer({canvas:boardCanvas,antialias:true,alpha:true,powerPreference:'low-power'});
     boardRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));boardRenderer.setClearColor(0x000000,0);
     boardRenderer.shadowMap.enabled=true;boardRenderer.shadowMap.type=THREE.PCFSoftShadowMap;
