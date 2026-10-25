@@ -930,3 +930,10 @@ html.game-mode #customGamePanel{grid-template-areas:"setup" "names" "status" "lo
 html.game-mode .player-location-heading{grid-area:locationTitle!important;display:flex!important;align-items:center!important;gap:12px!important;margin:0!important;padding:0 2px!important;color:#f1f3e5!important;font-size:10px!important;font-weight:900!important;letter-spacing:1.3px!important}
 html.game-mode .player-location-heading span{font-size:8px!important;font-weight:500!important;letter-spacing:.6px!important;color:#d0d9c4!important;opacity:.9!important}
 @media(max-width:760px){html.game-mode .player-location-heading{font-size:9px!important;gap:7px!important}html.game-mode .player-location-heading span{font-size:7px!important}}
+
+html.game-mode #customGamePanel{grid-template-areas:"setup" "names" "status" "locationTitle" "locations" "roadTitle" "board" "actions" "log" "history"!important;grid-template-rows:auto auto auto auto auto auto minmax(150px,1fr) auto auto auto!important}
+html.game-mode .road-heading{grid-area:roadTitle!important;display:flex!important;align-items:center!important;gap:12px!important;margin:0!important;padding:0 2px!important;color:#f1f3e5!important;font-size:10px!important;font-weight:900!important;letter-spacing:1.3px!important}
+html.game-mode .road-heading span{font-size:8px!important;font-weight:500!important;letter-spacing:.6px!important;color:#d0d9c4!important}
+html.game-mode #playBoard.road-layout>.road-cell.tile-path .play-cell-symbol{display:block!important;width:13px!important;height:13px!important;min-height:13px!important;flex:0 0 13px!important;border-radius:50%!important;background:radial-gradient(circle at 35% 28%,#fff0c8,#bd9e6b 48%,#5a422b 100%)!important;border:2px solid #ead2a4!important;box-shadow:0 4px 7px #000b,inset 0 1px #fff8!important;font-size:0!important}
+html.game-mode #playBoard.road-layout>.road-cell.tile-path .road-cell-name{font-size:7px!important;color:#e0d0b0!important}
+@media(max-width:760px){html.game-mode .road-heading{font-size:9px!important;gap:7px!important}html.game-mode .road-heading span{font-size:7px!important}}
