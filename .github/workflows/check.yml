@@ -65,9 +65,14 @@ jobs:
           grep -q 'data-game-scene="mystery".*tile-empty' styles.css
           grep -q 'data-game-scene="neon".*tile-empty' styles.css
           grep -q 'data-game-scene="cosmos".*tile-empty' styles.css
-          grep -q 'diorama-world-7' index.html
-          grep -q 'diorama-world-6' index.html
-          echo "Объёмные поверхности, тематические декорации и обновление кеша найдены."
+          grep -q 'styles.css?v=' index.html
+          grep -q 'app.js?v=' index.html
+          grep -q 'world-3d.js?v=' index.html
+          grep -q 'id="mapZoomIn"' index.html
+          grep -q 'id="mapZoomOut"' index.html
+          grep -q 'id="mapViewReset"' index.html
+          grep -q 'id="mapHistoryToggle"' index.html
+          echo "Объёмные поверхности, тематические декорации, полноэкранная карта и навигация найдены."
 
       - name: Проверить синтаксис JavaScript
         run: |
