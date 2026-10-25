@@ -565,11 +565,11 @@ function performGameTurn(){
   const cell=gameState.route[player.position];
   let event='выпало '+roll+', переход на клетку '+(player.position+1)+'.';
   if(cell.type==='treasure'){player.coins+=3;event+=' Сокровище: +3 монеты!'}
-  else if(cell.type==='trap'){player.position=Math.max(0,player.position-2);event+=' Ловушка! Отступаешь на 2 клетки.'}
+  else if(cell.type==='trap'){player.skip=true;event+=' Ловушка! Следующий ход пропускается, но путь назад не ведёт.'}
   else if(cell.type==='event'){
     const outcome=Math.floor(Math.random()*3);
     if(outcome===0){player.coins+=2;event+=' Удача: +2 монеты.'}
-    else if(outcome===1){player.position=Math.max(0,player.position-1);event+=' Неожиданность: шаг назад.'}
+    else if(outcome===1){player.coins=Math.max(0,player.coins-1);event+=' Неожиданность: потеря 1 монеты.'}
     else {player.coins+=1;event+=' Находка: +1 монета.'}
   }
   addGameLog(player.name+': '+event);
