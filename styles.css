@@ -465,3 +465,38 @@ html.game-mode #playBoard.dice-rolling{animation:boardDiceShake .65s cubic-bezie
 @keyframes arcanePulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.14)}}
 @media(prefers-reduced-motion:reduce){html.game-mode .play-cell.tile-treasure,html.game-mode .play-cell.tile-event{animation:none}html.game-mode #playBoard.dice-rolling{animation:none}}
 @media(max-width:620px){html.game-mode .cell-terrain{font-size:clamp(13px,4vw,25px)}html.game-mode #turnStatus:after{display:none}}
+
+
+/* Illustrated world pass: real vector scenery behind the playable map */
+html.game-mode body{isolation:isolate}
+html.game-mode body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(180deg,#08110ac9 0%,#09110b75 42%,#070b09e8 100%),url("assets/adventure-atmosphere.svg");background-position:center;background-size:cover;background-repeat:no-repeat;opacity:.92;filter:saturate(.9)}
+html.game-mode .game-dialog{z-index:1}
+html.game-mode[data-game-scene="island"] body:after{background-image:linear-gradient(180deg,#07151bc4 0%,#08212a55 42%,#061218e8 100%),url("assets/scene-island.svg")}
+html.game-mode[data-game-scene="city"] body:after{background-image:linear-gradient(180deg,#160e13c9 0%,#15131b55 42%,#080d13ed 100%),url("assets/scene-city.svg")}
+html.game-mode[data-game-scene="mystery"] body:after{background-image:linear-gradient(180deg,#100d20c9 0%,#15102655 42%,#080a15ed 100%),url("assets/scene-mystery.svg")}
+html.game-mode[data-game-scene="neon"] body:after{background-image:linear-gradient(180deg,#10091fc9 0%,#11102b55 42%,#080a15ed 100%),url("assets/scene-neon.svg")}
+html.game-mode[data-game-scene="cosmos"] body:after{background-image:linear-gradient(180deg,#080b1cc9 0%,#0d123455 42%,#050713ed 100%),url("assets/scene-cosmos.svg")}
+html.game-mode .game-world-ambient{z-index:0;opacity:.7}
+html.game-mode .game-world-props{z-index:1}
+html.game-mode #customGamePanel,html.game-mode #dialogTitle,html.game-mode #dialogDescription,html.game-mode .dialog-actions,html.game-mode .eyebrow{position:relative;z-index:2}
+html.game-mode #playBoard{background:linear-gradient(145deg,#1b2b20eF,#111b16f2 62%,#0a120ef7);border-color:#c7d5a477;box-shadow:0 26px 80px #000b,inset 0 1px #f0f8dc35,0 0 0 8px #070c09a8}
+html.game-mode .play-cell{background-color:#263b2a;background-image:radial-gradient(ellipse at 20% 18%,#b5d99b20,transparent 46%),linear-gradient(145deg,#344b35,#1d2e23 65%,#18251b)}
+html.game-mode .play-cell.off-route{opacity:.82;filter:saturate(.86);border-color:#78906a66}
+html.game-mode .play-cell.tile-empty{background-image:radial-gradient(ellipse at 50% 100%,#7aa56c44,transparent 56%),radial-gradient(ellipse at 15% 15%,#d8eacb12,transparent 60%),linear-gradient(145deg,#1b3024,#101a15 75%)}
+html.game-mode .play-cell.tile-path{background-image:radial-gradient(ellipse at 50% 100%,#b3a27642,transparent 62%),linear-gradient(145deg,#65583c,#3e3b2c 56%,#283528);border-color:#c3ad7966;box-shadow:inset 0 1px #f5e8c044,inset 0 -5px 10px #17130c88,0 3px 5px #0005}
+html.game-mode .play-cell.tile-path:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,#e8d6a51b,transparent 54%),linear-gradient(115deg,transparent 30%,#fff2 31%,transparent 33%);pointer-events:none}
+html.game-mode[data-game-scene="island"] .play-cell.tile-path{background-image:radial-gradient(ellipse at 50% 100%,#e8d18a55,transparent 58%),linear-gradient(145deg,#8b8050,#4b6548 58%,#24545a)}
+html.game-mode[data-game-scene="island"] .play-cell.tile-empty{background-image:radial-gradient(ellipse at 50% 100%,#38c4bd55,transparent 62%),linear-gradient(145deg,#123b40,#10272e)}
+html.game-mode[data-game-scene="city"] .play-cell.tile-path{background-image:repeating-linear-gradient(0deg,transparent 0 12px,#d9a87913 13px 15px),linear-gradient(145deg,#63534b,#36383b 65%,#252c34)}
+html.game-mode[data-game-scene="city"] .play-cell.tile-empty{background-image:linear-gradient(135deg,#252d33,#151b22 70%)}
+html.game-mode[data-game-scene="mystery"] .play-cell.tile-path{background-image:radial-gradient(ellipse at 50% 100%,#b9a2d72b,transparent 60%),linear-gradient(145deg,#50435f,#302a42 65%,#1e2231)}
+html.game-mode[data-game-scene="mystery"] .play-cell.tile-empty{background-image:radial-gradient(ellipse at 50% 100%,#a68bd733,transparent 60%),linear-gradient(145deg,#27253a,#151827)}
+html.game-mode[data-game-scene="neon"] .play-cell.tile-path{background-image:linear-gradient(135deg,#f34fc415 1px,transparent 1px),linear-gradient(45deg,#3fe8ff16 1px,transparent 1px),linear-gradient(145deg,#302b4d,#20263f 65%,#171c32);background-size:15px 15px,15px 15px,auto;border-color:#9e69c277}
+html.game-mode[data-game-scene="neon"] .play-cell.tile-empty{background-image:linear-gradient(135deg,#f34fc420 1px,transparent 1px),linear-gradient(145deg,#1b2039,#101629);background-size:15px 15px,auto}
+html.game-mode[data-game-scene="cosmos"] .play-cell.tile-path{background-image:radial-gradient(circle at 25% 25%,#e0e8ff44 1px,transparent 2px),radial-gradient(ellipse at 50% 100%,#6178dd44,transparent 62%),linear-gradient(145deg,#303d70,#202847 65%,#141b32);background-size:23px 23px,auto,auto}
+html.game-mode[data-game-scene="cosmos"] .play-cell.tile-empty{background-image:radial-gradient(circle at 25% 25%,#e0e8ff66 1px,transparent 2px),radial-gradient(ellipse at 50% 100%,#6178dd33,transparent 62%),linear-gradient(145deg,#151e3b,#0c1228);background-size:19px 19px,auto,auto}
+html.game-mode .play-cell.tile-start,html.game-mode .play-cell.tile-finish{transform:translateY(-1px);box-shadow:0 7px 18px #0008,inset 0 2px #fff9}
+html.game-mode .player-token{position:relative;z-index:4;box-shadow:0 3px 6px #000b,inset 0 2px #fff8;border:1px solid #fff8}
+html.game-mode .play-cell .route-step{z-index:2;text-shadow:0 1px 4px #000;background:#111a13a8;border-radius:3px;padding:1px 3px}
+html.game-mode #turnStatus{position:relative;z-index:2;background:linear-gradient(90deg,#283923ed,#172219ed);border:1px solid #c6e0a22b;border-left:3px solid var(--lime);box-shadow:0 8px 25px #0004}
+@media(max-width:620px){html.game-mode body:after{background-position:center;background-size:auto 100%;opacity:.75}html.game-mode .game-world-props{opacity:.45}html.game-mode .play-cell.off-route{opacity:.74}}
