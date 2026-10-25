@@ -286,7 +286,7 @@
       const edgeY=.015+Math.sin(t*22)*.018;
       vertices.push(x-width,edgeY,z,x+width,edgeY,z);
       uvs.push(0,t*12,1,t*12);
-      if(i<segments){const a=i*2,b=a+1,c=a+2,d=a+3;indices.push(a,c,b,b,c,d);}
+      if(i<segments){const a=i*2,b=a+1,c=a+2,d=a+3;indices.push(a,b,c,b,d,c);}
     }
     const geometry=new THREE.BufferGeometry();
     geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
