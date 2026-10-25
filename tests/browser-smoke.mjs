@@ -37,6 +37,13 @@ try {
     await page.goto('http://127.0.0.1:4173/?play=wild', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#gameDialog[open]', { timeout: 10000 });
     await page.waitForFunction(() => document.documentElement.classList.contains('game-mode'));
+    // A full-screen DOM layout alone is not enough: the game must actually mount its WebGL board.
+    await page.waitForSelector('#nastolkaBoard3D', { state: 'attached', timeout: 15000 });
+    await page.waitForFunction(() => {
+      const canvas = document.querySelector('#nastolkaBoard3D');
+      return canvas && getComputedStyle(canvas).display !== 'none' && canvas.width > 0 && canvas.height > 0;
+    }, { timeout: 10000 });
+    await page.waitForTimeout(250);
 
     const layout = await page.evaluate(() => {
       const rect = selector => {
