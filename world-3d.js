@@ -203,13 +203,18 @@
   }
   function addForestEdge(x,z,seed){
     const rand=seeded(seed+2401),rock=forestMat(seed%2?0x55594b:0x696b5c,.98);
-    // Broken stone outcrops at the forest boundary make the terrain feel carved, not boxed.
-    for(let n=0;n<2+(seed%2);n++){
-      const px=x+(rand()-.5)*.62,pz=z+(rand()-.5)*.62,size=.13+rand()*.17;
-      const b=boardMesh(new THREE.DodecahedronGeometry(size,1),rock,px,.055+size*.36,pz,.9+rand()*.55,.7+rand()*.6,.85+rand()*.45);
-      b.rotation.set(rand()*.25,rand()*Math.PI,rand()*.2);
+    // Irregular layered outcrops, partly buried in soil instead of a clean board rim.
+    for(let n=0;n<3+(seed%3);n++){
+      const px=x+(rand()-.5)*.78,pz=z+(rand()-.5)*.78,size=.12+rand()*.23;
+      const b=boardMesh(new THREE.DodecahedronGeometry(size,1),rock,px,.035+size*.3,pz,.85+rand()*.75,.58+rand()*.72,.78+rand()*.62);
+      b.rotation.set(rand()*.32,rand()*Math.PI,rand()*.26);
     }
-    if(seed%2===0)addForestRoots(x+(rand()-.5)*.18,z+(rand()-.5)*.18,seed+77);
+    // Exposed roots and moss visually stitch the rocks into the forest floor.
+    if(seed%2===0)addForestRoots(x+(rand()-.5)*.24,z+(rand()-.5)*.24,seed+77);
+    if(seed%3===0){
+      const moss=boardMesh(new THREE.SphereGeometry(.25,8,5),forestMat(0x3d5833),x+(rand()-.5)*.3,.073,z+(rand()-.5)*.3,1.4,.13,.92);
+      moss.rotation.y=rand()*Math.PI;
+    }
   }
   function boardMesh(geometry,material,x,y,z,scaleX=1,scaleY=1,scaleZ=1){
     const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.scale.set(scaleX,scaleY,scaleZ);m.castShadow=true;m.receiveShadow=true;boardRoot.add(m);return m;
