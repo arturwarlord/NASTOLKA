@@ -173,7 +173,8 @@
     // Real CC0 broadleaf hero trees; lightweight procedural trees remain as distant fallback.
     loadPolyHavenModel('jacaranda_tree').then(model=>{
       detailedTreeModel=model;applyDetailedTreeModel();applyBoardTreeDecorations();
-      window.__nastolkaAssetStatus.tree='loaded';\n      console.info('NASTOLKA: loaded Poly Haven CC0 Jacaranda model; replaced '+treeRecords.length+' procedural trees.');
+      window.__nastolkaAssetStatus.tree='loaded';
+      console.info('NASTOLKA: loaded Poly Haven CC0 Jacaranda model; replaced '+treeRecords.length+' procedural trees.');
     }).catch(error=>{window.__nastolkaAssetStatus.tree='failed';console.error('NASTOLKA: real tree model failed to load.',error);});
   }
   function applyBoardRockDecorations(){
