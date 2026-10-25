@@ -694,7 +694,7 @@ $('#resumeGameBtn').addEventListener('click',resumeCustomGame);
 $('#playerCount').addEventListener('change',renderPlayerNameFields);
 $('#playRollBtn').addEventListener('click', takeGameTurn);
 $('#restartGameBtn').addEventListener('click', startCustomGame);
-$('.dialog-close').forEach(btn => btn.addEventListener('click', () => btn.closest('dialog').close()));
+$$('.dialog-close').forEach(btn => btn.addEventListener('click', () => btn.closest('dialog').close()));
 const mapHistoryToggle=$('#mapHistoryToggle');
 if(mapHistoryToggle)mapHistoryToggle.addEventListener('click',()=>{const open=document.documentElement.classList.toggle('map-history-open');mapHistoryToggle.setAttribute('aria-pressed',String(open));mapHistoryToggle.setAttribute('aria-label',open?'Закрыть историю игры':'Открыть историю игры');});
 const gameDialog=$('#gameDialog');
