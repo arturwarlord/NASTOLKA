@@ -75,7 +75,7 @@
   // DOM remains authoritative for turns and multiplayer; WebGL supplies the rendered board.
   let boardRenderer,boardScene,boardCamera,boardCanvas,boardObserver,boardResizeHandler;
   let boardRoot,boardFrame;
-  let boardMaterials;
+  let boardMaterials,lastBoardSignature='',boardSyncQueued=false;
   function createBoardMaterials(){boardMaterials={
     empty:new THREE.MeshStandardMaterial({color:0x284632,roughness:1}),
     path:new THREE.MeshStandardMaterial({color:0x92734b,roughness:.94}),
@@ -99,9 +99,13 @@
     boardCamera.updateProjectionMatrix();
     boardFrame=board;
   }
+  function boardSignature(board){
+    return Array.from(board.children).map(cell=>cell.className+'['+cell.querySelectorAll('.player-token').length+']').join('|');
+  }
   function build3DBoard(){
     const board=document.getElementById('playBoard');
     if(!board||!boardRenderer||!board.isConnected)return;
+    lastBoardSignature=boardSignature(board);
     board.classList.add('board-3d-ready');
     if(boardRoot){boardScene.remove(boardRoot);boardRoot.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&& !Object.values(boardMaterials).includes(o.material)){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});}
     boardRoot=new THREE.Group();boardScene.add(boardRoot);
@@ -154,6 +158,7 @@
       });
     }
     updateBoardPosition();
+    if(boardRenderer)boardRenderer.render(boardScene,boardCamera);
   }
   function init3DBoard(){
     const board=document.getElementById('playBoard');
@@ -171,14 +176,27 @@
     boardRenderer.outputColorSpace=THREE.SRGBColorSpace;boardRenderer.toneMapping=THREE.ACESFilmicToneMapping;
     boardScene.add(new THREE.HemisphereLight(0xe5efdc,0x263326,2.3));
     const sun=new THREE.DirectionalLight(0xffe8c4,3.4);sun.position.set(-4,10,5);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);boardScene.add(sun);
-    const sync=()=>{const active=document.documentElement.classList.contains('game-mode')&&!board.closest('[hidden]')&&board.offsetWidth>0;boardCanvas.style.display=active?'block':'none';if(active)build3DBoard();};
+    const sync=()=>{
+      if(boardSyncQueued)return;
+      boardSyncQueued=true;
+      requestAnimationFrame(()=>{
+        boardSyncQueued=false;
+        const active=document.documentElement.classList.contains('game-mode')&&board.isConnected&&board.offsetWidth>0;
+        boardCanvas.style.display=active?'block':'none';
+        if(active){
+          const signature=boardSignature(board);
+          if(signature!==lastBoardSignature)build3DBoard();
+          else {updateBoardPosition();boardRenderer.render(boardScene,boardCamera);}
+        }
+      });
+    };
     boardObserver=new MutationObserver(sync);boardObserver.observe(board,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-    boardResizeHandler=()=>{if(boardCanvas&&boardCanvas.style.display!=='none')updateBoardPosition();};
+    boardResizeHandler=()=>{if(boardCanvas&&boardCanvas.style.display!=='none'){updateBoardPosition();boardRenderer.render(boardScene,boardCamera);}};
     addEventListener('resize',boardResizeHandler,{passive:true});addEventListener('scroll',boardResizeHandler,{passive:true,capture:true});
     new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:['class','data-game-scene']});
     sync();
-    const draw=()=>{requestAnimationFrame(draw);if(boardRenderer&&boardCanvas.style.display!=='none')boardRenderer.render(boardScene,boardCamera);};
-    draw();
+    // The board is static between moves: render only after state or layout changes,
+    // rather than spending a full animation loop on a motionless tabletop.
   }
 
   function animate(){
