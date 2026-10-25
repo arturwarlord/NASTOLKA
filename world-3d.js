@@ -576,7 +576,6 @@
   function addGrassTuft(x,z,seed,scale=1){
     // Curved, tapered grass blades replace the repeated cone/sphere tufts.
     const rand=seeded(seed+8117),greens=[0x294b29,0x3e6534,0x587b3d,0x78904a];
-    const materialCache=grassBladeMaterials;
     for(let n=0;n<4+(seed%3);n++){
       const h=(.075+rand()*.12)*scale,w=(.012+rand()*.009)*scale;
       const angle=rand()*Math.PI*2,bend=(rand()-.5)*.09*scale,lean=(.018+rand()*.035)*scale;
