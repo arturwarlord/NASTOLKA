@@ -274,7 +274,7 @@
       ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(rand()-.5)*18,y+(rand()-.5)*22);ctx.stroke();
     }
     const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;map.wrapS=map.wrapT=THREE.RepeatWrapping;map.anisotropy=4;
-    weatheredStoneMaterials[color]=new THREE.MeshStandardMaterial({map,color:0xffffff,roughness:.98,metalness:0,vertexColors:true});
+    weatheredStoneMaterials[color]=new THREE.MeshStandardMaterial({map,color:0xffffff,roughness:.98,metalness:0});
     return weatheredStoneMaterials[color];
   }
   function weatheredRockGeometry(radius,seed,detail=2){
