@@ -81,6 +81,12 @@ jobs:
           node --check rooms.js
           node --check supabase-config.js
 
+      - name: Проверить полноэкранную карту в браузере
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
+          node tests/browser-smoke.mjs
+
       - name: Проверить обязательные элементы страницы
         run: |
           python - <<'PY'
