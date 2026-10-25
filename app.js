@@ -341,71 +341,75 @@ function playableCells(map){
   indices.reverse();
   return indices.map(index => ({type:cells[index], index}));
 }
+function renderPlayerLocations(){
+  const bar=$('#playerLocationBar');
+  if(!bar||!gameState)return;
+  bar.replaceChildren();
+  gameState.players.forEach((player,index)=>{
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='player-location'+(index===gameState.turn?' is-current':'')+(index===gameState.winner?' is-winner':'');
+    button.style.setProperty('--token-color',playerColors[index]);
+    button.dataset.playerIndex=String(index);
+    button.setAttribute('aria-label','Показать '+player.name+', шаг '+(player.position+1));
+    const marker=document.createElement('span');marker.className='player-location-marker';marker.textContent=String(index+1);
+    const info=document.createElement('span');info.className='player-location-info';
+    const name=document.createElement('strong');name.textContent=player.name;
+    const position=document.createElement('small');position.textContent=(player.position===gameState.route.length-1?'Финиш':'Шаг '+(player.position+1)+' из '+gameState.route.length)+' · '+player.coins+' монет';
+    info.append(name,position);button.append(marker,info);
+    const progress=document.createElement('span');progress.className='player-location-progress';
+    progress.style.width=(Math.max(0,Math.min(100,((player.position+1)/gameState.route.length)*100)))+'%';
+    button.append(progress);bar.append(button);
+  });
+}
 function renderPlayBoard(){
-  const route = gameState.route;
-  const board = $('#playBoard');
-  const cells = normalizeBoard(activePlayMap);
-  const miniatures = ['♟','♞','♜','♛'];
+  const route=gameState.route;
+  const board=$('#playBoard');
+  const miniatures=['♟','♞','♜','♛'];
+  board.dataset.layout='road';
   board.replaceChildren();
-  cells.forEach((originalType,boardIndex)=>{
-    const routeIndex = route.findIndex(cell=>cell.index===boardIndex);
-    const type = routeIndex >= 0 ? route[routeIndex].type : originalType;
-    const isCurrent = routeIndex >= 0 && gameState.players[gameState.turn]?.position === routeIndex;
-    const tile = document.createElement('div');
-    tile.className = 'play-cell tile-' + type + (routeIndex < 0 ? ' off-route' : ' route-cell') + (isCurrent ? ' current-player-cell' : '');
-    if(routeIndex >= 0) tile.dataset.step = String(routeIndex + 1);
-    tile.title = 'Клетка ' + (boardIndex+1) + ': ' + (tileInfo[type]?.label || 'Путь') + (routeIndex < 0 ? ' — вне маршрута' : ' · Шаг ' + (routeIndex+1));
-    const scene = document.documentElement.dataset.gameScene || 'wild';
-    const symbols = {
-      wild:{start:'🏕️',finish:'🏰',treasure:'💎',trap:'🪤',event:'🔮',path:'',empty:['🌲','🌿','🪨','🍄','🌱','🪵']},
-      island:{start:'⛵',finish:'🏴‍☠️',treasure:'💰',trap:'🦀',event:'🐚',path:'',empty:['🌴','🐚','🪸','🌿','🪨','🌺']},
-      city:{start:'🚉',finish:'🏛️',treasure:'🪙',trap:'🚧',event:'🏮',path:'',empty:['🏢','🌳','🛤️','💡','🏙️','🪴']},
-      mystery:{start:'🕯️',finish:'🗝️',treasure:'🔮',trap:'🕸️',event:'👁️',path:'',empty:['🗿','🕯️','🪦','🕸️','🌑','🦇']},
-      neon:{start:'🚀',finish:'🌆',treasure:'💠',trap:'⚡',event:'🦾',path:'',empty:['💡','🌃','🔋','🛰️','⚙️','🔹']},
-      cosmos:{start:'🛰️',finish:'🪐',treasure:'🌟',trap:'☄️',event:'🌀',path:'',empty:['✨','🌌','🪨','🌠','🪐','💫']}
-    };
-    const sceneSet = symbols[scene] || symbols.wild;
-    const label = document.createElement('span');
-    label.className = 'play-cell-symbol';
-    label.textContent = sceneSet[type] || tileInfo[type]?.symbol || '·';
-    tile.append(label);
-    if(type === 'empty'){
-      const terrain = document.createElement('span');
-      terrain.className = 'cell-terrain';
-      terrain.textContent = sceneSet.empty[(boardIndex * 7 + Math.floor(boardIndex / 8) * 3) % sceneSet.empty.length];
-      terrain.setAttribute('aria-hidden','true');
-      tile.append(terrain);
-    }
-    if(type === 'path' && routeIndex > 0 && routeIndex < route.length - 1){
-      const trail = document.createElement('span');
-      trail.className = 'path-inlay';
-      trail.textContent = ['◆','✧','•','◇'][(routeIndex + boardIndex) % 4];
-      trail.setAttribute('aria-hidden','true');
-      tile.append(trail);
-    }
-    if(routeIndex > 0 && routeIndex < route.length - 1 && ['path','empty'].includes(type)){
-      const step = document.createElement('span');
-      step.className = 'route-step';
-      step.textContent = String(routeIndex + 1).padStart(2,'0');
-      tile.append(step);
-    }
-    const tokens = document.createElement('div');
-    tokens.className = 'play-tokens';
+  const scene=document.documentElement.dataset.gameScene||'wild';
+  const symbols={
+    wild:{start:'🏕️',finish:'🏰',treasure:'💎',trap:'🪤',event:'🔮',path:'·'},
+    island:{start:'⛵',finish:'🏴‍☠️',treasure:'💰',trap:'🦀',event:'🐚',path:'·'},
+    city:{start:'🚉',finish:'🏛️',treasure:'🪙',trap:'🚧',event:'🏮',path:'·'},
+    mystery:{start:'🕯️',finish:'🗝️',treasure:'🔮',trap:'🕸️',event:'👁️',path:'·'},
+    neon:{start:'🚀',finish:'🌆',treasure:'💠',trap:'⚡',event:'🦾',path:'·'},
+    cosmos:{start:'🛰️',finish:'🪐',treasure:'🌟',trap:'☄️',event:'🌀',path:'·'}
+  };
+  const sceneSet=symbols[scene]||symbols.wild;
+  route.forEach((cell,routeIndex)=>{
+    const type=cell.type||'path';
+    const isCurrent=gameState.players[gameState.turn]?.position===routeIndex;
+    const tile=document.createElement('article');
+    tile.className='play-cell road-cell tile-'+type+(isCurrent?' current-player-cell':'')+(routeIndex===gameState.route.length-1?' road-finish':'');
+    tile.dataset.step=String(routeIndex+1);
+    tile.title=(tileInfo[type]?.label||'Путь')+' · Шаг '+(routeIndex+1);
+    const step=document.createElement('span');step.className='route-step';step.textContent=String(routeIndex+1).padStart(2,'0');tile.append(step);
+    const label=document.createElement('span');label.className='play-cell-symbol';label.textContent=sceneSet[type]||'·';tile.append(label);
+    const name=document.createElement('span');name.className='road-cell-name';
+    name.textContent=routeIndex===0?'СТАРТ':routeIndex===route.length-1?'ФИНИШ':(tileInfo[type]?.label||'Дорога').toLocaleUpperCase('ru-RU');
+    tile.append(name);
+    const tokens=document.createElement('div');tokens.className='play-tokens';
     gameState.players.forEach((player,playerIndex)=>{
-      if(routeIndex >= 0 && player.position===routeIndex){
+      if(player.position===routeIndex){
         const token=document.createElement('span');
-        token.className='player-token player-token-' + playerIndex;
-        token.style.setProperty('--token-color', playerColors[playerIndex]);
+        token.className='player-token player-token-'+playerIndex;
+        token.style.setProperty('--token-color',playerColors[playerIndex]);
         token.textContent=miniatures[playerIndex];
         token.setAttribute('aria-label',player.name);
-        token.title=player.name + ' · игрок ' + (playerIndex+1);
+        token.title=player.name+' · шаг '+(routeIndex+1);
         tokens.append(token);
       }
     });
     tile.append(tokens);
-    if(type==='start'){const tag=document.createElement('small');tag.textContent='СТАРТ';tile.append(tag)}
-    if(type==='finish'){const tag=document.createElement('small');tag.textContent='ФИНИШ';tile.append(tag)}
     board.append(tile);
+  });
+  renderPlayerLocations();
+  requestAnimationFrame(()=>{
+    const position=gameState.players[gameState.turn]?.position||0;
+    const active=board.querySelector('[data-step="'+(position+1)+'"]');
+    if(active)active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
   });
 }
 function getSavedSession(){
@@ -479,7 +483,8 @@ function addGameLog(message){
 function updateGameStatus(){
   if(!gameState) return;
   const player=gameState.players[gameState.turn];
-  $('#turnStatus').textContent=gameState.finished?'🏆 '+player.name+' победил!':player.name+' — твой ход · монеты: '+player.coins;
+  $('#turnStatus').textContent=gameState.finished?'🏆 '+player.name+' победил!':player.name+' — твой ход · шаг '+(player.position+1)+' из '+gameState.route.length+' · монеты: '+player.coins;
+  renderPlayerLocations();
 }
 function renderFinalResults(){
   if(!gameState||!gameState.finished)return;
@@ -697,6 +702,8 @@ $('#restartGameBtn').addEventListener('click', startCustomGame);
 $$('.dialog-close').forEach(btn => btn.addEventListener('click', () => btn.closest('dialog').close()));
 const mapHistoryToggle=$('#mapHistoryToggle');
 if(mapHistoryToggle)mapHistoryToggle.addEventListener('click',()=>{const open=document.documentElement.classList.toggle('map-history-open');mapHistoryToggle.setAttribute('aria-pressed',String(open));mapHistoryToggle.setAttribute('aria-label',open?'Закрыть историю игры':'Открыть историю игры');});
+const playerLocationBar=$('#playerLocationBar');
+if(playerLocationBar)playerLocationBar.addEventListener('click',event=>{const button=event.target.closest('[data-player-index]');if(!button||!gameState)return;const player=gameState.players[Number(button.dataset.playerIndex)];const cell=$('#playBoard [data-step="'+(player.position+1)+'"]');if(cell)cell.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});});
 const gameDialog=$('#gameDialog');
 if(gameDialog)gameDialog.addEventListener('close',()=>{document.documentElement.classList.remove('game-mode','map-history-open');if(mapHistoryToggle){mapHistoryToggle.setAttribute('aria-pressed','false');mapHistoryToggle.setAttribute('aria-label','Открыть историю игры');}});
 $('#createMapBtn').addEventListener('click', () => $('#createDialog').showModal());
