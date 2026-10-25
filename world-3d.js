@@ -657,7 +657,7 @@
     for(let i=1;i<outline.length;i++)shape.lineTo(outline[i][0],outline[i][1]);
     shape.closePath();
     const top=new THREE.Mesh(new THREE.ShapeGeometry(shape,1),baseMat);
-    top.rotation.x=-Math.PI/2;top.position.y=-.012;top.receiveShadow=true;boardRoot.add(top);
+    top.rotation.x=Math.PI/2;top.position.y=-.012;top.receiveShadow=true;boardRoot.add(top);
     const sidePositions=[],sideIndices=[];
     for(let i=0;i<outline.length;i++){
       const a=outline[i],b=outline[(i+1)%outline.length],base=i*4;
@@ -668,12 +668,6 @@
     sideGeometry.setAttribute('position',new THREE.Float32BufferAttribute(sidePositions,3));
     sideGeometry.setIndex(sideIndices);sideGeometry.computeVertexNormals();
     const sideMesh=new THREE.Mesh(sideGeometry,rimMat);sideMesh.castShadow=true;sideMesh.receiveShadow=true;boardRoot.add(sideMesh);
-    // A thin soil lip softens the join between playable terrain and the broken cliff edge.
-    const insetMat=new THREE.MeshStandardMaterial({color:look.inset,roughness:1,metalness:0});
-    const insetShape=new THREE.Shape();
-    insetShape.moveTo(-3.98,-3.98);insetShape.lineTo(3.98,-3.98);insetShape.lineTo(3.98,3.98);insetShape.lineTo(-3.98,3.98);insetShape.closePath();
-    const inset=new THREE.Mesh(new THREE.ShapeGeometry(insetShape),insetMat);
-    inset.rotation.x=-Math.PI/2;inset.position.y=.012;inset.receiveShadow=true;boardRoot.add(inset);
     if(root.dataset.gameScene==='wild'){addAncientRuin();addAncientStump();addPerimeterOutcrops();}
     // One uninterrupted forest floor removes visible cell seams; the DOM grid still owns gameplay.
     if(root.dataset.gameScene==='wild'){
