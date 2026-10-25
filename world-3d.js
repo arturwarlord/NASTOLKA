@@ -573,6 +573,27 @@
     const chip=boardMesh(weatheredRockGeometry(size*.42,seed+29,1),rockMat,x+(rand()-.5)*.18,.085,z+(rand()-.5)*.15,.9,.72,1.1);
     chip.rotation.y=rand()*Math.PI;
   }
+  function addGrassTuft(x,z,seed,scale=1){
+    // Curved, tapered grass blades replace the repeated cone/sphere tufts.
+    const rand=seeded(seed+8117),greens=[0x294b29,0x3e6534,0x587b3d,0x78904a];
+    const materialCache=grassBladeMaterials;
+    for(let n=0;n<4+(seed%3);n++){
+      const h=(.075+rand()*.12)*scale,w=(.012+rand()*.009)*scale;
+      const angle=rand()*Math.PI*2,bend=(rand()-.5)*.09*scale,lean=(.018+rand()*.035)*scale;
+      const verts=[
+        -w,0,0, w,0,0,
+        -w*.58,h*.52,bend*.35, w*.58,h*.52,bend*.35,
+        bend+lean,h,lean*.18
+      ];
+      const geo=new THREE.BufferGeometry();
+      geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+      geo.setIndex([0,2,1,1,2,3,2,4,3]);
+      geo.computeVertexNormals();
+      const blade=new THREE.Mesh(geo,forestMat(greens[(seed+n)%greens.length],1));
+      blade.position.set(x+(rand()-.5)*.11*scale,.065,z+(rand()-.5)*.11*scale);
+      blade.rotation.y=angle;blade.castShadow=false;blade.receiveShadow=false;boardRoot.add(blade);
+    }
+  }
   function addPathGrassTransition(x,z,seed,side){
     // Soft, broken grass fringes grow into the dirt only where the trail meets empty forest.
     const rand=seeded(seed+side.dx*31+side.dz*47+7103);
@@ -580,23 +601,18 @@
     const patch=boardMesh(new THREE.CircleGeometry(.13+rand()*.07,12),forestMat(grass[seed%grass.length],1),
       x+side.dx*.405,.064,z+side.dz*.405,side.dx===0?1.25:.78,1,side.dz===0?1.25:.78);
     patch.rotation.x=-Math.PI/2;patch.castShadow=false;patch.receiveShadow=false;
-    for(let n=0;n<3;n++){
+    for(let n=0;n<2;n++){
       const along=(rand()-.5)*.28,px=x+side.dx*.405+(side.dz!==0?along:0),pz=z+side.dz*.405+(side.dx!==0?along:0);
-      const blade=boardMesh(new THREE.ConeGeometry(.014+rand()*.01,.075+rand()*.045,4),
-        forestMat(grass[(seed+n+1)%grass.length],1),px,.09+rand()*.018,pz);
-      blade.rotation.z=(rand()-.5)*.42;
-      blade.rotation.x=(rand()-.5)*.28;
-      blade.castShadow=false;
+      addGrassTuft(px,pz,seed+n+side.dx*17+side.dz*23,.8+rand()*.55);
     }
   }
   function addForestFloorDetail(x,z,seed){
     // Small, irregular moss islands and fallen twigs break the perfect-square look
     // without changing the underlying logical grid or making the board too heavy.
-    const mossColors=[0x3d5b36,0x526b3d,0x667348];
-    const mossMat=new THREE.MeshStandardMaterial({color:mossColors[seed%3],roughness:1});
-    const patch=new THREE.Mesh(new THREE.SphereGeometry(.19+(seed%3)*.035,7,5),mossMat);
-    patch.position.set(x+(((seed*7)%11)/20-.25),.188,z+(((seed*5)%9)/20-.22));
-    patch.scale.set(1.25,.12,.72);patch.rotation.y=(seed%7)*.43;patch.receiveShadow=true;boardRoot.add(patch);
+    const mossColors=[0x3d5b36,0x526b3d,0x667348],mx=x+(((seed*7)%11)/20-.25),mz=z+(((seed*5)%9)/20-.22);
+    const patch=boardMesh(irregularPatch(.16+(seed%3)*.035,seed+3901,11),forestMat(mossColors[seed%3],1),mx,.061,mz,1.25,1,.72);
+    patch.rotation.x=-Math.PI/2;patch.castShadow=false;patch.receiveShadow=false;
+    if(seed%3===1)addGrassTuft(mx,mz,seed+91,.72);
     if(seed%2===0){
       const twigMat=forestMat(seed%4===0?0x493b2a:0x66503a);
       const twig=boardMesh(new THREE.CylinderGeometry(.018,.032,.27,5),twigMat,x+(((seed*3)%7)/16-.2),.205,z+(((seed*11)%7)/16-.2));
@@ -715,8 +731,8 @@
           // Embedded pebbles and thin worn ruts make the trail read as compacted earth.
           for(let n=0;n<4;n++){
             const px=x+(rand()-.5)*.78,pz=z+(rand()-.5)*.72,size=.018+rand()*.025;
-            const pebble=boardMesh(new THREE.DodecahedronGeometry(size,0),forestMat(n%2?0x766650:0x5c503e,1),px,.071,pz,1.3,.55,.9);
-            pebble.rotation.y=rand()*Math.PI;
+            const pebble=boardMesh(weatheredRockGeometry(size,seed*17+n+611,1),weatheredStoneMaterial(n%2?0x766650:0x5c503e),px,.071,pz,1.3,.55,.9);
+            pebble.rotation.set(rand()*.25,rand()*Math.PI,rand()*.2);
           }
           for(let rut=0;rut<2;rut++){
             const rutMesh=boardMesh(new THREE.CapsuleGeometry(.012,.25,2,4),forestMat(0x6e5236,1),x+(rut===0?-.17:.17),.063,z+(rand()-.5)*.12,.75,1,1.15);
@@ -728,19 +744,14 @@
         // Uneven dirt edge stones, scattered rather than arranged as decorative beads.
         for(let k=0;k<3;k++){
           const px=x+Math.sin(seed*2.1+k*4.3)*.34,pz=z+Math.cos(seed*1.7+k*3.7)*.34;
-          const stone=boardMesh(new THREE.DodecahedronGeometry(.035+(k%2)*.018,0),new THREE.MeshStandardMaterial({color:k===1?0x9a8b70:0x665b49,roughness:1}),px,.09,pz,1.2,.55,.8);
-          stone.rotation.y=seed*k;
+          const stone=boardMesh(weatheredRockGeometry(.035+(k%2)*.018,seed*29+k+97,1),weatheredStoneMaterial(k===1?0x9a8b70:0x665b49),px,.078,pz,1.2,.55,.8);
+          stone.rotation.set(.12*(k-1),seed*k,.09*(k-1));
         }
         if(seed%2===0){
-          const rand=seeded(seed+91),greens=[0x284d2d,0x355d32,0x496b39];
-          for(let n=0;n<4;n++){
-            const tuft=boardMesh(new THREE.SphereGeometry(.045+rand()*.025,6,5),forestMat(greens[n%3]),x+(rand()-.5)*.78,.09,z+(rand()-.5)*.78,.8,.5,1.1);
-          }
+          const rand=seeded(seed+91);
+          for(let n=0;n<2;n++)addGrassTuft(x+(rand()-.5)*.72,z+(rand()-.5)*.72,seed+n+140,.72+rand()*.7);
         }
-        if(seed%4===0){
-          const grassMat=forestMat(0x516b37);
-          for(let k=0;k<3;k++){const blade=boardMesh(new THREE.ConeGeometry(.018,.12,4),grassMat,x+Math.sin(seed+k)*.37,.11,z+Math.cos(seed*2+k)*.34);blade.rotation.z=(k-1)*.32;}
-        }
+        if(seed%4===0)addGrassTuft(x+Math.sin(seed)*.37,z+Math.cos(seed*2)*.34,seed+208,1.1);
         if(seed%5===0)addForestFloorDetail(x,z,seed);
         if(root.dataset.gameScene==='wild'){
           // Only exposed edges receive tufts; adjacent path cells stay visually connected.
