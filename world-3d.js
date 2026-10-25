@@ -129,7 +129,7 @@
     if(polyHavenModelPromises[assetId])return polyHavenModelPromises[assetId];
     polyHavenModelPromises[assetId]=Promise.all([
       import('https://esm.sh/three@0.160.1/examples/jsm/loaders/GLTFLoader.js'),
-      fetch('https://api.polyhaven.com/files/'+encodeURIComponent(assetId),{headers:{'User-Agent':'NASTOLKA-3D/1.0'}}).then(response=>{
+      fetch('https://api.polyhaven.com/files/'+encodeURIComponent(assetId)).then(response=>{
         if(!response.ok)throw new Error('Poly Haven asset manifest HTTP '+response.status);
         return response.json();
       })
