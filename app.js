@@ -354,10 +354,34 @@ function renderPlayBoard(){
     tile.className = 'play-cell tile-' + type + (routeIndex < 0 ? ' off-route' : ' route-cell') + (isCurrent ? ' current-player-cell' : '');
     if(routeIndex >= 0) tile.dataset.step = String(routeIndex + 1);
     tile.title = 'Клетка ' + (boardIndex+1) + ': ' + (tileInfo[type]?.label || 'Путь') + (routeIndex < 0 ? ' — вне маршрута' : ' · Шаг ' + (routeIndex+1));
+    const scene = document.documentElement.dataset.gameScene || 'wild';
+    const symbols = {
+      wild:{start:'🏕️',finish:'🏰',treasure:'💎',trap:'🪤',event:'🔮',path:'',empty:['🌲','🌿','🪨','🍄','🌱','🪵']},
+      island:{start:'⛵',finish:'🏴‍☠️',treasure:'💰',trap:'🦀',event:'🐚',path:'',empty:['🌴','🐚','🪸','🌿','🪨','🌺']},
+      city:{start:'🚉',finish:'🏛️',treasure:'🪙',trap:'🚧',event:'🏮',path:'',empty:['🏢','🌳','🛤️','💡','🏙️','🪴']},
+      mystery:{start:'🕯️',finish:'🗝️',treasure:'🔮',trap:'🕸️',event:'👁️',path:'',empty:['🗿','🕯️','🪦','🕸️','🌑','🦇']},
+      neon:{start:'🚀',finish:'🌆',treasure:'💠',trap:'⚡',event:'🦾',path:'',empty:['💡','🌃','🔋','🛰️','⚙️','🔹']},
+      cosmos:{start:'🛰️',finish:'🪐',treasure:'🌟',trap:'☄️',event:'🌀',path:'',empty:['✨','🌌','🪨','🌠','🪐','💫']}
+    };
+    const sceneSet = symbols[scene] || symbols.wild;
     const label = document.createElement('span');
     label.className = 'play-cell-symbol';
-    label.textContent = tileInfo[type]?.symbol || '·';
+    label.textContent = sceneSet[type] || tileInfo[type]?.symbol || '·';
     tile.append(label);
+    if(type === 'empty'){
+      const terrain = document.createElement('span');
+      terrain.className = 'cell-terrain';
+      terrain.textContent = sceneSet.empty[(boardIndex * 7 + Math.floor(boardIndex / 8) * 3) % sceneSet.empty.length];
+      terrain.setAttribute('aria-hidden','true');
+      tile.append(terrain);
+    }
+    if(type === 'path' && routeIndex > 0 && routeIndex < route.length - 1){
+      const trail = document.createElement('span');
+      trail.className = 'path-inlay';
+      trail.textContent = ['◆','✧','•','◇'][(routeIndex + boardIndex) % 4];
+      trail.setAttribute('aria-hidden','true');
+      tile.append(trail);
+    }
     if(routeIndex > 0 && routeIndex < route.length - 1 && ['path','empty'].includes(type)){
       const step = document.createElement('span');
       step.className = 'route-step';
@@ -488,6 +512,13 @@ function nextPlayer(){
   updateGameStatus();
 }
 async function takeGameTurn(){
+  const boardEl=$('#playBoard');
+  if(boardEl){
+    boardEl.classList.remove('dice-rolling');
+    void boardEl.offsetWidth;
+    boardEl.classList.add('dice-rolling');
+    window.setTimeout(()=>boardEl.classList.remove('dice-rolling'),720);
+  }
   if(!onlineGameContext) { performGameTurn(); return; }
   if(!gameState || gameState.finished) return;
   if(onlineGameContext.playerIds[gameState.turn] !== onlineGameContext.playerId) {
