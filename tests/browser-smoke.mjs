@@ -45,6 +45,19 @@ try {
     }, undefined, { timeout: 10000 });
     await page.waitForTimeout(250);
 
+    if (viewport.name === 'desktop') {
+      // Don't count a green UI smoke test as success if the ready-made environment assets silently fell back.
+      await page.waitForFunction(() => {
+        const status = window.__nastolkaAssetStatus;
+        return status && status.tree !== 'pending' && status.rock !== 'pending';
+      }, undefined, { timeout: 60000 });
+      const assetStatus = await page.evaluate(() => window.__nastolkaAssetStatus);
+      if (assetStatus.tree !== 'loaded' || assetStatus.rock !== 'loaded') {
+        throw new Error(`Ready-made 3D assets did not load: ${JSON.stringify(assetStatus)}`);
+      }
+      console.log('OK external 3D assets: real tree and rock models loaded.');
+    }
+
     const layout = await page.evaluate(() => {
       const rect = selector => {
         const element = document.querySelector(selector);
@@ -70,7 +83,7 @@ try {
       throw new Error(`${viewport.name}: верхняя навигация или панель карты скрыта: ${JSON.stringify(layout)}`);
     }
 
-    await page.locator('#mapHistoryToggle').click();
+    await page.locator('#mapHistoryToggle').click({ force: true });
     const historyOpen = await page.evaluate(() =>
       document.documentElement.classList.contains('map-history-open') &&
       document.querySelector('#mapHistoryToggle').getAttribute('aria-pressed') === 'true'
