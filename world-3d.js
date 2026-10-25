@@ -102,6 +102,21 @@
   function boardMesh(geometry,material,x,y,z,scaleX=1,scaleY=1,scaleZ=1){
     const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.scale.set(scaleX,scaleY,scaleZ);m.castShadow=true;m.receiveShadow=true;boardRoot.add(m);return m;
   }
+  function addForestFloorDetail(x,z,seed){
+    // Small, irregular moss islands and fallen twigs break the perfect-square look
+    // without changing the underlying logical grid or making the board too heavy.
+    const mossColors=[0x3d5b36,0x526b3d,0x667348];
+    const mossMat=new THREE.MeshStandardMaterial({color:mossColors[seed%3],roughness:1});
+    const patch=new THREE.Mesh(new THREE.SphereGeometry(.19+(seed%3)*.035,7,5),mossMat);
+    patch.position.set(x+(((seed*7)%11)/20-.25),.188,z+(((seed*5)%9)/20-.22));
+    patch.scale.set(1.25,.12,.72);patch.rotation.y=(seed%7)*.43;patch.receiveShadow=true;boardRoot.add(patch);
+    if(seed%2===0){
+      const twigMat=new THREE.MeshStandardMaterial({color:seed%4===0?0x493b2a:0x66503a,roughness:1});
+      const twig=new THREE.Mesh(new THREE.CylinderGeometry(.018,.032,.27,5),twigMat);
+      twig.position.set(x+(((seed*3)%7)/16-.2),.205,z+(((seed*11)%7)/16-.2));
+      twig.rotation.set(.08,(seed%9)*.37,Math.PI/2+((seed%3)-1)*.22);boardRoot.add(twig);
+    }
+  }
   function updateBoardPosition(){
     const board=document.getElementById('playBoard');
     if(!board||!boardCanvas||!boardRenderer)return;
@@ -136,6 +151,8 @@
       const type=['start','finish','treasure','trap','event','empty'].find(t=>cell.classList.contains('tile-'+t))||'path';
       const x=j-3.5,z=i-3.5;
       boardMesh(new THREE.BoxGeometry(.94,.2,.94),boardMaterials[type],x,.075,z);
+      // Forest paths get restrained organic ground clutter; gameplay cells stay unchanged.
+      if(root.dataset.gameScene==='wild'&&(type==='path'||type==='empty')&&((i*8+j)%3!==1))addForestFloorDetail(x,z,i*8+j+1);
       // Fine bevel-like inset and natural surface variation.
       if(type==='path'){
         for(let k=0;k<3;k++){
