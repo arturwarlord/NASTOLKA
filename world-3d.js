@@ -9,6 +9,7 @@
   let detailedRockModel=null,rockAssetAttempted=false,boardAssetDecorations=null,boardRockDecorations=null,boardTreeDecorations=null;
   let detailedFernModel=null,fernAssetAttempted=false,worldFernDecorations=null;
   let treeRecords=[];
+  let rockRecords=[];
   const palettes={
     wild:{fog:0x111b15,ground:0x344332,rock:0x56584b,leaf:0x29472d,accent:0x84945a,sky:0x26352a},
     island:{fog:0x102a32,ground:0x9b8a61,rock:0x5d665b,leaf:0x2b5d3b,accent:0x5cc6bc,sky:0x20505b},
@@ -27,6 +28,7 @@
     const mesh=new THREE.Mesh(new THREE.SphereGeometry(scale,12,8),material);
     mesh.position.set(x,scale*.38,z);mesh.scale.set(1.22,.76,.94);mesh.rotation.set(Math.random()*.12,Math.random()*3,Math.random()*.12);
     mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
+    rockRecords.push({parent,mesh,x,z,scale,rotation:mesh.rotation.y});
   }
   function tree(parent,x,z,scale,leaf,wood){
     // Keep the procedural tree as an instant fallback, then replace it with a licensed
@@ -218,20 +220,22 @@
   let worldRockDecorations=null;
   function applyWorldRockModel(){
     if(!detailedRockModel||!world)return;
-    if(worldRockDecorations&&worldRockDecorations.parent)worldRockDecorations.parent.remove(worldRockDecorations);
-    worldRockDecorations=new THREE.Group();
     const bounds=new THREE.Box3().setFromObject(detailedRockModel);
     const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
     if(!size.x||!Number.isFinite(size.x))return;
-    [[-8.2,3.5,.25,2.25],[8.1,2.4,1.15,2.0],[-11.4,-1.8,2.2,2.5],[11.1,-2.2,.65,2.3]].forEach(([x,z,rotation,width],index)=>{
-      const model=detailedRockModel.clone(true),scale=width/size.x;
-      model.scale.setScalar(scale);
-      model.position.set(x-center.x*scale,-bounds.min.y*scale,z-center.z*scale);
-      model.rotation.y=rotation;
+    // Replace every procedural rock in the current environment with instances of the scanned CC0 rock set.
+    // The source mesh data is shared by clones; only transforms differ between placements.
+    for(const record of rockRecords){
+      if(record.parent!==world||!record.mesh.parent)continue;
+      const model=detailedRockModel.clone(true),fit=(1.85*record.scale)/size.x;
+      model.scale.setScalar(fit);
+      model.position.set(record.x-center.x*fit,-bounds.min.y*fit,record.z-center.z*fit);
+      model.rotation.y=record.rotation;
       model.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;}});
-      worldRockDecorations.add(model);
-    });
-    world.add(worldRockDecorations);
+      record.parent.remove(record.mesh);
+      record.parent.add(model);
+      record.mesh=model;
+    }
   }
   function applyWorldFernModel(){
     if(!detailedFernModel||!world)return;
@@ -275,6 +279,7 @@
   }
   function build(sceneName){
     treeRecords=[];
+    rockRecords=[];
     const p=palettes[sceneName]||palettes.wild;
     scene=new THREE.Scene();scene.background=new THREE.Color(p.sky);scene.fog=new THREE.FogExp2(p.fog,.025);
     camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,160);
