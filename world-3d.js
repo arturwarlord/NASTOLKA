@@ -103,7 +103,7 @@
     const board=document.getElementById('playBoard');
     if(!board||!boardRenderer||!board.isConnected)return;
     board.classList.add('board-3d-ready');
-    if(boardRoot){boardScene.remove(boardRoot);boardRoot.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
+    if(boardRoot){boardScene.remove(boardRoot);boardRoot.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&& !Object.values(boardMaterials).includes(o.material)){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});}
     boardRoot=new THREE.Group();boardScene.add(boardRoot);
     const baseMat=new THREE.MeshStandardMaterial({color:0x17231a,roughness:1});
     boardMesh(new THREE.BoxGeometry(8.18,.24,8.18),baseMat,0,-.17,0);
