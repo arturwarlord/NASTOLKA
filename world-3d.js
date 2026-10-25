@@ -213,7 +213,7 @@
     boardObserver=new MutationObserver(sync);boardObserver.observe(board,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
     boardResizeHandler=()=>{if(boardCanvas&&boardCanvas.style.display!=='none'){updateBoardPosition();boardRenderer.render(boardScene,boardCamera);}};
     addEventListener('resize',boardResizeHandler,{passive:true});addEventListener('scroll',boardResizeHandler,{passive:true,capture:true});
-    new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:['class','data-game-scene']});
+    new MutationObserver(()=>{createBoardMaterials();lastBoardSignature='';sync();}).observe(document.documentElement,{attributes:true,attributeFilter:['class','data-game-scene']});
     sync();
     // The board is static between moves: render only after state or layout changes,
     // rather than spending a full animation loop on a motionless tabletop.
