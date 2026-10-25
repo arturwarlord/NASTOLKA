@@ -166,6 +166,38 @@
     const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.scale.set(scaleX,scaleY,scaleZ);m.castShadow=true;m.receiveShadow=true;boardRoot.add(m);return m;
   }
   function addTopDownTree(x,z,seed){addCanopy(x,z,1.15,seed);}
+  function addForestRoots(x,z,seed){
+    const rand=seeded(seed+401),rootMat=forestMat(seed%3===0?0x493a27:0x5a452e),count=3+(seed%3);
+    for(let n=0;n<count;n++){
+      const a=Math.PI*2*n/count+(rand()-.5)*.45,length=.18+rand()*.2;
+      const root=boardMesh(new THREE.CylinderGeometry(.012,.035,length,5),rootMat,x+Math.cos(a)*length*.36,.105,z+Math.sin(a)*length*.36);
+      root.rotation.set(.12,-a,Math.PI/2);root.scale.z=.72+rand()*.65;
+    }
+  }
+  function addFern(x,z,seed){
+    const rand=seeded(seed+809),greens=[0x41653a,0x557743,0x71884a],stemMat=forestMat(0x3b512e);
+    for(let n=0;n<5;n++){
+      const a=n*Math.PI*2/5+rand()*.35,len=.13+rand()*.1;
+      const leaf=boardMesh(new THREE.SphereGeometry(.085,7,5),forestMat(greens[n%3]),x+Math.cos(a)*len*.65,.115,z+Math.sin(a)*len*.65,1.05,.25,.52);
+      leaf.rotation.y=-a;
+      const stem=boardMesh(new THREE.CylinderGeometry(.008,.012,len,4),stemMat,x+Math.cos(a)*len*.36,.105,z+Math.sin(a)*len*.36);
+      stem.rotation.set(0,-a,Math.PI/2);
+    }
+  }
+  function addFallenLog(x,z,seed){
+    const rand=seeded(seed+1201),wood=forestMat(seed%2?0x493522:0x5b432b),length=.34+rand()*.22;
+    const log=boardMesh(new THREE.CylinderGeometry(.045,.06,length,7),wood,x,.12,z);
+    log.rotation.set(0,(rand()-.5)*.8,Math.PI/2);
+    const end=boardMesh(new THREE.CircleGeometry(.043,8),forestMat(0x9a7950),x+length*.49,.12,z);
+    end.rotation.x=-Math.PI/2;
+  }
+  function addBoulderDetail(x,z,seed){
+    const rand=seeded(seed+1601),rockMat=forestMat(seed%2?0x62675a:0x777969,.98),size=.105+rand()*.095;
+    const b=boardMesh(new THREE.DodecahedronGeometry(size,1),rockMat,x,.11,z,1.25,.75,.95);
+    b.rotation.set(rand()*.2,rand()*Math.PI,rand()*.18);
+    const chip=boardMesh(new THREE.DodecahedronGeometry(size*.42,0),rockMat,x+(rand()-.5)*.18,.085,z+(rand()-.5)*.15,.9,.72,1.1);
+    chip.rotation.y=rand()*Math.PI;
+  }
   function addForestFloorDetail(x,z,seed){
     // Small, irregular moss islands and fallen twigs break the perfect-square look
     // without changing the underlying logical grid or making the board too heavy.
@@ -175,11 +207,11 @@
     patch.position.set(x+(((seed*7)%11)/20-.25),.188,z+(((seed*5)%9)/20-.22));
     patch.scale.set(1.25,.12,.72);patch.rotation.y=(seed%7)*.43;patch.receiveShadow=true;boardRoot.add(patch);
     if(seed%2===0){
-      const twigMat=new THREE.MeshStandardMaterial({color:seed%4===0?0x493b2a:0x66503a,roughness:1});
-      const twig=new THREE.Mesh(new THREE.CylinderGeometry(.018,.032,.27,5),twigMat);
-      twig.position.set(x+(((seed*3)%7)/16-.2),.205,z+(((seed*11)%7)/16-.2));
-      twig.rotation.set(.08,(seed%9)*.37,Math.PI/2+((seed%3)-1)*.22);boardRoot.add(twig);
+      const twigMat=forestMat(seed%4===0?0x493b2a:0x66503a);
+      const twig=boardMesh(new THREE.CylinderGeometry(.018,.032,.27,5),twigMat,x+(((seed*3)%7)/16-.2),.205,z+(((seed*11)%7)/16-.2));
+      twig.rotation.set(.08,(seed%9)*.37,Math.PI/2+((seed%3)-1)*.22);
     }
+    if(seed%3===0)addFern(x+(((seed*5)%7)/10-.3),z+(((seed*3)%9)/12-.3),seed);
   }
   function updateBoardPosition(){
     const board=document.getElementById('playBoard');
@@ -247,20 +279,24 @@
           for(let k=0;k<3;k++){const blade=boardMesh(new THREE.ConeGeometry(.018,.12,4),grassMat,x+Math.sin(seed+k)*.37,.11,z+Math.cos(seed*2+k)*.34);blade.rotation.z=(k-1)*.32;}
         }
       } else if(type==='empty'){
+        const rand=seeded(seed+211);
         if(seed%3!==0)addCanopy(x+((seed%3)-1)*.12,z+((seed%5)-2)*.07,.7+(seed%4)*.08,seed);
-        if(seed%4===0){
-          const boulder=boardMesh(new THREE.DodecahedronGeometry(.13,1),new THREE.MeshStandardMaterial({color:0x626454,roughness:1}),x+.28,.12,z-.24,1.25,.72,.95);
-          boulder.rotation.y=seed*.7;
-        }
+        if(seed%4===0)addBoulderDetail(x+.27,z-.22,seed);
+        if(seed%5===1)addForestRoots(x-.12,z+.12,seed);
+        if(seed%6===2)addFallenLog(x+(rand()-.5)*.24,z+(rand()-.5)*.24,seed);
         for(let k=0;k<3;k++){
-          const bush=boardMesh(new THREE.SphereGeometry(.085+(k%2)*.025,7,6),new THREE.MeshStandardMaterial({color:[0x294f2d,0x3a6337,0x496b3c][k],roughness:1}),x+Math.sin(seed+k*2)*.31,.12,z+Math.cos(seed*1.4+k*2)*.3,.95,.62,1.05);
+          boardMesh(new THREE.SphereGeometry(.085+(k%2)*.025,7,6),forestMat([0x294f2d,0x3a6337,0x496b3c][k]),x+Math.sin(seed+k*2)*.31,.12,z+Math.cos(seed*1.4+k*2)*.3,.95,.62,1.05);
         }
+        if(seed%3===0)addFern(x-.22,z+.2,seed);
       } else if(type==='treasure'){
-        const chestWood=new THREE.MeshStandardMaterial({color:0x624126,roughness:.82});
+        const chestWood=forestMat(0x624126,.82);
         const gold=new THREE.MeshStandardMaterial({color:0xc3a04b,metalness:.45,roughness:.38});
-        boardMesh(new THREE.BoxGeometry(.25,.16,.2),chestWood,x,.16,z);
+        const chest=boardMesh(new THREE.BoxGeometry(.25,.16,.2),chestWood,x,.16,z);
+        chest.rotation.y=(seed%5)*.21;
         boardMesh(new THREE.BoxGeometry(.27,.035,.22),gold,x,.25,z);
         boardMesh(new THREE.BoxGeometry(.035,.1,.025),gold,x,.18,z+.105);
+        boardMesh(new THREE.TorusGeometry(.12,.012,5,12,Math.PI),gold,x,.25,z,1,.65,.85);
+        if(seed%2===0)addFern(x+.24,z+.2,seed);
       } else if(type==='trap'){
         const iron=new THREE.MeshStandardMaterial({color:0x6f7771,metalness:.65,roughness:.42});
         boardMesh(new THREE.TorusGeometry(.22,.022,5,20),iron,x,.09,z,1,1,.8);
