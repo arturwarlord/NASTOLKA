@@ -147,38 +147,72 @@
     }
     positions.needsUpdate=true;geometry.computeVertexNormals();return geometry;
   }
+  let barkMaterial3D=null;
+  function treeBark(){
+    if(barkMaterial3D)return barkMaterial3D;
+    const canvas=document.createElement('canvas');canvas.width=128;canvas.height=256;
+    const c=canvas.getContext('2d');
+    c.fillStyle='#3b2b20';c.fillRect(0,0,128,256);
+    let state=7193;
+    const rand=()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};
+    for(let i=0;i<1700;i++){
+      const x=rand()*128,y=rand()*256,w=.5+rand()*3.5,h=5+rand()*44;
+      const light=rand()>.5;
+      c.fillStyle=light?'rgba(139,104,67,.10)':'rgba(8,9,6,.20)';
+      c.fillRect(x,y,w,h);
+    }
+    for(let i=0;i<90;i++){
+      c.strokeStyle='rgba(17,14,10,.24)';c.lineWidth=.5+rand();
+      c.beginPath();c.moveTo(rand()*128,rand()*256);c.bezierCurveTo(rand()*128,rand()*256,rand()*128,rand()*256,rand()*128,rand()*256);c.stroke();
+    }
+    const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(1,1);
+    barkMaterial3D=new THREE.MeshStandardMaterial({map:tex,color:0xffffff,roughness:1});
+    return barkMaterial3D;
+  }
+  function irregularCrown(radius,seed,color){
+    const geometry=new THREE.IcosahedronGeometry(radius,2),pos=geometry.attributes.position;
+    const rand=seeded(seed+17021),colors=[];
+    for(let i=0;i<pos.count;i++){
+      const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
+      const noise=.91+rand()*.17+.035*Math.sin(x*19+seed)*Math.cos(z*17-seed);
+      pos.setXYZ(i,x*noise,y*(.88+noise*.12),z*noise);
+      const shade=.72+rand()*.36;
+      colors.push(((color>>16&255)*shade)/255,((color>>8&255)*shade)/255,((color&255)*shade)/255);
+    }
+    geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geometry.computeVertexNormals();
+    const material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,metalness:0});
+    return new THREE.Mesh(geometry,material);
+  }
   function addCanopy(x,z,scale,seed){
-    // Taller, irregular woodland trees: visible trunks, branching limbs and layered foliage.
-    const rand=seeded(seed),greens=[0x203b25,0x29492c,0x315632,0x3a6036,0x45683a,0x526f40,0x5b7845];
-    const shadow=boardMesh(new THREE.CircleGeometry(.34*scale,20),forestMat(0x10170f),x+.055,.087,z+.07,.9,1,.8);
-    shadow.rotation.x=-Math.PI/2;
-    const bark=forestMat(seed%3===0?0x39291e:0x4b3524);
-    const trunkH=.62*scale;
-    const trunk=boardMesh(new THREE.CylinderGeometry(.045*scale,.09*scale,trunkH,7),bark,x,.055+trunkH/2,z);
-    trunk.rotation.z=(rand()-.5)*.09;
-    // Forked branches break the straight, toy-like trunk silhouette.
-    for(let n=0;n<3;n++){
-      const a=rand()*Math.PI*2,branchLen=(.19+rand()*.1)*scale;
-      const branch=boardMesh(new THREE.CylinderGeometry(.012*scale,.027*scale,branchLen,5),bark,
-        x+Math.cos(a)*branchLen*.25,.055+trunkH*(.62+n*.09),z+Math.sin(a)*branchLen*.25);
-      branch.rotation.set(Math.sin(a)*.72,0,Math.cos(a)*.72);
+    // Rebuilt from irregular, vertex-shaded foliage masses rather than rows of smooth toy spheres.
+    const rand=seeded(seed),greens=[0x1c3420,0x244329,0x2d4c2d,0x365632,0x3d5d35,0x46633a];
+    const bark=treeBark(),trunkH=1.03*scale;
+    const shadow=boardMesh(new THREE.CircleGeometry(.38*scale,24),forestMat(0x10150d),x+.06,.057,z+.04,1,.01,.86);
+    shadow.rotation.x=-Math.PI/2;shadow.castShadow=false;
+    const trunk=boardMesh(new THREE.CylinderGeometry(.07*scale,.145*scale,trunkH,10,3),bark,x,.055+trunkH/2,z);
+    trunk.rotation.z=(rand()-.5)*.075;
+    // Exposed root flares make the trunk emerge from the ground instead of ending at a cylinder base.
+    for(let n=0;n<4;n++){
+      const a=n*Math.PI/2+rand()*.45,len=(.24+rand()*.12)*scale;
+      const root=boardMesh(new THREE.CylinderGeometry(.018*scale,.065*scale,len,7),bark,
+        x+Math.cos(a)*len*.28,.105,z+Math.sin(a)*len*.28);
+      root.rotation.set(Math.sin(a)*.7,0,Math.cos(a)*.7);
     }
-    // Layered asymmetric foliage, raised above the ground so perspective reveals depth.
-    for(let n=0;n<13;n++){
-      const angle=rand()*Math.PI*2,dist=n===0?0:(.08+rand()*.22)*scale;
-      const radius=(.17+rand()*.14)*scale;
-      const crownY=.055+trunkH*.92+rand()*.22*scale;
-      const crown=boardMesh(new THREE.SphereGeometry(radius,10,8),forestMat(greens[Math.floor(rand()*greens.length)]),
-        x+Math.cos(angle)*dist,crownY,z+Math.sin(angle)*dist,
-        .9+rand()*.5,.72+rand()*.42,.85+rand()*.5);
-      crown.rotation.set((rand()-.5)*.18,rand()*Math.PI,(rand()-.5)*.18);
+    for(let n=0;n<4;n++){
+      const a=rand()*Math.PI*2,len=(.28+rand()*.16)*scale;
+      const branch=boardMesh(new THREE.CylinderGeometry(.018*scale,.045*scale,len,7),bark,
+        x+Math.cos(a)*len*.27,.055+trunkH*(.58+n*.055),z+Math.sin(a)*len*.27);
+      branch.rotation.set(Math.sin(a)*.78,0,Math.cos(a)*.78);
     }
-    // A few small leaf clusters create an uneven, natural crown edge.
-    for(let n=0;n<5;n++){
-      const angle=rand()*Math.PI*2,dist=(.25+rand()*.1)*scale;
-      const leaf=boardMesh(new THREE.SphereGeometry(.055*scale,8,6),forestMat(greens[Math.floor(rand()*greens.length)]),
-        x+Math.cos(angle)*dist,.055+trunkH*.86+rand()*.2*scale,z+Math.sin(angle)*dist,.9,.8,1.15);
-      leaf.rotation.y=angle;
+    // Uneven overlapping canopy layers; each has a deformed silhouette and per-vertex color variation.
+    for(let n=0;n<7;n++){
+      const angle=rand()*Math.PI*2,ring=n===0?0:(.12+rand()*.28)*scale;
+      const radius=(.31+rand()*.17)*scale;
+      const crown=irregularCrown(radius,seed*13+n,greens[Math.floor(rand()*greens.length)]);
+      crown.position.set(x+Math.cos(angle)*ring,.055+trunkH*.76+rand()*.48*scale,z+Math.sin(angle)*ring);
+      crown.scale.set(.92+rand()*.34,.9+rand()*.34,.9+rand()*.34);
+      crown.rotation.set((rand()-.5)*.22,rand()*Math.PI,(rand()-.5)*.22);
+      crown.castShadow=true;crown.receiveShadow=true;boardRoot.add(crown);
     }
   }
   function addTerrainRelief(x,z,seed){
@@ -608,9 +642,9 @@
     boardRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));boardRenderer.setClearColor(0x000000,0);
     boardRenderer.shadowMap.enabled=true;boardRenderer.shadowMap.type=THREE.PCFSoftShadowMap;
     boardRenderer.outputColorSpace=THREE.SRGBColorSpace;boardRenderer.toneMapping=THREE.ACESFilmicToneMapping;
-    boardScene.add(new THREE.HemisphereLight(0xe5efdc,0x263326,1.75));
-    const fill=new THREE.DirectionalLight(0xb7d6ff,.72);fill.position.set(6,5,-6);boardScene.add(fill);
-    const sun=new THREE.DirectionalLight(0xffe8c4,2.7);sun.position.set(-5,11,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-7;sun.shadow.camera.right=7;sun.shadow.camera.top=7;sun.shadow.camera.bottom=-7;sun.shadow.bias=-.00018;sun.shadow.normalBias=.025;boardScene.add(sun);
+    boardScene.add(new THREE.HemisphereLight(0xcbd7c4,0x171d15,.78));
+    const fill=new THREE.DirectionalLight(0x9fb7c8,.28);fill.position.set(6,5,-6);boardScene.add(fill);
+    const sun=new THREE.DirectionalLight(0xffe2bb,3.15);sun.position.set(-5,11,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-7;sun.shadow.camera.right=7;sun.shadow.camera.top=7;sun.shadow.camera.bottom=-7;sun.shadow.bias=-.00018;sun.shadow.normalBias=.025;boardScene.add(sun);
     const sync=()=>{
       if(boardSyncQueued)return;
       boardSyncQueued=true;
