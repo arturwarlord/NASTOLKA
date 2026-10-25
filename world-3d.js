@@ -273,7 +273,7 @@
     // Fine grass and shallow soil lips soften the border between packed trail and forest floor.
     // Everything stays near cell edges so player tokens and the path center remain clear.
     const rand=seeded(seed+edge*173+9203),green=[0x3b5a32,0x4c6a38,0x607542],soil=forestMat(0x70563a,1);
-    const angle=edge*Math.PI/2,ex=Math.cos(angle),ez=Math.sin(angle);
+    const angle=(edge-1)*Math.PI/2,ex=Math.cos(angle),ez=Math.sin(angle);
     const offset=.405+rand()*.035;
     const bank=boardMesh(new THREE.SphereGeometry(.13+rand()*.055,7,5),soil,
       x+ex*offset,.064,z+ez*offset,1.2,.075,.72);
@@ -282,8 +282,8 @@
       const along=(rand()-.5)*.24,height=.055+rand()*.055;
       const b=boardMesh(new THREE.ConeGeometry(.012+rand()*.008,height,4),
         forestMat(green[blade%green.length],1),
-        x+ex*offset-ex*along+ez*along,.075+height*.45,
-        z+ez*offset-ez*along+ex*along);
+        x+ex*offset-ez*along,.075+height*.45,
+        z+ez*offset+ex*along);
       b.rotation.z=(rand()-.5)*.42;b.rotation.x=(rand()-.5)*.35;b.castShadow=false;
     }
   }
