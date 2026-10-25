@@ -697,6 +697,8 @@ $('#restartGameBtn').addEventListener('click', startCustomGame);
 $('.dialog-close').forEach(btn => btn.addEventListener('click', () => btn.closest('dialog').close()));
 const mapHistoryToggle=$('#mapHistoryToggle');
 if(mapHistoryToggle)mapHistoryToggle.addEventListener('click',()=>{const open=document.documentElement.classList.toggle('map-history-open');mapHistoryToggle.setAttribute('aria-pressed',String(open));mapHistoryToggle.setAttribute('aria-label',open?'Закрыть историю игры':'Открыть историю игры');});
+const gameDialog=$('#gameDialog');
+if(gameDialog)gameDialog.addEventListener('close',()=>{document.documentElement.classList.remove('game-mode','map-history-open');if(mapHistoryToggle){mapHistoryToggle.setAttribute('aria-pressed','false');mapHistoryToggle.setAttribute('aria-label','Открыть историю игры');}});
 $('#createMapBtn').addEventListener('click', () => $('#createDialog').showModal());
 $$('.tile-tool').forEach(button => button.addEventListener('click', () => {
   selectedTile = button.dataset.tile;
