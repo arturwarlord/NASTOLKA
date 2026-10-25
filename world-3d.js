@@ -5,8 +5,9 @@
   const root=document.documentElement;
   let renderer,scene,camera,world,raf,resizeObserver;
   let detailedTreeModel=null,treeLoaderPromise=null,treeAssetAttempted=false;
-  window.__nastolkaAssetStatus={tree:'pending',rock:'pending'};
+  window.__nastolkaAssetStatus={tree:'pending',rock:'pending',fern:'pending'};
   let detailedRockModel=null,rockAssetAttempted=false,boardAssetDecorations=null,boardRockDecorations=null,boardTreeDecorations=null;
+  let detailedFernModel=null,fernAssetAttempted=false,worldFernDecorations=null;
   let treeRecords=[];
   const palettes={
     wild:{fog:0x111b15,ground:0x344332,rock:0x56584b,leaf:0x29472d,accent:0x84945a,sky:0x26352a},
@@ -232,6 +233,36 @@
     });
     world.add(worldRockDecorations);
   }
+  function applyWorldFernModel(){
+    if(!detailedFernModel||!world)return;
+    if(worldFernDecorations&&worldFernDecorations.parent)worldFernDecorations.parent.remove(worldFernDecorations);
+    worldFernDecorations=new THREE.Group();
+    const bounds=new THREE.Box3().setFromObject(detailedFernModel);
+    const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
+    if(!size.y||!Number.isFinite(size.y))return;
+    const placements=[[-7.1,-.8,.15,1.25],[7.25,-.2,1.1,1.15],[-9.5,2.6,.8,1.35],[9.6,2.4,2.2,1.25],[-6.9,4.8,1.7,1.05],[7.2,5.1,.35,1.15]];
+    placements.forEach(([x,z,rotation,height])=>{
+      const model=detailedFernModel.clone(true),scale=height/size.y;
+      model.scale.setScalar(scale);
+      model.position.set(x-center.x*scale,-bounds.min.y*scale,z-center.z*scale);
+      model.rotation.y=rotation;
+      model.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;}});
+      worldFernDecorations.add(model);
+    });
+    world.add(worldFernDecorations);
+  }
+  function loadWorldFernModel(){
+    if(fernAssetAttempted||root.dataset.gameScene!=='wild')return;
+    fernAssetAttempted=true;
+    loadPolyHavenModel('fern_02').then(model=>{
+      detailedFernModel=model;applyWorldFernModel();
+      window.__nastolkaAssetStatus.fern='loaded';
+      console.info('NASTOLKA: loaded Poly Haven CC0 Fern 02 model for foreground foliage.');
+    }).catch(error=>{
+      window.__nastolkaAssetStatus.fern='failed';
+      console.error('NASTOLKA: real fern model failed to load.',error);
+    });
+  }
   function loadBoardRockModel(){
     if(rockAssetAttempted||root.dataset.gameScene!=='wild')return;
     rockAssetAttempted=true;
@@ -283,7 +314,7 @@
       if(sceneName==='mystery')for(let i=0;i<6;i++){box(world,(Math.random()-.5)*25,.9,-7-Math.random()*14,1.1,1.8,1.1,mat(0x5d5867));}
     }
     if(treeRecords.length){if(detailedTreeModel)applyDetailedTreeModel();else loadDetailedTreeModel();}
-    if(sceneName==='wild'){if(detailedRockModel)applyWorldRockModel();else loadBoardRockModel();}
+    if(sceneName==='wild'){if(detailedRockModel)applyWorldRockModel();else loadBoardRockModel();if(detailedFernModel)applyWorldFernModel();else loadWorldFernModel();}
   }
 
   // A separate real 3D tabletop, aligned to the existing accessible DOM grid.
