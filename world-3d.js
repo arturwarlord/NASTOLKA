@@ -20,8 +20,9 @@
     mesh.position.set(x,y,z);if(rx)mesh.rotation.y=rx;mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
   }
   function rock(parent,x,z,scale,material){
-    const mesh=new THREE.Mesh(new THREE.DodecahedronGeometry(scale,1),material);
-    mesh.position.set(x,scale*.42,z);mesh.scale.set(1.15,.68,.9);mesh.rotation.set(Math.random()*.25,Math.random()*3,Math.random()*.2);
+    // Smooth, rounded prop silhouette; surface detail comes from material, not faceted geometry.
+    const mesh=new THREE.Mesh(new THREE.SphereGeometry(scale,12,8),material);
+    mesh.position.set(x,scale*.38,z);mesh.scale.set(1.22,.76,.94);mesh.rotation.set(Math.random()*.12,Math.random()*3,Math.random()*.12);
     mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
   }
   function tree(parent,x,z,scale,leaf,wood){
@@ -278,18 +279,14 @@
     return weatheredStoneMaterials[color];
   }
   function weatheredRockGeometry(radius,seed,detail=2){
-    // Natural fractured stone silhouette: subtly displaced vertices and muted mineral variation,
-    // avoiding the clean, repeated low-poly dodecahedrons that made the terrain feel like a toy.
-    const geometry=new THREE.IcosahedronGeometry(radius,detail);
-    const pos=geometry.attributes.position,rand=seeded(seed+6029),colors=[];
+    // Rounded decorative stone prop. Avoid visible triangular facets; relief is painted into the stone material.
+    const geometry=new THREE.SphereGeometry(radius,12,8);
+    const pos=geometry.attributes.position,rand=seeded(seed+6029);
     for(let i=0;i<pos.count;i++){
       const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
-      const n=.84+rand()*.29+.035*Math.sin(x*37+seed)*Math.cos(z*31-seed);
-      pos.setXYZ(i,x*n,y*n*(.84+rand()*.28),z*n);
-      const shade=.76+rand()*.28;
-      colors.push(shade,shade*(.985+rand()*.035),shade*(.96+rand()*.07));
+      const n=.96+rand()*.08;
+      pos.setXYZ(i,x*n,y*n*(.86+rand()*.16),z*n);
     }
-    geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
     geometry.computeVertexNormals();
     return geometry;
   }
@@ -314,50 +311,61 @@
     barkMaterial3D=new THREE.MeshStandardMaterial({map:tex,color:0xffffff,roughness:1});
     return barkMaterial3D;
   }
-  function irregularCrown(radius,seed,color){
-    const geometry=new THREE.IcosahedronGeometry(radius,2),pos=geometry.attributes.position;
-    const rand=seeded(seed+17021),colors=[];
-    for(let i=0;i<pos.count;i++){
-      const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
-      const noise=.91+rand()*.17+.035*Math.sin(x*19+seed)*Math.cos(z*17-seed);
-      pos.setXYZ(i,x*noise,y*(.88+noise*.12),z*noise);
-      const shade=.72+rand()*.36;
-      colors.push(((color>>16&255)*shade)/255,((color>>8&255)*shade)/255,((color&255)*shade)/255);
+  const foliageMaterialCache={};
+  function foliageMaterial(color){
+    if(foliageMaterialCache[color])return foliageMaterialCache[color];
+    const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
+    const c=canvas.getContext('2d');
+    const rgb=[color>>16&255,color>>8&255,color&255];
+    c.fillStyle='rgb('+rgb.join(',')+')';c.fillRect(0,0,256,256);
+    let state=(color+9107)*2654435761>>>0;
+    const rand=()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};
+    // Painted leaf clusters give the canopy a textured, organic surface without a jagged low-poly look.
+    for(let i=0;i<520;i++){
+      const shade=rand()>.52?1:-1,delta=10+rand()*35;
+      const col=rgb.map(v=>Math.max(0,Math.min(255,Math.round(v+shade*delta))));
+      c.fillStyle='rgba('+col.join(',')+','+(.32+rand()*.48)+')';
+      c.beginPath();
+      const x=rand()*256,y=rand()*256,w=2+rand()*9,h=1.5+rand()*5;
+      c.ellipse(x,y,w,h,rand()*Math.PI,0,Math.PI*2);c.fill();
+      if(i%4===0){c.strokeStyle='rgba(20,35,16,.22)';c.lineWidth=.7;c.beginPath();c.moveTo(x-w,y);c.lineTo(x+w,y);c.stroke();}
     }
-    geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geometry.computeVertexNormals();
-    const material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,metalness:0});
-    return new THREE.Mesh(geometry,material);
+    const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=4;
+    foliageMaterialCache[color]=new THREE.MeshStandardMaterial({map:tex,color:0xffffff,roughness:1,metalness:0});
+    return foliageMaterialCache[color];
   }
   function addCanopy(x,z,scale,seed){
-    // Rebuilt from irregular, vertex-shaded foliage masses rather than rows of smooth toy spheres.
+    // Natural rounded foliage masses with painted leaf texture replace spiky triangulated crowns.
     const rand=seeded(seed),greens=[0x1c3420,0x244329,0x2d4c2d,0x365632,0x3d5d35,0x46633a];
     const bark=treeBark(),trunkH=1.03*scale;
-    const shadow=boardMesh(new THREE.CircleGeometry(.38*scale,24),forestMat(0x10150d),x+.06,.057,z+.04,1,.01,.86);
+    const shadow=boardMesh(new THREE.CircleGeometry(.38*scale,20),forestMat(0x10150d),x+.06,.057,z+.04,1,.01,.86);
     shadow.rotation.x=-Math.PI/2;shadow.castShadow=false;
-    const trunk=boardMesh(new THREE.CylinderGeometry(.07*scale,.145*scale,trunkH,10,3),bark,x,.055+trunkH/2,z);
+    const trunk=boardMesh(new THREE.CylinderGeometry(.075*scale,.14*scale,trunkH,10),bark,x,.055+trunkH/2,z);
     trunk.rotation.z=(rand()-.5)*.075;
-    // Exposed root flares make the trunk emerge from the ground instead of ending at a cylinder base.
     for(let n=0;n<4;n++){
-      const a=n*Math.PI/2+rand()*.45,len=(.24+rand()*.12)*scale;
-      const root=boardMesh(new THREE.CylinderGeometry(.018*scale,.065*scale,len,7),bark,
-        x+Math.cos(a)*len*.28,.105,z+Math.sin(a)*len*.28);
-      root.rotation.set(Math.sin(a)*.7,0,Math.cos(a)*.7);
+      const angle=n*Math.PI/2+rand()*.45,len=(.22+rand()*.1)*scale;
+      const root=boardMesh(new THREE.CylinderGeometry(.025*scale,.06*scale,len,8),bark,
+        x+Math.cos(angle)*len*.28,.105,z+Math.sin(angle)*len*.28);
+      root.rotation.set(Math.sin(angle)*.7,0,Math.cos(angle)*.7);
     }
+    for(let n=0;n<3;n++){
+      const angle=rand()*Math.PI*2,len=(.25+rand()*.12)*scale;
+      const branch=boardMesh(new THREE.CylinderGeometry(.018*scale,.038*scale,len,8),bark,
+        x+Math.cos(angle)*len*.27,.055+trunkH*(.62+n*.06),z+Math.sin(angle)*len*.27);
+      branch.rotation.set(Math.sin(angle)*.75,0,Math.cos(angle)*.75);
+    }
+    // One broad central crown plus four overlapping rounded lobes: decoration-like silhouette, not a spiky mesh.
+    const centerY=.055+trunkH*.86;
+    const central=new THREE.Mesh(new THREE.SphereGeometry(.43*scale,14,10),foliageMaterial(greens[seed%greens.length]));
+    central.position.set(x,centerY,z);central.scale.set(1.08,1.02,.96);
+    central.castShadow=true;central.receiveShadow=true;boardRoot.add(central);
     for(let n=0;n<4;n++){
-      const a=rand()*Math.PI*2,len=(.28+rand()*.16)*scale;
-      const branch=boardMesh(new THREE.CylinderGeometry(.018*scale,.045*scale,len,7),bark,
-        x+Math.cos(a)*len*.27,.055+trunkH*(.58+n*.055),z+Math.sin(a)*len*.27);
-      branch.rotation.set(Math.sin(a)*.78,0,Math.cos(a)*.78);
-    }
-    // Uneven overlapping canopy layers; each has a deformed silhouette and per-vertex color variation.
-    for(let n=0;n<7;n++){
-      const angle=rand()*Math.PI*2,ring=n===0?0:(.12+rand()*.28)*scale;
-      const radius=(.31+rand()*.17)*scale;
-      const crown=irregularCrown(radius,seed*13+n,greens[Math.floor(rand()*greens.length)]);
-      crown.position.set(x+Math.cos(angle)*ring,.055+trunkH*.76+rand()*.48*scale,z+Math.sin(angle)*ring);
-      crown.scale.set(.92+rand()*.34,.9+rand()*.34,.9+rand()*.34);
-      crown.rotation.set((rand()-.5)*.22,rand()*Math.PI,(rand()-.5)*.22);
-      crown.castShadow=true;crown.receiveShadow=true;boardRoot.add(crown);
+      const angle=n*Math.PI*.5+rand()*.28,ring=(.2+rand()*.07)*scale,radius=(.29+rand()*.06)*scale;
+      const crown=new THREE.Mesh(new THREE.SphereGeometry(radius,12,8),foliageMaterial(greens[Math.floor(rand()*greens.length)]));
+      crown.position.set(x+Math.cos(angle)*ring,centerY+(.02+rand()*.16)*scale,z+Math.sin(angle)*ring);
+      crown.scale.set(.98+rand()*.22,.88+rand()*.18,.96+rand()*.2);
+      crown.rotation.y=rand()*Math.PI;crown.castShadow=true;crown.receiveShadow=true;boardRoot.add(crown);
     }
   }
   function addTerrainRelief(x,z,seed){
