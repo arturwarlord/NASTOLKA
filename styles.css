@@ -938,3 +938,70 @@ html.game-mode .road-heading span{font-size:8px!important;font-weight:500!import
 html.game-mode #playBoard.road-layout>.road-cell.tile-path .play-cell-symbol{display:block!important;width:13px!important;height:13px!important;min-height:13px!important;flex:0 0 13px!important;border-radius:50%!important;background:radial-gradient(circle at 35% 28%,#fff0c8,#bd9e6b 48%,#5a422b 100%)!important;border:2px solid #ead2a4!important;box-shadow:0 4px 7px #000b,inset 0 1px #fff8!important;font-size:0!important}
 html.game-mode #playBoard.road-layout>.road-cell.tile-path .road-cell-name{font-size:7px!important;color:#e0d0b0!important}
 @media(max-width:760px){html.game-mode .road-heading{font-size:9px!important;gap:7px!important}html.game-mode .road-heading span{font-size:7px!important}}
+
+
+/* Immersive trail HUD: keep route markers, remove the flat row of board tiles. */
+html.game-mode #playBoard.road-layout{
+  border:0!important;border-radius:0!important;
+  background:linear-gradient(180deg,transparent 0%,#08100b18 55%,#08100bc9 100%)!important;
+  box-shadow:none!important;
+  padding:10px clamp(18px,5vw,76px) 16px!important;
+  gap:clamp(18px,2.4vw,38px)!important;
+  scroll-snap-type:x proximity!important;
+}
+html.game-mode #playBoard.road-layout:before,
+html.game-mode #playBoard.road-layout:after{display:none!important;content:none!important}
+html.game-mode #playBoard.road-layout>.road-cell{
+  flex:0 0 clamp(58px,6.8vw,88px)!important;
+  width:clamp(58px,6.8vw,88px)!important;
+  height:clamp(92px,15vh,132px)!important;
+  min-height:0!important;max-height:none!important;
+  border:1px solid #b6c99b30!important;
+  border-radius:42% 42% 9px 9px!important;
+  background:linear-gradient(180deg,#16251bc9,#0b130ec9)!important;
+  box-shadow:0 12px 24px #0007,inset 0 1px #e4f0d51b!important;
+  backdrop-filter:blur(5px);
+  transform:perspective(500px) rotateX(5deg)!important;
+}
+html.game-mode #playBoard.road-layout>.road-cell.tile-path{
+  border-color:transparent!important;background:transparent!important;
+  box-shadow:none!important;backdrop-filter:none!important;
+}
+html.game-mode #playBoard.road-layout>.road-cell .route-step{
+  top:5px!important;left:50%!important;bottom:auto!important;transform:translateX(-50%)!important;
+  background:#10180dc9!important;border:1px solid #c5d7ad2a!important;
+  border-radius:12px!important;padding:3px 6px!important;font-size:8px!important;opacity:.9!important;
+}
+html.game-mode #playBoard.road-layout>.road-cell .play-cell-symbol{
+  display:grid!important;place-items:center!important;flex:0 0 auto!important;
+  width:30px!important;height:30px!important;min-height:30px!important;
+  margin:auto auto 4px!important;border-radius:50%!important;
+  background:radial-gradient(circle at 32% 25%,#f4f0d8,#9bb47b 48%,#283b26 100%)!important;
+  border:1px solid #e2ebc8a8!important;box-shadow:0 5px 10px #0008!important;
+  font-size:16px!important;filter:drop-shadow(0 2px 4px #0009)!important;
+}
+html.game-mode #playBoard.road-layout>.road-cell.tile-path .play-cell-symbol{
+  width:9px!important;height:9px!important;min-height:9px!important;
+  margin:auto!important;background:#bfa274!important;border:2px solid #ead2a4!important;
+  box-shadow:0 3px 6px #000b!important;font-size:0!important;
+}
+html.game-mode #playBoard.road-layout>.road-cell .road-cell-name{
+  position:relative!important;display:block!important;max-width:100%!important;
+  margin:0 2px 8px!important;text-align:center!important;line-height:1.25!important;
+  font-size:7px!important;letter-spacing:.35px!important;color:#e4e8d6!important;
+  text-shadow:0 2px 4px #000!important;overflow-wrap:anywhere!important;
+}
+html.game-mode #playBoard.road-layout>.road-cell .play-tokens{
+  position:absolute!important;left:0!important;right:0!important;bottom:-7px!important;
+  display:flex!important;justify-content:center!important;gap:2px!important;max-width:100%!important;
+}
+html.game-mode #playBoard.road-layout>.road-cell.current-player-cell{
+  outline:2px solid #d8ff3e!important;outline-offset:3px!important;
+  background:linear-gradient(180deg,#53643bbd,#182516e8)!important;
+  box-shadow:0 0 22px #d8ff3e44,0 12px 24px #0008!important;
+}
+@media(max-width:760px){
+  html.game-mode #playBoard.road-layout{gap:12px!important;padding-inline:18px!important}
+  html.game-mode #playBoard.road-layout>.road-cell{flex-basis:60px!important;width:60px!important;height:94px!important}
+  html.game-mode #playBoard.road-layout>.road-cell .road-cell-name{font-size:6px!important}
+}
