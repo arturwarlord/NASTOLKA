@@ -76,15 +76,29 @@
   let boardRenderer,boardScene,boardCamera,boardCanvas,boardObserver,boardResizeHandler;
   let boardRoot,boardFrame;
   let boardMaterials,lastBoardSignature='',boardSyncQueued=false;
-  function createBoardMaterials(){boardMaterials={
-    empty:new THREE.MeshStandardMaterial({color:0x284632,roughness:1}),
-    path:new THREE.MeshStandardMaterial({color:0x92734b,roughness:.94}),
-    start:new THREE.MeshStandardMaterial({color:0x9ab849,roughness:.78}),
-    finish:new THREE.MeshStandardMaterial({color:0xc7a365,roughness:.75}),
-    treasure:new THREE.MeshStandardMaterial({color:0x9d7428,metalness:.22,roughness:.45}),
-    trap:new THREE.MeshStandardMaterial({color:0x783d35,roughness:.82}),
-    event:new THREE.MeshStandardMaterial({color:0x66528f,roughness:.68})
-  };}
+  // Theme-specific board materials: the same playable grid becomes a different physical world.
+  const boardLooks={
+    wild:{base:0x17231a,rim:0x514333,inset:0x283b29,empty:0x284632,path:0x92734b,start:0x9ab849,finish:0xc7a365,trap:0x783d35,event:0x66528f,detail:0x54734a,detail2:0x64523a,metal:0x9b9b8b},
+    island:{base:0x203b3b,rim:0x6c573b,inset:0x7f704e,empty:0x47734c,path:0xc3a36b,start:0x71b98b,finish:0xf0d18b,trap:0x9b6048,event:0x3f9fa5,detail:0x3c7951,detail2:0x9c8759,metal:0xb4b7a3},
+    city:{base:0x20262b,rim:0x42464a,inset:0x333a3f,empty:0x39483e,path:0x686b6a,start:0x86a87c,finish:0xe1b37c,trap:0x8d4841,event:0xb27c4b,detail:0x53615a,detail2:0x777b7c,metal:0xb7bfc1},
+    mystery:{base:0x211e2c,rim:0x4b4357,inset:0x343044,empty:0x41443c,path:0x71677b,start:0x879b70,finish:0xc5b5d6,trap:0x78475c,event:0x8e79b8,detail:0x555044,detail2:0x5d5867,metal:0xaaa2b4},
+    neon:{base:0x151b2a,rim:0x3b4055,inset:0x242d43,empty:0x25454a,path:0x3b5264,start:0x45b6a1,finish:0x5cc6e6,trap:0xb13f72,event:0xd65bb8,detail:0x28616a,detail2:0x3c5369,metal:0x80d8e7},
+    cosmos:{base:0x171d35,rim:0x424865,inset:0x272f4d,empty:0x303e62,path:0x59658a,start:0x7899cb,finish:0xd0c6ff,trap:0x864d7a,event:0x8197e5,detail:0x40567a,detail2:0x6c7397,metal:0xb4c7f4}
+  };
+  let activeBoardLook=boardLooks.wild;
+  function createBoardMaterials(){
+    const key=root.dataset.gameScene||'wild';
+    activeBoardLook=boardLooks[key]||boardLooks.wild;
+    boardMaterials={
+      empty:new THREE.MeshStandardMaterial({color:activeBoardLook.empty,roughness:1}),
+      path:new THREE.MeshStandardMaterial({color:activeBoardLook.path,roughness:.94}),
+      start:new THREE.MeshStandardMaterial({color:activeBoardLook.start,roughness:.78}),
+      finish:new THREE.MeshStandardMaterial({color:activeBoardLook.finish,roughness:.75}),
+      treasure:new THREE.MeshStandardMaterial({color:0x9d7428,metalness:.22,roughness:.45}),
+      trap:new THREE.MeshStandardMaterial({color:activeBoardLook.trap,roughness:.82}),
+      event:new THREE.MeshStandardMaterial({color:activeBoardLook.event,roughness:.55,metalness:key==='neon'||key==='cosmos'?.2:.02})
+    };
+  }
   function boardMesh(geometry,material,x,y,z,scaleX=1,scaleY=1,scaleZ=1){
     const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.scale.set(scaleX,scaleY,scaleZ);m.castShadow=true;m.receiveShadow=true;boardRoot.add(m);return m;
   }
@@ -109,12 +123,13 @@
     board.classList.add('board-3d-ready');
     if(boardRoot){boardScene.remove(boardRoot);boardRoot.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&& !Object.values(boardMaterials).includes(o.material)){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});}
     boardRoot=new THREE.Group();boardScene.add(boardRoot);
-    const baseMat=new THREE.MeshStandardMaterial({color:0x17231a,roughness:.96,metalness:.015});
+    const look=activeBoardLook;
+    const baseMat=new THREE.MeshStandardMaterial({color:look.base,roughness:.96,metalness:.015});
     boardMesh(new THREE.BoxGeometry(8.3,.34,8.3),baseMat,0,-.2,0);
-    // Dark wood-like rim and a narrow inset border make the board read as a physical tabletop.
-    const rimMat=new THREE.MeshStandardMaterial({color:0x514333,roughness:.78});
+    // Theme-specific edge finish keeps the board feeling like a physical miniature terrain.
+    const rimMat=new THREE.MeshStandardMaterial({color:look.rim,roughness:.78,metalness:(root.dataset.gameScene==='neon'||root.dataset.gameScene==='cosmos')?.18:.02});
     boardMesh(new THREE.BoxGeometry(8.36,.1,8.36),rimMat,0,-.015,0);
-    const insetMat=new THREE.MeshStandardMaterial({color:0x283b29,roughness:.94});
+    const insetMat=new THREE.MeshStandardMaterial({color:look.inset,roughness:.94});
     boardMesh(new THREE.BoxGeometry(8.12,.035,8.12),insetMat,0,.045,0);
     for(let i=0;i<8;i++)for(let j=0;j<8;j++){
       const cell=board.children[i*8+j];if(!cell||!cell.classList.contains('play-cell'))continue;
@@ -124,13 +139,13 @@
       // Fine bevel-like inset and natural surface variation.
       if(type==='path'){
         for(let k=0;k<3;k++){
-          const pebble=new THREE.Mesh(new THREE.DodecahedronGeometry(.075+(k%2)*.025,0),new THREE.MeshStandardMaterial({color:k===1?0xb8a17b:0x64523a,roughness:1}));
+          const pebble=new THREE.Mesh(new THREE.DodecahedronGeometry(.075+(k%2)*.025,0),new THREE.MeshStandardMaterial({color:k===1?0xb8a17b:look.detail2,roughness:1}));
           pebble.position.set(x+(Math.random()-.5)*.58,.19,z+(Math.random()-.5)*.58);pebble.scale.y=.38;pebble.castShadow=true;boardRoot.add(pebble);
         }
       } else if(type==='empty'){
-        const rockMat=new THREE.MeshStandardMaterial({color:0x4a6044,roughness:1});
+        const rockMat=new THREE.MeshStandardMaterial({color:look.detail2,roughness:1});
         for(let k=0;k<2;k++){
-          const bush=new THREE.Mesh(new THREE.IcosahedronGeometry(.19+Math.random()*.13,1),new THREE.MeshStandardMaterial({color:k?0x34583a:0x54734a,roughness:1}));
+          const bush=new THREE.Mesh(new THREE.IcosahedronGeometry(.19+Math.random()*.13,1),new THREE.MeshStandardMaterial({color:k?look.detail:look.empty,roughness:1}));
           bush.position.set(x+(k?-.2:.2),.27,z+(Math.random()-.5)*.3);bush.scale.y=1.35;bush.castShadow=true;boardRoot.add(bush);
         }
         if((i*8+j)%3===0)boardMesh(new THREE.DodecahedronGeometry(.13,1),rockMat,x+.25,.25,z+.24,.9,.65,.8);
@@ -140,7 +155,7 @@
         boardMesh(new THREE.BoxGeometry(.39,.07,.31),gold,x,.42,z);
         boardMesh(new THREE.BoxGeometry(.055,.08,.025),new THREE.MeshStandardMaterial({color:0x51351a,metalness:.1}),x,.33,z+.16);
       } else if(type==='trap'){
-        const iron=new THREE.MeshStandardMaterial({color:0x9b9b8b,metalness:.7,roughness:.36});
+        const iron=new THREE.MeshStandardMaterial({color:look.metal,metalness:.7,roughness:.36});
         for(let k=0;k<4;k++){const spike=boardMesh(new THREE.ConeGeometry(.065,.24,6),iron,x-.24+k*.16,.25,z);spike.rotation.z=Math.PI;}
         boardMesh(new THREE.TorusGeometry(.28,.035,6,20),iron,x,.2,z,1,1,.8);
       } else if(type==='event'){
