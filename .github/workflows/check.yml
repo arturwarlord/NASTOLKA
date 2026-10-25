@@ -29,6 +29,9 @@ jobs:
           test -s supabase/multiplayer.sql
           grep -q 'styles.css' index.html
           grep -q 'app.js' index.html
+          grep -q 'world-3d.js' index.html
+          grep -q 'function init3DBoard()' world-3d.js
+          grep -q 'board-3d-ready' styles.css
           echo "Основные файлы найдены."
 
       - name: Проверить интерфейс резервного копирования карт
@@ -69,6 +72,7 @@ jobs:
       - name: Проверить синтаксис JavaScript
         run: |
           node --check app.js
+          node --check world-3d.js
           node --check rooms.js
           node --check supabase-config.js
 
