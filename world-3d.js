@@ -172,6 +172,26 @@
       leaf.rotation.y=angle;
     }
   }
+  function addTerrainRelief(x,z,seed){
+    // Low, irregular ground swells break the flat board silhouette without moving logical cells.
+    const rand=seeded(seed+3307),radius=.27+rand()*.16,segments=7+(seed%3);
+    const positions=[],indices=[];
+    const peak=.075+rand()*.055;
+    positions.push(0,peak,0);
+    for(let n=0;n<segments;n++){
+      const a=Math.PI*2*n/segments+(rand()-.5)*.22;
+      const r=radius*(.72+rand()*.38);
+      positions.push(Math.cos(a)*r,.056+rand()*.009,Math.sin(a)*r);
+    }
+    for(let n=0;n<segments;n++)indices.push(0,n+1,(n+1)%segments+1);
+    const geometry=new THREE.BufferGeometry();
+    geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+    geometry.setIndex(indices);geometry.computeVertexNormals();
+    const colors=[0x314c2d,0x3c5732,0x455f37,0x526742];
+    const material=forestMat(colors[seed%colors.length],1);
+    const mound=boardMesh(geometry,material,x,.002,z);
+    mound.castShadow=false;mound.receiveShadow=true;
+  }
   function addForestEdge(x,z,seed){
     const rand=seeded(seed+2401),rock=forestMat(seed%2?0x55594b:0x696b5c,.98);
     // Broken stone outcrops at the forest boundary make the terrain feel carved, not boxed.
@@ -312,6 +332,7 @@
         if(seed%5===0)addForestFloorDetail(x,z,seed);
       } else if(type==='empty'){
         const rand=seeded(seed+211);
+        if(root.dataset.gameScene==='wild'&&seed%2===0)addTerrainRelief(x+(rand()-.5)*.22,z+(rand()-.5)*.22,seed);
         if(seed%3!==0)addCanopy(x+((seed%3)-1)*.12,z+((seed%5)-2)*.07,.7+(seed%4)*.08,seed);
         if(seed%4===0)addBoulderDetail(x+.27,z-.22,seed);
         if(seed%5===1)addForestRoots(x-.12,z+.12,seed);
@@ -373,8 +394,9 @@
     boardRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));boardRenderer.setClearColor(0x000000,0);
     boardRenderer.shadowMap.enabled=true;boardRenderer.shadowMap.type=THREE.PCFSoftShadowMap;
     boardRenderer.outputColorSpace=THREE.SRGBColorSpace;boardRenderer.toneMapping=THREE.ACESFilmicToneMapping;
-    boardScene.add(new THREE.HemisphereLight(0xe5efdc,0x263326,2.3));
-    const sun=new THREE.DirectionalLight(0xffe8c4,3.1);sun.position.set(-5,11,7);sun.castShadow=true;sun.shadow.mapSize.set(768,768);sun.shadow.camera.left=-7;sun.shadow.camera.right=7;sun.shadow.camera.top=7;sun.shadow.camera.bottom=-7;sun.shadow.bias=-.00025;boardScene.add(sun);
+    boardScene.add(new THREE.HemisphereLight(0xe5efdc,0x263326,1.75));
+    const fill=new THREE.DirectionalLight(0xb7d6ff,.72);fill.position.set(6,5,-6);boardScene.add(fill);
+    const sun=new THREE.DirectionalLight(0xffe8c4,2.7);sun.position.set(-5,11,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-7;sun.shadow.camera.right=7;sun.shadow.camera.top=7;sun.shadow.camera.bottom=-7;sun.shadow.bias=-.00018;sun.shadow.normalBias=.025;boardScene.add(sun);
     const sync=()=>{
       if(boardSyncQueued)return;
       boardSyncQueued=true;
