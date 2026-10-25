@@ -925,3 +925,8 @@ html.game-mode #gameLog{background:#08100ddf!important;backdrop-filter:blur(8px)
   html.game-mode #playBoard.road-layout{padding-left:25px!important;padding-right:25px!important;gap:12px!important}
   html.game-mode #playBoard.road-layout>.road-cell{flex-basis:82px!important;width:82px!important;height:clamp(132px,22vh,175px)!important}
 }
+
+html.game-mode #customGamePanel{grid-template-areas:"setup" "names" "status" "locationTitle" "locations" "board" "actions" "log" "history"!important;grid-template-rows:auto auto auto auto auto minmax(160px,1fr) auto auto auto!important}
+html.game-mode .player-location-heading{grid-area:locationTitle!important;display:flex!important;align-items:center!important;gap:12px!important;margin:0!important;padding:0 2px!important;color:#f1f3e5!important;font-size:10px!important;font-weight:900!important;letter-spacing:1.3px!important}
+html.game-mode .player-location-heading span{font-size:8px!important;font-weight:500!important;letter-spacing:.6px!important;color:#d0d9c4!important;opacity:.9!important}
+@media(max-width:760px){html.game-mode .player-location-heading{font-size:9px!important;gap:7px!important}html.game-mode .player-location-heading span{font-size:7px!important}}
