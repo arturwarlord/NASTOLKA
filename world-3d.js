@@ -252,6 +252,31 @@
     positions.needsUpdate=true;geometry.computeVertexNormals();return geometry;
   }
   let barkMaterial3D=null;
+  const weatheredStoneMaterials={};
+  function weatheredStoneMaterial(color){
+    if(weatheredStoneMaterials[color])return weatheredStoneMaterials[color];
+    const canvas=document.createElement('canvas');canvas.width=canvas.height=128;
+    const ctx=canvas.getContext('2d');
+    const rgb=[color>>16&255,color>>8&255,color&255];
+    ctx.fillStyle='rgb('+rgb.join(',')+')';ctx.fillRect(0,0,128,128);
+    let state=(color+1817)*2654435761>>>0;
+    const rand=()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};
+    for(let i=0;i<2100;i++){
+      const delta=Math.floor(rand()*44)-22,alpha=.06+rand()*.19;
+      const c=rgb.map(v=>Math.max(0,Math.min(255,v+delta)));
+      ctx.fillStyle='rgba('+c.join(',')+','+alpha+')';
+      const w=.5+rand()*3.5,h=.5+rand()*2.5;
+      ctx.beginPath();ctx.ellipse(rand()*128,rand()*128,w,h,rand()*Math.PI,0,Math.PI*2);ctx.fill();
+    }
+    for(let i=0;i<22;i++){
+      const x=rand()*128,y=rand()*128;
+      ctx.strokeStyle='rgba(22,24,20,'+(.08+rand()*.13)+')';ctx.lineWidth=.4+rand()*.7;
+      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(rand()-.5)*18,y+(rand()-.5)*22);ctx.stroke();
+    }
+    const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;map.wrapS=map.wrapT=THREE.RepeatWrapping;map.anisotropy=4;
+    weatheredStoneMaterials[color]=new THREE.MeshStandardMaterial({map,color:0xffffff,roughness:.98,metalness:0,vertexColors:true});
+    return weatheredStoneMaterials[color];
+  }
   function weatheredRockGeometry(radius,seed,detail=2){
     // Natural fractured stone silhouette: subtly displaced vertices and muted mineral variation,
     // avoiding the clean, repeated low-poly dodecahedrons that made the terrain feel like a toy.
@@ -376,7 +401,7 @@
   function addAncientRuin(){
     // Weathered, partially collapsed stone gateway behind the playable forest edge.
     // Decorative only: no gameplay cells or positions are changed.
-    const stone=forestMat(0x55594d,.97),moss=forestMat(0x46573a,1),z=-4.02;
+    const stone=weatheredStoneMaterial(0x55594d),moss=forestMat(0x46573a,1),z=-4.02;
     for(const side of [-1,1]){
       const x=side*2.48,height=side===-1?1.02:.78;
       const pillar=boardMesh(new THREE.CylinderGeometry(.105,.16,height,7),stone,x,.055+height/2,z);
@@ -473,7 +498,7 @@
   }
   function addPerimeterOutcrops(){
     // Larger fractured rock groups rise from the very edge, framing rather than blocking the route.
-    const stone=forestMat(0x5b6052,.99),lightStone=forestMat(0x747767,.98),moss=forestMat(0x405a34,1);
+    const stone=weatheredStoneMaterial(0x5b6052),lightStone=weatheredStoneMaterial(0x747767),moss=forestMat(0x405a34,1);
     for(const side of [-1,1]){
       const x=side*4.02;
       for(let n=0;n<3;n++){
@@ -542,7 +567,7 @@
     end.rotation.x=-Math.PI/2;
   }
   function addBoulderDetail(x,z,seed){
-    const rand=seeded(seed+1601),rockMat=forestMat(seed%2?0x62675a:0x777969,.98),size=.105+rand()*.095;
+    const rand=seeded(seed+1601),rockMat=weatheredStoneMaterial(seed%2?0x62675a:0x777969),size=.105+rand()*.095;
     const b=boardMesh(weatheredRockGeometry(size,seed+13),rockMat,x,.11,z,1.25,.75,.95);
     b.rotation.set(rand()*.2,rand()*Math.PI,rand()*.18);
     const chip=boardMesh(weatheredRockGeometry(size*.42,seed+29,1),rockMat,x+(rand()-.5)*.18,.085,z+(rand()-.5)*.15,.9,.72,1.1);
