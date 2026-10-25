@@ -224,10 +224,10 @@
         if(root.dataset.gameScene==='wild'){
           const rand=seeded(seed+173);
           const dirt=boardMesh(new THREE.CircleGeometry(.61,18),boardMaterials.path,x,.062,z, .9+rand()*.2,1,.78+rand()*.25);
-          dirt.rotation.x=-Math.PI/2;dirt.rotation.z=rand()*.3;
+          dirt.rotation.x=-Math.PI/2;
           for(let n=0;n<2;n++){
             const patch=boardMesh(new THREE.CircleGeometry(.27+rand()*.13,12),boardMaterials.path,x+(rand()-.5)*.42,.063,z+(rand()-.5)*.42,.8+rand()*.5,1,.65+rand()*.6);
-            patch.rotation.x=-Math.PI/2;patch.rotation.z=rand()*Math.PI;
+            patch.rotation.x=-Math.PI/2;
           }
         }
         // Uneven dirt edge stones, scattered rather than arranged as decorative beads.
