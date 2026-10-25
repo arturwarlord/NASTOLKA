@@ -75,7 +75,8 @@
   // DOM remains authoritative for turns and multiplayer; WebGL supplies the rendered board.
   let boardRenderer,boardScene,boardCamera,boardCanvas,boardObserver,boardResizeHandler;
   let boardRoot,boardFrame;
-  const boardMaterials={
+  let boardMaterials;
+  function createBoardMaterials(){boardMaterials={
     empty:new THREE.MeshStandardMaterial({color:0x284632,roughness:1}),
     path:new THREE.MeshStandardMaterial({color:0x92734b,roughness:.94}),
     start:new THREE.MeshStandardMaterial({color:0x9ab849,roughness:.78}),
@@ -83,7 +84,7 @@
     treasure:new THREE.MeshStandardMaterial({color:0x9d7428,metalness:.22,roughness:.45}),
     trap:new THREE.MeshStandardMaterial({color:0x783d35,roughness:.82}),
     event:new THREE.MeshStandardMaterial({color:0x66528f,roughness:.68})
-  };
+  };}
   function boardMesh(geometry,material,x,y,z,scaleX=1,scaleY=1,scaleZ=1){
     const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.scale.set(scaleX,scaleY,scaleZ);m.castShadow=true;m.receiveShadow=true;boardRoot.add(m);return m;
   }
@@ -160,6 +161,7 @@
     boardCanvas=document.createElement('canvas');boardCanvas.id='nastolkaBoard3D';boardCanvas.setAttribute('aria-hidden','true');
     Object.assign(boardCanvas.style,{position:'fixed',pointerEvents:'none',zIndex:'1'});
     document.body.appendChild(boardCanvas);
+    createBoardMaterials();
     boardScene=new THREE.Scene();boardScene.background=null;
     boardCamera=new THREE.OrthographicCamera(-4.18,4.18,4.18,-4.18,.1,40);
     boardCamera.position.set(0,13,.001);boardCamera.lookAt(0,0,0);
