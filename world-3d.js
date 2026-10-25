@@ -269,6 +269,56 @@
       stain.rotation.z=(rand()-.5)*.18;
     }
   }
+  function addAncientStump(){
+    // A massive, weathered fallen trunk anchors the rear edge without covering playable cells.
+    const bark=forestMat(0x493323,.98),oldWood=forestMat(0x92734d,1),darkWood=forestMat(0x4b3828,1);
+    const x=.18,z=-4.055,length=1.34,radius=.17;
+    const trunk=boardMesh(new THREE.CylinderGeometry(radius*.88,radius,length,9,2),bark,x,.19,z,1,1,1);
+    trunk.rotation.z=Math.PI/2+.035;
+    trunk.rotation.y=.08;
+    // Exposed cut end with concentric, imperfect growth rings.
+    const endX=x+length*.49;
+    const end=boardMesh(new THREE.CircleGeometry(radius*.83,12),oldWood,endX,.19,z,1,1,1);
+    end.rotation.y=Math.PI/2;end.rotation.z=.035;end.castShadow=false;
+    for(let ring=0;ring<3;ring++){
+      const torus=boardMesh(new THREE.TorusGeometry(radius*(.28+ring*.2),.006,4,14),darkWood,endX+.003,.19,z);
+      torus.rotation.y=Math.PI/2;torus.rotation.z=.035;torus.castShadow=false;
+    }
+    // Broken branch stubs and dark bark seams keep the silhouette organic.
+    for(let n=0;n<3;n++){
+      const px=x-.36+n*.34,side=n%2?1:-1;
+      const branch=boardMesh(new THREE.CylinderGeometry(.025,.055,.28,5),bark,px,.25,z+side*.13);
+      branch.rotation.x=side*.72;branch.rotation.z=(n-1)*.32;
+      const moss=boardMesh(new THREE.SphereGeometry(.13,7,5),forestMat(0x3e5932),px,.29,z-side*.045,1.2,.16,.8);
+      moss.castShadow=false;
+    }
+    // Root tips merge the trunk into the uneven forest floor.
+    for(let n=0;n<4;n++){
+      const side=n%2?1:-1,px=x-.42+n*.28;
+      const root=boardMesh(new THREE.CylinderGeometry(.012,.045,.34,5),bark,px,.105,z+side*.19);
+      root.rotation.x=side*.9;root.rotation.z=(n-1.5)*.12;
+    }
+  }
+  function addPerimeterOutcrops(){
+    // Larger fractured rock groups rise from the very edge, framing rather than blocking the route.
+    const stone=forestMat(0x5b6052,.99),lightStone=forestMat(0x747767,.98),moss=forestMat(0x405a34,1);
+    for(const side of [-1,1]){
+      const x=side*4.02;
+      for(let n=0;n<3;n++){
+        const z=-1.65+n*.72+(side===1?.13:0),size=[.25,.34,.21][n];
+        const rock=boardMesh(new THREE.DodecahedronGeometry(size,1),n===1?lightStone:stone,x+(n%2)*side*.08,.09+size*.28,z,
+          .9+(n*.13),.75+(n%2)*.18,.9+(n*.1));
+        rock.rotation.set(.12*(n+1),side*.7+n*.46,.08*(n-1));
+        if(n===1){
+          const lichen=boardMesh(new THREE.SphereGeometry(.16,7,5),moss,x-side*.07,.13,z-.04,1.25,.15,.86);
+          lichen.rotation.y=side*.6;lichen.castShadow=false;
+        }
+      }
+      // Thin roots visibly wrap around the lower rock faces.
+      const root=boardMesh(new THREE.CylinderGeometry(.012,.034,.62,5),forestMat(0x4a3927),x-side*.09,.12,-.85);
+      root.rotation.z=Math.PI/2+(side*.16);root.rotation.y=.18;
+    }
+  }
   function addForestMushrooms(x,z,seed){
     // Tiny, subdued mushroom clusters provide scale cues along damp woodland edges.
     const rand=seeded(seed+5019),stem=forestMat(0xb8ad8a,.95);
@@ -370,7 +420,7 @@
     boardMesh(new THREE.BoxGeometry(8.36,.045,8.36),rimMat,0,-.005,0);
     const insetMat=new THREE.MeshStandardMaterial({color:look.inset,roughness:.94});
     boardMesh(new THREE.BoxGeometry(8.12,.018,8.12),insetMat,0,.025,0);
-    if(root.dataset.gameScene==='wild')addAncientRuin();
+    if(root.dataset.gameScene==='wild'){addAncientRuin();addAncientStump();addPerimeterOutcrops();}
     // One uninterrupted forest floor removes visible cell seams; the DOM grid still owns gameplay.
     if(root.dataset.gameScene==='wild'){
       const forestFloor=boardMesh(new THREE.PlaneGeometry(8.08,8.08),boardMaterials.empty,0,.052,0);
