@@ -39,6 +39,23 @@ jobs:
           grep -q "new Set(Object.keys(tileInfo))" app.js
           echo "Экспорт, импорт и проверка формата карт найдены."
 
+
+      - name: Проверить иллюстрации игровых миров
+        run: |
+          test -s assets/adventure-atmosphere.svg
+          test -s assets/scene-island.svg
+          test -s assets/scene-city.svg
+          test -s assets/scene-mystery.svg
+          test -s assets/scene-neon.svg
+          test -s assets/scene-cosmos.svg
+          grep -q 'scene-island.svg' styles.css
+          grep -q 'scene-city.svg' styles.css
+          grep -q 'scene-mystery.svg' styles.css
+          grep -q 'scene-neon.svg' styles.css
+          grep -q 'scene-cosmos.svg' styles.css
+          grep -q 'play-cell.off-route{opacity:.82' styles.css
+          echo "Иллюстрации миров и тематические поверхности найдены."
+
       - name: Проверить синтаксис JavaScript
         run: |
           node --check app.js
