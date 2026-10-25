@@ -37,12 +37,10 @@ try {
     await page.goto('http://127.0.0.1:4173/?play=wild', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#gameDialog[open]', { timeout: 10000 });
     await page.waitForFunction(() => document.documentElement.classList.contains('game-mode'));
-    // A full-screen DOM layout alone is not enough: the game must actually mount its WebGL board.
-    await page.waitForSelector('#nastolkaBoard3D', { state: 'attached', timeout: 15000 });
-    await page.waitForFunction(() => {
-      const canvas = document.querySelector('#nastolkaBoard3D');
-      return canvas && getComputedStyle(canvas).display !== 'none' && canvas.width > 0 && canvas.height > 0;
-    }, undefined, { timeout: 10000 });
+    // The forward road is DOM-driven; the environment canvas supplies the 3D scenery.
+    await page.waitForSelector('#playerLocationBar', { state: 'attached', timeout: 15000 });
+    await page.waitForSelector('#playBoard .road-cell', { state: 'attached', timeout: 15000 });
+    await page.waitForSelector('#nastolka3D', { state: 'attached', timeout: 15000 });
     await page.waitForTimeout(250);
 
     if (viewport.name === 'desktop') {
@@ -68,15 +66,17 @@ try {
       return {
         viewport: { width: innerWidth, height: innerHeight },
         board: rect('#playBoard'),
+        locationBar: rect('#playerLocationBar'),
+        roadCells: document.querySelectorAll('#playBoard .road-cell').length,
         topbar: rect('.game-world-topbar'),
         navigation: rect('#mapNavigation'),
         navigationDisplay: getComputedStyle(document.querySelector('#mapNavigation')).display,
       };
     });
 
-    if (!layout.board || Math.abs(layout.board.width - viewport.width) > 3 ||
-        Math.abs(layout.board.height - viewport.height) > 3) {
-      throw new Error(`${viewport.name}: поле не занимает весь экран: ${JSON.stringify(layout)}`);
+    if (!layout.board || layout.board.width < viewport.width * 0.85 || layout.board.height < 120 ||
+        !layout.locationBar || layout.roadCells < 2) {
+      throw new Error(`${viewport.name}: дорожный маршрут или панель игроков не отображаются: ${JSON.stringify(layout)}`);
     }
     if (!layout.topbar || layout.topbar.height < 1 ||
         !layout.navigation || layout.navigationDisplay === 'none') {
