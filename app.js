@@ -284,6 +284,7 @@ function setGameScene(map){
   });
 }
 function openCustomGame(map){
+  document.documentElement.classList.add('game-mode');
   setGameScene(map);
   onlineGameContext = null;
   const setup = $('.game-setup'); if(setup) setup.hidden = false;
@@ -693,7 +694,9 @@ $('#resumeGameBtn').addEventListener('click',resumeCustomGame);
 $('#playerCount').addEventListener('change',renderPlayerNameFields);
 $('#playRollBtn').addEventListener('click', takeGameTurn);
 $('#restartGameBtn').addEventListener('click', startCustomGame);
-$$('.dialog-close').forEach(btn => btn.addEventListener('click', () => btn.closest('dialog').close()));
+$('.dialog-close').forEach(btn => btn.addEventListener('click', () => btn.closest('dialog').close()));
+const mapHistoryToggle=$('#mapHistoryToggle');
+if(mapHistoryToggle)mapHistoryToggle.addEventListener('click',()=>{const open=document.documentElement.classList.toggle('map-history-open');mapHistoryToggle.setAttribute('aria-pressed',String(open));mapHistoryToggle.setAttribute('aria-label',open?'Закрыть историю игры':'Открыть историю игры');});
 $('#createMapBtn').addEventListener('click', () => $('#createDialog').showModal());
 $$('.tile-tool').forEach(button => button.addEventListener('click', () => {
   selectedTile = button.dataset.tile;
