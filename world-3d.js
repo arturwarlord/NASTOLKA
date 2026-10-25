@@ -111,7 +111,7 @@
     return result;
   }
   function normalizeAssetPath(value){
-    return String(value||'').replace(/\\\\/g,'/').replace(/^\.\\//,'').replace(/^\\//,'').toLowerCase();
+    return String(value||'').replace(/\\/g,'/').replace(/^\.\//,'').replace(/^\//,'').toLowerCase();
   }
   function includedAssetUrl(include,uri){
     const wanted=normalizeAssetPath(uri);
@@ -138,7 +138,7 @@
       const candidates=findPolyHavenModelFile(manifest,[],[]);
       const rank=item=>{
         const path=item.path;
-        const format=/\\.glb(?:[?#].*)?$/i.test(item.url)?0:1;
+        const format=/\.glb(?:[?#].*)?$/i.test(item.url)?0:1;
         const resolution=path.includes('1k')?0:path.includes('2k')?1:2;
         return format*10+resolution;
       };
