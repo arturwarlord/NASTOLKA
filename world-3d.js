@@ -407,13 +407,13 @@
       const pillar=boardMesh(new THREE.CylinderGeometry(.105,.16,height,7),stone,x,.055+height/2,z);
       pillar.rotation.z=side===-1?-.035:.08;
       boardMesh(new THREE.CylinderGeometry(.18,.2,.12,7),stone,x,.105,z,1,.55,1);
-      const cap=boardMesh(weatheredRockGeometry(.19,seed+side*13),stone,x,.055+height,z,.95,.65,1.05);
+      const cap=boardMesh(weatheredRockGeometry(.19,404+side*13),stone,x,.055+height,z,.95,.65,1.05);
       cap.rotation.set(.1,side*.3,.08);
       if(side===-1){
         const lintel=boardMesh(new THREE.BoxGeometry(.62,.16,.2),stone,x+.31,.055+height+.02,z);
         lintel.rotation.z=-.16;
       }else{
-        const fragment=boardMesh(weatheredRockGeometry(.23,seed+side*19),stone,x-.23,.16,z,.95,.65,1.15);
+        const fragment=boardMesh(weatheredRockGeometry(.23,404+side*19),stone,x-.23,.16,z,.95,.65,1.15);
         fragment.rotation.set(.1,.7,.24);
       }
       boardMesh(new THREE.SphereGeometry(.12,7,5),moss,x-side*.08,.12,z+.09,1.5,.16,.8);
