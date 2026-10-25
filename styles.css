@@ -702,3 +702,5 @@ html.game-mode.map-history-open #mapHistoryToggle{background:var(--lime);color:#
   html.game-mode .map-navigation button{width:34px;height:34px;border-radius:7px;font-size:18px}
   html.game-mode.map-history-open .game-history{top:60px;right:48px;bottom:8px;width:calc(100vw - 56px);padding:11px}
 }
+
+html.game-mode [hidden]{display:none!important}
