@@ -219,6 +219,32 @@
   function boardMesh(geometry,material,x,y,z,scaleX=1,scaleY=1,scaleZ=1){
     const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.scale.set(scaleX,scaleY,scaleZ);m.castShadow=true;m.receiveShadow=true;boardRoot.add(m);return m;
   }
+  function addAncientRuin(){
+    // Weathered, partially collapsed stone gateway behind the playable forest edge.
+    // Decorative only: no gameplay cells or positions are changed.
+    const stone=forestMat(0x55594d,.97),moss=forestMat(0x46573a,1),z=-4.02;
+    for(const side of [-1,1]){
+      const x=side*2.48,height=side===-1?1.02:.78;
+      const pillar=boardMesh(new THREE.CylinderGeometry(.105,.16,height,7),stone,x,.055+height/2,z);
+      pillar.rotation.z=side===-1?-.035:.08;
+      boardMesh(new THREE.CylinderGeometry(.18,.2,.12,7),stone,x,.105,z,1,.55,1);
+      const cap=boardMesh(new THREE.DodecahedronGeometry(.19,1),stone,x,.055+height,z,.95,.65,1.05);
+      cap.rotation.set(.1,side*.3,.08);
+      if(side===-1){
+        const lintel=boardMesh(new THREE.BoxGeometry(.62,.16,.2),stone,x+.31,.055+height+.02,z);
+        lintel.rotation.z=-.16;
+      }else{
+        const fragment=boardMesh(new THREE.DodecahedronGeometry(.23,1),stone,x-.23,.16,z,.95,.65,1.15);
+        fragment.rotation.set(.1,.7,.24);
+      }
+      boardMesh(new THREE.SphereGeometry(.12,7,5),moss,x-side*.08,.12,z+.09,1.5,.16,.8);
+    }
+    for(let n=0;n<5;n++){
+      const x=-.8+n*.38,rand=seeded(730+n),size=.09+rand()*.11;
+      const chunk=boardMesh(new THREE.DodecahedronGeometry(size,1),stone,x,.055+size*.45,z+.05+(rand()-.5)*.2,.9+rand()*.6,.65+rand()*.5,.8+rand()*.5);
+      chunk.rotation.set(rand()*.3,rand()*Math.PI,rand()*.2);
+    }
+  }
   function addTopDownTree(x,z,seed){addCanopy(x,z,1.15,seed);}
   function addForestRoots(x,z,seed){
     const rand=seeded(seed+401),rootMat=forestMat(seed%3===0?0x493a27:0x5a452e),count=3+(seed%3);
@@ -296,6 +322,7 @@
     boardMesh(new THREE.BoxGeometry(8.36,.045,8.36),rimMat,0,-.005,0);
     const insetMat=new THREE.MeshStandardMaterial({color:look.inset,roughness:.94});
     boardMesh(new THREE.BoxGeometry(8.12,.018,8.12),insetMat,0,.025,0);
+    if(root.dataset.gameScene==='wild')addAncientRuin();
     // One uninterrupted forest floor removes visible cell seams; the DOM grid still owns gameplay.
     if(root.dataset.gameScene==='wild'){
       const forestFloor=boardMesh(new THREE.PlaneGeometry(8.08,8.08),boardMaterials.empty,0,.052,0);
