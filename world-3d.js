@@ -52,21 +52,18 @@
       limb.castShadow=true;group.add(limb);
     }
     const baseColor=new THREE.Color(leaf);
-    const canopyColors=[baseColor.clone().multiplyScalar(.66),baseColor.clone().multiplyScalar(.82),baseColor.clone(),baseColor.clone().lerp(new THREE.Color(0x9ca96a),.22)];
-    for(let i=0;i<15;i++){
-      const angle=i*2.39996+rand()*.2,ring=Math.sqrt((i+.5)/15);
-      const cx=x+Math.cos(angle)*ring*.72*scale+(rand()-.5)*.13*scale;
-      const cz=z+Math.sin(angle)*ring*.65*scale+(rand()-.5)*.13*scale;
-      const cy=(1.65+rand()*.92)*scale,radius=(.30+rand()*.23)*scale;
-      const geometry=new THREE.IcosahedronGeometry(radius,1),pos=geometry.attributes.position;
-      for(let v=0;v<pos.count;v++){
-        const n=.84+rand()*.32;
-        pos.setXYZ(v,pos.getX(v)*n,pos.getY(v)*(.88+rand()*.28),pos.getZ(v)*n);
-      }
-      geometry.computeVertexNormals();
-      const material=new THREE.MeshStandardMaterial({color:canopyColors[i%canopyColors.length],roughness:.98,flatShading:true});
-      const crown=new THREE.Mesh(geometry,material);
-      crown.position.set(cx,cy,cz);crown.scale.set(1.04,.88,1.02);crown.rotation.y=rand()*Math.PI;
+    const canopyColors=[
+      '#'+baseColor.clone().multiplyScalar(.68).getHexString(),
+      '#'+baseColor.clone().multiplyScalar(.84).getHexString(),
+      '#'+baseColor.getHexString(),
+      '#'+baseColor.clone().lerp(new THREE.Color(0x9ca96a),.22).getHexString()
+    ];
+    for(let i=0;i<6;i++){
+      const angle=i*2.39996+rand()*.25,ring=(i===0?0:.22+rand()*.12)*scale;
+      const cy=(1.82+rand()*.24)*scale,radius=(.39+rand()*.12)*scale;
+      const crown=new THREE.Mesh(new THREE.SphereGeometry(radius,12,9),foliageMaterial(Number(canopyColors[i%canopyColors.length].slice(1),16)));
+      crown.position.set(x+Math.cos(angle)*ring,cy+(rand()-.5)*.12*scale,z+Math.sin(angle)*ring);
+      crown.scale.set(1.08,.9,1.02);crown.rotation.y=rand()*Math.PI;
       crown.castShadow=true;crown.receiveShadow=true;group.add(crown);
     }
     parent.add(group);
