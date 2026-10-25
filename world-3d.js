@@ -77,9 +77,9 @@
     const box3=new THREE.Box3().setFromObject(detailedTreeModel);
     const size=box3.getSize(new THREE.Vector3()),center=box3.getCenter(new THREE.Vector3());
     if(!size.y||!Number.isFinite(size.y))return;
-    // Use a small number of high-detail scanned trees as hero props; keep the rest lightweight.
-    // This avoids multiplying a photogrammetry mesh across the entire forest.
-    const heroTrees=treeRecords.slice().sort((a,b)=>b.scale-a.scale).slice(0,12);
+    // Replace every procedural tree in the environment with the same licensed ready-made model.
+    // Clones share the source geometry/materials, so the scene gains real foliage without duplicating mesh data.
+    const heroTrees=treeRecords.slice().sort((a,b)=>b.scale-a.scale);
     for(const record of heroTrees){
       if(!record.group.parent)continue;
       const instance=detailedTreeModel.clone(true);
