@@ -4,6 +4,8 @@
   'use strict';
   const root=document.documentElement;
   let renderer,scene,camera,world,raf,resizeObserver;
+  let detailedTreeModel=null,treeLoaderPromise=null,treeAssetAttempted=false;
+  let treeRecords=[];
   const palettes={
     wild:{fog:0x111b15,ground:0x344332,rock:0x56584b,leaf:0x29472d,accent:0x84945a,sky:0x26352a},
     island:{fog:0x102a32,ground:0x9b8a61,rock:0x5d665b,leaf:0x2b5d3b,accent:0x5cc6bc,sky:0x20505b},
@@ -23,18 +25,19 @@
     mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
   }
   function tree(parent,x,z,scale,leaf,wood){
-    // Layered woodland tree: tapered trunk, radial limbs, root flare and broken-up foliage.
-    // The silhouette avoids the stacked-ball look while remaining light enough for mobile WebGL.
+    // Keep the procedural tree as an instant fallback, then replace it with a licensed
+    // branching GLB when available. One shared model geometry keeps repeated trees light.
+    const group=new THREE.Group();
     const bark=wood.clone();bark.roughness=.96;
     const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.075*scale,.19*scale,1.95*scale,9,3),bark);
-    trunk.position.set(x,.91*scale,z);trunk.castShadow=true;trunk.receiveShadow=true;parent.add(trunk);
+    trunk.position.set(x,.91*scale,z);trunk.castShadow=true;trunk.receiveShadow=true;group.add(trunk);
     const rand=()=>Math.random();
     for(let r=0;r<5;r++){
       const a=r*Math.PI*2/5+rand()*.35,len=(.36+rand()*.25)*scale;
-      const root=new THREE.Mesh(new THREE.CylinderGeometry(.012*scale,.075*scale,len,5),bark);
-      root.position.set(x+Math.cos(a)*len*.32,.12*scale,z+Math.sin(a)*len*.32);
-      root.rotation.z=Math.cos(a)*-.72;root.rotation.x=Math.sin(a)*.72;
-      root.castShadow=true;parent.add(root);
+      const rootMesh=new THREE.Mesh(new THREE.CylinderGeometry(.012*scale,.075*scale,len,5),bark);
+      rootMesh.position.set(x+Math.cos(a)*len*.32,.12*scale,z+Math.sin(a)*len*.32);
+      rootMesh.rotation.z=Math.cos(a)*-.72;rootMesh.rotation.x=Math.sin(a)*.72;
+      rootMesh.castShadow=true;group.add(rootMesh);
     }
     for(let i=0;i<7;i++){
       const t=.34+i*.085,angle=i*2.39996+rand()*.3;
@@ -45,7 +48,7 @@
       const limb=new THREE.Mesh(new THREE.CylinderGeometry(.018*scale,.067*scale,direction.length(),5),bark);
       limb.position.copy(start).add(end).multiplyScalar(.5);
       limb.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());
-      limb.castShadow=true;parent.add(limb);
+      limb.castShadow=true;group.add(limb);
     }
     const baseColor=new THREE.Color(leaf);
     const canopyColors=[baseColor.clone().multiplyScalar(.66),baseColor.clone().multiplyScalar(.82),baseColor.clone(),baseColor.clone().lerp(new THREE.Color(0x9ca96a),.22)];
@@ -53,10 +56,8 @@
       const angle=i*2.39996+rand()*.2,ring=Math.sqrt((i+.5)/15);
       const cx=x+Math.cos(angle)*ring*.72*scale+(rand()-.5)*.13*scale;
       const cz=z+Math.sin(angle)*ring*.65*scale+(rand()-.5)*.13*scale;
-      const cy=(1.65+rand()*.92)*scale;
-      const radius=(.30+rand()*.23)*scale;
-      const geometry=new THREE.IcosahedronGeometry(radius,1);
-      const pos=geometry.attributes.position;
+      const cy=(1.65+rand()*.92)*scale,radius=(.30+rand()*.23)*scale;
+      const geometry=new THREE.IcosahedronGeometry(radius,1),pos=geometry.attributes.position;
       for(let v=0;v<pos.count;v++){
         const n=.84+rand()*.32;
         pos.setXYZ(v,pos.getX(v)*n,pos.getY(v)*(.88+rand()*.28),pos.getZ(v)*n);
@@ -65,10 +66,50 @@
       const material=new THREE.MeshStandardMaterial({color:canopyColors[i%canopyColors.length],roughness:.98,flatShading:true});
       const crown=new THREE.Mesh(geometry,material);
       crown.position.set(cx,cy,cz);crown.scale.set(1.04,.88,1.02);crown.rotation.y=rand()*Math.PI;
-      crown.castShadow=true;crown.receiveShadow=true;parent.add(crown);
+      crown.castShadow=true;crown.receiveShadow=true;group.add(crown);
+    }
+    parent.add(group);
+    treeRecords.push({parent,group,x,z,scale});
+  }
+  function applyDetailedTreeModel(){
+    if(!detailedTreeModel)return;
+    const box3=new THREE.Box3().setFromObject(detailedTreeModel);
+    const size=box3.getSize(new THREE.Vector3()),center=box3.getCenter(new THREE.Vector3());
+    if(!size.y||!Number.isFinite(size.y))return;
+    // Reuse the loaded GLB's geometry/materials across instances; only transforms differ.
+    for(const record of treeRecords){
+      if(!record.group.parent)continue;
+      const instance=detailedTreeModel.clone(true);
+      const targetHeight=2.55*record.scale,fit=targetHeight/size.y;
+      instance.scale.setScalar(fit);
+      instance.position.set(record.x-center.x*fit,-box3.min.y*fit,record.z-center.z*fit);
+      instance.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;}});
+      record.parent.remove(record.group);
+      record.parent.add(instance);
+      record.group=instance;
     }
   }
+  function loadDetailedTreeModel(){
+    if(treeAssetAttempted)return;
+    treeAssetAttempted=true;
+    // CC0 oak with branching hierarchy and a light canopy; keep the detailed fallback
+    // if the third-party model host or module CDN is unavailable.
+    const modelUrl='https://www.innerscene.com/api/library/oak-street-tree-light-canopy-a469b6df/download';
+    treeLoaderPromise=import('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js')
+      .then(({GLTFLoader})=>new Promise((resolve,reject)=>{
+        new GLTFLoader().load(modelUrl,gltf=>resolve(gltf.scene),undefined,reject);
+      }))
+      .then(model=>{
+        detailedTreeModel=model;
+        applyDetailedTreeModel();
+      })
+      .catch(error=>{
+        console.warn('NASTOLKA: CC0 tree model unavailable; keeping procedural forest.',error);
+        treeLoaderPromise=null;
+      });
+  }
   function build(sceneName){
+    treeRecords=[];
     const p=palettes[sceneName]||palettes.wild;
     scene=new THREE.Scene();scene.background=new THREE.Color(p.sky);scene.fog=new THREE.FogExp2(p.fog,.025);
     camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,160);
@@ -107,6 +148,7 @@
       for(let i=0;i<24;i++)rock(world,(Math.random()-.5)*36,-3-Math.random()*24,.3+Math.random()*1.2,mat(p.rock));
       if(sceneName==='mystery')for(let i=0;i<6;i++){box(world,(Math.random()-.5)*25,.9,-7-Math.random()*14,1.1,1.8,1.1,mat(0x5d5867));}
     }
+    if(treeRecords.length){if(detailedTreeModel)applyDetailedTreeModel();else loadDetailedTreeModel();}
   }
 
   // A separate real 3D tabletop, aligned to the existing accessible DOM grid.
