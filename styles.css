@@ -715,7 +715,7 @@ html.game-mode .game-dialog>.eyebrow{margin-bottom:5px;font-size:8px}
 html.game-mode .game-dialog>#dialogTitle{font-size:clamp(22px,2.4vw,34px);margin-bottom:4px}
 html.game-mode .game-dialog>#dialogDescription{font-size:10px;line-height:1.4;margin-bottom:8px;max-width:1000px}
 html.game-mode .game-dialog>.dialog-actions{margin-bottom:8px}
-html.game-mode #customGamePanel{flex:1;min-height:0;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(220px,290px);grid-template-rows:auto auto auto minmax(0,1fr) auto;grid-template-areas:"setup setup" "names names" "status status" "locations locations" "board log" "actions log" "history history";gap:8px 14px;overflow-y:auto;align-content:start}
+html.game-mode #customGamePanel{flex:1;min-height:0;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(220px,290px);grid-template-rows:auto auto auto minmax(0,1fr) auto;grid-template-areas:"setup setup" "names names" "status status" "locations locations" "board board" "actions log" "history history";gap:8px 14px;overflow-y:auto;align-content:start}
 html.game-mode #customGamePanel>.game-setup{grid-area:setup;margin:0;padding:8px 10px;gap:8px}
 html.game-mode #playerNameFields{grid-area:names;margin:0;gap:6px}
 html.game-mode .player-name-field{padding:5px 9px;min-width:100px}
