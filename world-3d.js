@@ -269,6 +269,24 @@
       stain.rotation.z=(rand()-.5)*.18;
     }
   }
+  function addPathBankGrass(x,z,seed,edge){
+    // Fine grass and shallow soil lips soften the border between packed trail and forest floor.
+    // Everything stays near cell edges so player tokens and the path center remain clear.
+    const rand=seeded(seed+edge*173+9203),green=[0x3b5a32,0x4c6a38,0x607542],soil=forestMat(0x70563a,1);
+    const angle=edge*Math.PI/2,ex=Math.cos(angle),ez=Math.sin(angle);
+    const offset=.405+rand()*.035;
+    const bank=boardMesh(new THREE.SphereGeometry(.13+rand()*.055,7,5),soil,
+      x+ex*offset,.064,z+ez*offset,1.2,.075,.72);
+    bank.rotation.y=angle+(rand()-.5)*.3;bank.castShadow=false;
+    for(let blade=0;blade<4;blade++){
+      const along=(rand()-.5)*.24,height=.055+rand()*.055;
+      const b=boardMesh(new THREE.ConeGeometry(.012+rand()*.008,height,4),
+        forestMat(green[blade%green.length],1),
+        x+ex*offset-ex*along+ez*along,.075+height*.45,
+        z+ez*offset-ez*along+ex*along);
+      b.rotation.z=(rand()-.5)*.42;b.rotation.x=(rand()-.5)*.35;b.castShadow=false;
+    }
+  }
   function addAncientStump(){
     // A massive, weathered fallen trunk anchors the rear edge without covering playable cells.
     const bark=forestMat(0x493323,.98),oldWood=forestMat(0x92734d,1),darkWood=forestMat(0x4b3828,1);
@@ -487,6 +505,20 @@
           for(let k=0;k<3;k++){const blade=boardMesh(new THREE.ConeGeometry(.018,.12,4),grassMat,x+Math.sin(seed+k)*.37,.11,z+Math.cos(seed*2+k)*.34);blade.rotation.z=(k-1)*.32;}
         }
         if(seed%5===0)addForestFloorDetail(x,z,seed);
+        if(root.dataset.gameScene==='wild'){
+          // Only exposed edges receive tufts; adjacent path cells stay visually connected.
+          const neighbors=[
+            {cell:board.children[i*8+j-8],edge:0,valid:i>0},
+            {cell:board.children[i*8+j+1],edge:1,valid:j<7},
+            {cell:board.children[i*8+j+8],edge:2,valid:i<7},
+            {cell:board.children[i*8+j-1],edge:3,valid:j>0}
+          ];
+          for(const neighbor of neighbors){
+            if(neighbor.valid&&(!neighbor.cell||!neighbor.cell.classList.contains('tile-path'))&&((seed+neighbor.edge*3)%3===0)){
+              addPathBankGrass(x,z,seed,neighbor.edge);
+            }
+          }
+        }
       } else if(type==='empty'){
         const rand=seeded(seed+211);
         if(root.dataset.gameScene==='wild'&&seed%2===0)addTerrainRelief(x+(rand()-.5)*.22,z+(rand()-.5)*.22,seed);
