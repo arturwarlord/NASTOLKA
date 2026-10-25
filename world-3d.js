@@ -102,6 +102,19 @@
   function boardMesh(geometry,material,x,y,z,scaleX=1,scaleY=1,scaleZ=1){
     const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.scale.set(scaleX,scaleY,scaleZ);m.castShadow=true;m.receiveShadow=true;boardRoot.add(m);return m;
   }
+  function addTopDownTree(x,z,seed){
+    const greens=[0x244b2d,0x315f35,0x3c7040,0x557c45];
+    const trunkMat=new THREE.MeshStandardMaterial({color:0x493728,roughness:1});
+    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.075,.11,.16,7),trunkMat);
+    trunk.position.set(x,.105,z);boardRoot.add(trunk);
+    const r=.27+(seed%4)*.035;
+    const shade=new THREE.Mesh(new THREE.CircleGeometry(r*1.12,12),new THREE.MeshStandardMaterial({color:0x14271a,roughness:1}));
+    shade.rotation.x=-Math.PI/2;shade.position.set(x+.045,.09,z+.055);boardRoot.add(shade);
+    for(let n=0;n<3;n++){
+      const crown=new THREE.Mesh(new THREE.SphereGeometry(r*(1-n*.16),10,7),new THREE.MeshStandardMaterial({color:greens[(seed+n)%greens.length],roughness:1}));
+      crown.scale.set(1,.24,.86);crown.position.set(x+Math.sin(seed+n*2)*.055,.18+n*.012,z+Math.cos(seed+n)*.045);crown.castShadow=true;boardRoot.add(crown);
+    }
+  }
   function addForestFloorDetail(x,z,seed){
     // Small, irregular moss islands and fallen twigs break the perfect-square look
     // without changing the underlying logical grid or making the board too heavy.
@@ -140,19 +153,25 @@
     boardRoot=new THREE.Group();boardScene.add(boardRoot);
     const look=activeBoardLook;
     const baseMat=new THREE.MeshStandardMaterial({color:look.base,roughness:.96,metalness:.015});
-    boardMesh(new THREE.BoxGeometry(8.3,.34,8.3),baseMat,0,-.2,0);
+    boardMesh(new THREE.BoxGeometry(8.3,.08,8.3),baseMat,0,-.065,0);
     // Theme-specific edge finish keeps the board feeling like a physical miniature terrain.
     const rimMat=new THREE.MeshStandardMaterial({color:look.rim,roughness:.78,metalness:(root.dataset.gameScene==='neon'||root.dataset.gameScene==='cosmos')?.18:.02});
-    boardMesh(new THREE.BoxGeometry(8.36,.1,8.36),rimMat,0,-.015,0);
+    boardMesh(new THREE.BoxGeometry(8.36,.045,8.36),rimMat,0,-.005,0);
     const insetMat=new THREE.MeshStandardMaterial({color:look.inset,roughness:.94});
-    boardMesh(new THREE.BoxGeometry(8.12,.035,8.12),insetMat,0,.045,0);
+    boardMesh(new THREE.BoxGeometry(8.12,.018,8.12),insetMat,0,.025,0);
     for(let i=0;i<8;i++)for(let j=0;j<8;j++){
       const cell=board.children[i*8+j];if(!cell||!cell.classList.contains('play-cell'))continue;
       const type=['start','finish','treasure','trap','event','empty'].find(t=>cell.classList.contains('tile-'+t))||'path';
       const x=j-3.5,z=i-3.5;
-      boardMesh(new THREE.BoxGeometry(.94,.2,.94),boardMaterials[type],x,.075,z);
+      boardMesh(new THREE.BoxGeometry(.995,.045,.995),boardMaterials[type],x,.052,z);
       // Forest paths get restrained organic ground clutter; gameplay cells stay unchanged.
       if(root.dataset.gameScene==='wild'&&(type==='path'||type==='empty')&&((i*8+j)%3!==1))addForestFloorDetail(x,z,i*8+j+1);
+      // Forest canopy clusters are seen from above; keep paths and special cells clear.
+      if(root.dataset.gameScene==='wild'&&type==='empty'){
+        const seed=i*8+j+1;
+        if(seed%4!==1)addTopDownTree(x+(seed%2?.23:-.23),z+(seed%3===0?.22:-.2),seed);
+        if(seed%7===0)addTopDownTree(x-.27,z+.24,seed+3);
+      }
       // Fine bevel-like inset and natural surface variation.
       if(type==='path'){
         for(let k=0;k<3;k++){
@@ -205,8 +224,8 @@
     createBoardMaterials();
     boardScene=new THREE.Scene();boardScene.background=null;
     boardCamera=new THREE.OrthographicCamera(-4.4,4.4,4.4,-4.4,.1,40);
-    // A low, oblique tabletop angle gives visible tile thickness and depth instead of a flat overhead grid.
-    boardCamera.position.set(0,13,4.6);boardCamera.lookAt(0,0,0);
+    // True orthographic overhead camera: a MOBA-style map view, not a tilted tabletop.
+    boardCamera.position.set(0,24,0.001);boardCamera.lookAt(0,0,0);
     boardRenderer=new THREE.WebGLRenderer({canvas:boardCanvas,antialias:true,alpha:true,powerPreference:'low-power'});
     boardRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));boardRenderer.setClearColor(0x000000,0);
     boardRenderer.shadowMap.enabled=true;boardRenderer.shadowMap.type=THREE.PCFSoftShadowMap;
