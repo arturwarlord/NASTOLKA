@@ -657,11 +657,11 @@
     for(let i=1;i<outline.length;i++)shape.lineTo(outline[i][0],outline[i][1]);
     shape.closePath();
     const top=new THREE.Mesh(new THREE.ShapeGeometry(shape,1),baseMat);
-    top.rotation.x=Math.PI/2;top.position.y=-.012;top.receiveShadow=true;boardRoot.add(top);
+    top.rotation.x=-Math.PI/2;top.position.y=-.012;top.receiveShadow=true;boardRoot.add(top);
     const sidePositions=[],sideIndices=[];
     for(let i=0;i<outline.length;i++){
       const a=outline[i],b=outline[(i+1)%outline.length],base=i*4;
-      sidePositions.push(a[0],-.012,a[1], b[0],-.012,b[1], b[0],-.245,b[1], a[0],-.245,a[1]);
+      sidePositions.push(a[0],-.012,-a[1], b[0],-.012,-b[1], b[0],-.245,-b[1], a[0],-.245,-a[1]);
       sideIndices.push(base,base+1,base+2,base,base+2,base+3);
     }
     const sideGeometry=new THREE.BufferGeometry();
