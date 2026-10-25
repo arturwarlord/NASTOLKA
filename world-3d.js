@@ -277,13 +277,51 @@
       console.info('NASTOLKA: loaded Poly Haven CC0 mossy rock model for world scenery.');
     }).catch(error=>{window.__nastolkaAssetStatus.rock='failed';console.error('NASTOLKA: real rock model failed to load.',error);});
   }
+  function buildWildTrail(){
+    // Continuous winding dirt track viewed from inside the forest, not a board or tiled grid.
+    const segments=120,vertices=[],uvs=[],indices=[];
+    const centerX=t=>Math.sin(t*5.4)*.72+Math.sin(t*12.3)*.18;
+    for(let i=0;i<=segments;i++){
+      const t=i/segments,z=9-t*53,x=centerX(t),width=1.35+Math.sin(t*8)*.16;
+      const edgeY=.015+Math.sin(t*22)*.018;
+      vertices.push(x-width,edgeY,z,x+width,edgeY,z);
+      uvs.push(0,t*12,1,t*12);
+      if(i<segments){const a=i*2,b=a+1,c=a+2,d=a+3;indices.push(a,c,b,b,c,d);}
+    }
+    const geometry=new THREE.BufferGeometry();
+    geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+    geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+    geometry.setIndex(indices);geometry.computeVertexNormals();
+    const dirt=new THREE.MeshStandardMaterial({color:0x715237,roughness:1,metalness:0});
+    const trail=new THREE.Mesh(geometry,dirt);trail.receiveShadow=true;trail.castShadow=false;world.add(trail);
+    // Soft, uneven shoulders blend the trail into leaf litter rather than making a clean road tile.
+    const shoulderMat=new THREE.MeshStandardMaterial({color:0x3b4b2c,roughness:1});
+    for(let i=0;i<segments;i+=2){
+      const t=i/segments,z=9-t*53,x=centerX(t),w=1.48+Math.sin(t*8)*.16;
+      for(const side of [-1,1]){
+        const patch=new THREE.Mesh(new THREE.SphereGeometry(.3+Math.random()*.3,7,5),shoulderMat);
+        patch.position.set(x+side*(w+.08+Math.random()*.22),-.005,z+(Math.random()-.5)*.35);
+        patch.scale.set(1.5,.09,.7);patch.rotation.y=Math.random()*.7;patch.receiveShadow=true;world.add(patch);
+      }
+    }
+    // Fallen branches and exposed roots at the path edges establish human-scale depth cues.
+    const bark=mat(0x493323);
+    for(let i=0;i<13;i++){
+      const t=.08+Math.random()*.86,z=8-t*51,x=centerX(t),side=i%2===0?-1:1;
+      const length=.45+Math.random()*1.15;
+      const log=new THREE.Mesh(new THREE.CylinderGeometry(.035,.065,length,7),bark);
+      log.position.set(x+side*(1.8+Math.random()*1.2),.1,z);log.rotation.z=Math.PI/2+(Math.random()-.5)*.25;log.rotation.y=Math.random()*.3;
+      log.castShadow=true;log.receiveShadow=true;world.add(log);
+    }
+  }
   function build(sceneName){
     treeRecords=[];
     rockRecords=[];
     const p=palettes[sceneName]||palettes.wild;
     scene=new THREE.Scene();scene.background=new THREE.Color(p.sky);scene.fog=new THREE.FogExp2(p.fog,.025);
-    camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,160);
-    camera.position.set(0,8.7,21);camera.lookAt(0,1.5,0);
+    camera=new THREE.PerspectiveCamera(sceneName==='wild'?58:42,innerWidth/innerHeight,.1,180);
+    if(sceneName==='wild'){camera.position.set(0,2.35,8.5);camera.lookAt(0,2.25,-19);}
+    else{camera.position.set(0,8.7,21);camera.lookAt(0,1.5,0);}
     const hemi=new THREE.HemisphereLight(0xdce8dc,0x20251e,2.1);scene.add(hemi);
     const sun=new THREE.DirectionalLight(0xffe5c0,3.1);sun.position.set(-8,16,9);sun.castShadow=true;
     sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-22;sun.shadow.camera.right=22;sun.shadow.camera.top=22;sun.shadow.camera.bottom=-22;scene.add(sun);
@@ -313,6 +351,29 @@
       const starMat=new THREE.MeshBasicMaterial({color:0xe3e8ff});
       for(let i=0;i<160;i++){const star=new THREE.Mesh(new THREE.SphereGeometry(.025+Math.random()*.035,5,5),starMat);star.position.set((Math.random()-.5)*60,3+Math.random()*25,-8-Math.random()*35);world.add(star);}
       for(let i=0;i<9;i++)rock(world,(Math.random()-.5)*34,-4-Math.random()*22,.7+Math.random()*1.8,mat(0x454e75));
+    } else if(sceneName==='wild') {
+      buildWildTrail();
+      // Frame the trail with close trunks and deeper layers of forest; leave the walking corridor open.
+      const treeSpots=[
+        [-5.0,5.2,1.55],[-7.8,1.0,1.7],[-5.4,-3.8,1.35],[-9.2,-7.6,1.8],[-6.3,-12.2,1.65],[-10.2,-16.8,1.9],[-7.4,-22.4,1.8],[-11.5,-28.0,2.05],[-8.5,-34.0,1.9],
+        [5.4,4.4,1.6],[7.9,.2,1.75],[5.8,-4.8,1.45],[9.7,-8.9,1.9],[6.7,-13.1,1.7],[10.8,-17.7,2.0],[7.8,-22.8,1.85],[12.0,-28.6,2.1],[9.2,-34.5,2.0],
+        [-13.5,-10.0,2.25],[14.2,-12.5,2.2],[-15.5,-23.0,2.4],[16.0,-25.0,2.45]
+      ];
+      treeSpots.forEach(([x,z,scale],i)=>tree(world,x,z,scale,i%5===0?0x3c5937:(i%3===0?0x304b30:p.leaf),wood));
+      for(let i=0;i<42;i++){
+        const side=i%2===0?-1:1,z=4-Math.random()*39,x=side*(3.0+Math.random()*7.5);
+        rock(world,x,z,.22+Math.random()*.8,mat(i%4===0?0x65705a:p.rock));
+      }
+      // Low understory makes the ground feel close to the camera without blocking the trail.
+      for(let i=0;i<72;i++){
+        const side=i%2===0?-1:1,z=5-Math.random()*38,x=side*(2.15+Math.random()*5.2);
+        const tuft=new THREE.Group();
+        for(let blade=0;blade<3;blade++){
+          const h=.18+Math.random()*.34,leafMesh=new THREE.Mesh(new THREE.ConeGeometry(.045+Math.random()*.035,h,4),mat([0x344d2d,0x49633a,0x5b7041][blade]));
+          leafMesh.position.set((Math.random()-.5)*.2,h*.48,(Math.random()-.5)*.18);leafMesh.rotation.z=(Math.random()-.5)*.35;tuft.add(leafMesh);
+        }
+        tuft.position.set(x,.02,z);world.add(tuft);
+      }
     } else {
       for(let i=0;i<34;i++)tree(world,(Math.random()-.5)*38,-5-Math.random()*24,.7+Math.random()*1.7,i%4===0?p.accent:p.leaf,wood);
       for(let i=0;i<24;i++)rock(world,(Math.random()-.5)*36,-3-Math.random()*24,.3+Math.random()*1.2,mat(p.rock));
