@@ -805,7 +805,7 @@
   function build3DBoard(){
     const board=document.getElementById('playBoard');
     if(!board||!boardRenderer||!board.isConnected)return;
-    if(board.classList.contains('road-layout')){if(boardCanvas)boardCanvas.style.display='none';return;}
+    if(board.classList.contains('road-layout')){lastBoardSignature=boardSignature(board);if(boardCanvas)boardCanvas.style.display='none';return;}
     if(boardCanvas)boardCanvas.style.display='block';
     lastBoardSignature=boardSignature(board);
     board.classList.add('board-3d-ready');
