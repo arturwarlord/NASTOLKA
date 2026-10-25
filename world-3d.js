@@ -220,7 +220,7 @@
     boardCanvas.style.left=Math.round(r.left)+'px';boardCanvas.style.top=Math.round(r.top)+'px';
     boardCanvas.style.width=Math.round(r.width)+'px';boardCanvas.style.height=Math.round(r.height)+'px';
     boardRenderer.setSize(Math.max(1,Math.round(r.width)),Math.max(1,Math.round(r.height)),false);
-    boardCamera.left=-4.18;boardCamera.right=4.18;boardCamera.top=4.18;boardCamera.bottom=-4.18;
+    boardCamera.aspect=Math.max(.5,r.width/Math.max(1,r.height));
     boardCamera.updateProjectionMatrix();
     boardFrame=board;
   }
@@ -255,10 +255,21 @@
       if(type==='path'){
         if(root.dataset.gameScene==='wild'){
           const rand=seeded(seed+173);
-          const dirt=boardMesh(new THREE.CircleGeometry(.61,18),boardMaterials.path,x,.062,z, .9+rand()*.2,1,.78+rand()*.25);
+          const dirt=boardMesh(new THREE.CircleGeometry(.59,24),boardMaterials.path,x,.062,z,.94+rand()*.16,1,.82+rand()*.2);
           dirt.rotation.x=-Math.PI/2;
+          // Join neighboring path cells into one readable trail rather than isolated dirt coins.
+          const right=board.children[i*8+j+1];
+          const down=board.children[(i+1)*8+j];
+          if(j<7&&right&&right.classList.contains('tile-path')){
+            const join=boardMesh(new THREE.CircleGeometry(.54,20),boardMaterials.path,x+.5,.0615,z,1.18,1,.82);
+            join.rotation.x=-Math.PI/2;
+          }
+          if(i<7&&down&&down.classList.contains('tile-path')){
+            const join=boardMesh(new THREE.CircleGeometry(.54,20),boardMaterials.path,x,.0615,z+.5,.82,1,1.18);
+            join.rotation.x=-Math.PI/2;
+          }
           for(let n=0;n<2;n++){
-            const patch=boardMesh(new THREE.CircleGeometry(.27+rand()*.13,12),boardMaterials.path,x+(rand()-.5)*.42,.063,z+(rand()-.5)*.42,.8+rand()*.5,1,.65+rand()*.6);
+            const patch=boardMesh(new THREE.CircleGeometry(.24+rand()*.12,14),boardMaterials.path,x+(rand()-.5)*.38,.063,z+(rand()-.5)*.38,.8+rand()*.5,1,.65+rand()*.6);
             patch.rotation.x=-Math.PI/2;
           }
         }
@@ -330,9 +341,10 @@
     (document.getElementById('gameDialog')||document.body).appendChild(boardCanvas);
     createBoardMaterials();
     boardScene=new THREE.Scene();boardScene.background=null;
-    boardCamera=new THREE.OrthographicCamera(-4.4,4.4,4.4,-4.4,.1,40);
-    // True orthographic overhead camera: a MOBA-style map view, not a tilted tabletop.
-    boardCamera.position.set(0,24,0.001);boardCamera.up.set(0,0,-1);boardCamera.lookAt(0,0,0);
+    // Cinematic oblique perspective: the board reads as a real miniature MOBA world,
+    // with visible terrain thickness, depth falloff and a horizon-facing forest edge.
+    boardCamera=new THREE.PerspectiveCamera(34,1,.1,60);
+    boardCamera.position.set(0,12.5,15.5);boardCamera.lookAt(0,.05,0);
     boardRenderer=new THREE.WebGLRenderer({canvas:boardCanvas,antialias:true,alpha:true,powerPreference:'low-power'});
     boardRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));boardRenderer.setClearColor(0x000000,0);
     boardRenderer.shadowMap.enabled=true;boardRenderer.shadowMap.type=THREE.PCFSoftShadowMap;
