@@ -822,3 +822,106 @@ html.game-mode .game-history{display:none!important}
 html.game-mode #customGamePanel[hidden],html.game-mode #customGamePanel>.game-setup[hidden]{display:none!important}
 @media(max-width:760px){html.game-mode .game-dialog>.game-world-topbar{flex-basis:46px!important;height:46px!important;padding:0 10px!important}html.game-mode .game-world-brand{font-size:10px!important}html.game-mode .game-world-live{font-size:8px!important}html.game-mode #customGamePanel{padding:8px!important;gap:6px!important}html.game-mode #playerNameFields .player-name-field{flex-basis:calc(50% - 4px)!important}html.game-mode #playerLocationBar{min-height:58px!important;max-height:64px!important}html.game-mode .player-location{flex-basis:180px!important;min-height:52px!important;padding:7px 8px 10px!important}html.game-mode #playBoard.road-layout{gap:18px!important;padding:15px 18px!important}html.game-mode #playBoard.road-layout>.road-cell{flex-basis:122px!important;width:122px!important;height:clamp(165px,28vh,230px)!important;padding:12px 7px!important}html.game-mode .game-actions #playRollBtn{min-width:0!important;flex:1!important}html.game-mode #gameLog{max-height:42px!important;font-size:9px!important}}
 @media(max-height:650px) and (min-width:761px){html.game-mode .game-dialog>.game-world-topbar{flex-basis:44px!important;height:44px!important}html.game-mode #customGamePanel{padding-top:6px!important;padding-bottom:6px!important;gap:5px!important}html.game-mode #playerLocationBar{min-height:52px!important;max-height:56px!important}html.game-mode #playBoard.road-layout>.road-cell{height:clamp(145px,27vh,205px)!important}html.game-mode #gameLog{max-height:34px!important}}
+
+
+/* Clarity pass: reveal the real 3D world behind a single continuous route. */
+html.game-mode .game-dialog{
+  background:transparent!important;
+  color:#f2f3e8!important;
+}
+html.game-mode .game-dialog:before{
+  content:"";position:fixed;inset:46px 0 0;z-index:-1;pointer-events:none;
+  background:linear-gradient(180deg,#07100940 0%,#08100a10 36%,#080e0b5c 100%);
+}
+html.game-mode #customGamePanel{
+  background:linear-gradient(180deg,#09120a18 0%,#09120a08 52%,#09120a48 100%)!important;
+  backdrop-filter:none!important;
+}
+html.game-mode #turnStatus{
+  background:#09120bd9!important;
+  border:1px solid #d8ff3e4a!important;border-left:3px solid var(--lime)!important;
+  border-radius:6px!important;box-shadow:0 5px 24px #0006!important;
+}
+html.game-mode #playerLocationBar{
+  min-height:66px!important;max-height:80px!important;padding:3px 3px 8px!important;
+}
+html.game-mode .player-location{
+  flex-basis:clamp(190px,21vw,250px)!important;
+  background:linear-gradient(130deg,#0b140deF,#111a13e8)!important;
+  border-color:#d9e6cb44!important;box-shadow:0 6px 18px #0004!important;
+}
+html.game-mode .player-location.is-current{
+  border-color:var(--token-color)!important;
+  background:linear-gradient(115deg,color-mix(in srgb,var(--token-color) 22%,#101a12),#101a12ed 78%)!important;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--token-color) 42%,transparent),0 7px 22px #0006!important;
+}
+html.game-mode #playBoard.road-layout{
+  background:linear-gradient(180deg,#08100908,#08100932)!important;
+  border-color:#dce8d32b!important;box-shadow:inset 0 1px #f5ffe01b,0 12px 34px #0002!important;
+  padding-left:clamp(32px,5vw,76px)!important;padding-right:clamp(32px,5vw,76px)!important;
+  gap:clamp(10px,1.3vw,20px)!important;
+}
+html.game-mode #playBoard.road-layout:before{
+  height:clamp(50px,8vh,78px)!important;
+  border:3px solid #392c1e!important;border-radius:10px!important;
+  background:
+    linear-gradient(180deg,#ad895a 0%,#725235 14%,#4d3927 82%,#2b2118 100%),
+    repeating-linear-gradient(90deg,#765638 0 20px,#a07a4e 20px 40px)!important;
+  box-shadow:0 12px 18px #0009,inset 0 3px #d6b88b55,inset 0 -5px #20170f!important;
+}
+html.game-mode #playBoard.road-layout:after{
+  height:2px!important;background:repeating-linear-gradient(90deg,#e9d5ad99 0 20px,transparent 20px 38px)!important;
+}
+html.game-mode #playBoard.road-layout>.road-cell{
+  flex:0 0 clamp(84px,8.2vw,112px)!important;width:clamp(84px,8.2vw,112px)!important;
+  height:clamp(142px,23vh,220px)!important;
+  padding:12px 5px!important;gap:8px!important;
+  border:1px solid #d8c29b9c!important;border-radius:7px!important;
+  background:linear-gradient(145deg,#756044f2 0%,#433724f5 44%,#25251cf7 100%)!important;
+  box-shadow:0 10px 16px #0008,inset 0 2px #f1d8a64d,inset 0 -4px #17150f!important;
+}
+html.game-mode #playBoard.road-layout>.road-cell:before{
+  content:"";position:absolute;inset:5px;border:1px solid #e5d0a524;border-radius:4px;pointer-events:none;
+}
+html.game-mode #playBoard.road-layout>.road-cell:nth-child(even){transform:translateY(12px)!important}
+html.game-mode #playBoard.road-layout>.road-cell:nth-child(odd){transform:translateY(-9px)!important}
+html.game-mode #playBoard.road-layout>.road-cell.current-player-cell{
+  border:2px solid var(--lime)!important;
+  background:linear-gradient(145deg,#82915a,#45522f 48%,#20281b)!important;
+  box-shadow:0 0 0 3px #d8ff3e25,0 0 24px #d8ff3e3d,0 14px 22px #000b,inset 0 2px #f3ffd966!important;
+}
+html.game-mode #playBoard.road-layout>.road-cell.tile-start{
+  background:linear-gradient(145deg,#b7c783,#758b4a 48%,#344421)!important;border-color:#eaffac!important;
+}
+html.game-mode #playBoard.road-layout>.road-cell.tile-finish{
+  background:linear-gradient(145deg,#ead7a8,#a58a54 48%,#55442b)!important;border-color:#fff0bd!important;
+}
+html.game-mode #playBoard.road-layout>.road-cell.tile-treasure{background:linear-gradient(145deg,#b39142,#665025 50%,#342918)!important}
+html.game-mode #playBoard.road-layout>.road-cell.tile-trap{background:linear-gradient(145deg,#98614e,#58352c 50%,#2c1b18)!important}
+html.game-mode #playBoard.road-layout>.road-cell.tile-event{background:linear-gradient(145deg,#8774a7,#4e4268 50%,#292438)!important}
+html.game-mode #playBoard.road-layout .route-step{
+  top:7px!important;left:8px!important;padding:3px 5px!important;
+  border-radius:3px!important;background:#090e0bc9!important;color:#f1e5ca!important;font-weight:800!important;
+}
+html.game-mode #playBoard.road-layout .play-cell-symbol{
+  font-size:clamp(24px,2.8vw,34px)!important;filter:drop-shadow(0 4px 4px #000a)!important;
+}
+html.game-mode #playBoard.road-layout .road-cell-name{
+  padding:4px 2px!important;font-size:8px!important;letter-spacing:.8px!important;
+  text-shadow:0 2px 3px #000b!important;
+}
+html.game-mode #playBoard.road-layout .play-tokens{right:50%!important;transform:translateX(50%)!important;bottom:-12px!important;gap:3px!important}
+html.game-mode #playBoard.road-layout .player-token{
+  width:25px!important;height:25px!important;border-radius:50%!important;
+  background:var(--token-color)!important;color:#11150d!important;font-weight:900!important;
+}
+html.game-mode .game-actions #playRollBtn{
+  background:linear-gradient(135deg,#dfff71,#9ebd3c)!important;color:#11180b!important;
+  box-shadow:0 5px 18px #b8e84835!important;font-weight:900!important;
+}
+html.game-mode #gameLog{background:#08100ddf!important;backdrop-filter:blur(8px)!important}
+@media(max-width:760px){
+  html.game-mode .game-dialog:before{inset:46px 0 0}
+  html.game-mode #playBoard.road-layout{padding-left:25px!important;padding-right:25px!important;gap:12px!important}
+  html.game-mode #playBoard.road-layout>.road-cell{flex-basis:82px!important;width:82px!important;height:clamp(132px,22vh,175px)!important}
+}
