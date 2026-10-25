@@ -40,7 +40,9 @@ try {
     await page.locator('#startGameBtn').click();
     // The forward road is DOM-driven; the environment canvas supplies the 3D scenery.
     await page.waitForSelector('#playerLocationBar', { state: 'attached', timeout: 15000 });
-    await page.waitForSelector('#playBoard .road-cell', { state: 'attached', timeout: 15000 });
+    await page.waitForTimeout(500);
+    const startup = await page.evaluate(() => ({ cells: document.querySelectorAll('#playBoard .road-cell').length, status: document.querySelector('#turnStatus')?.textContent, rollDisabled: document.querySelector('#playRollBtn')?.disabled }));
+    if (startup.cells < 2) throw new Error(`${viewport.name}: road did not initialize: ${JSON.stringify(startup)}`);
     await page.waitForTimeout(250);
 
     if (viewport.name === 'desktop') {
