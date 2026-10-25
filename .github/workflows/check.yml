@@ -55,6 +55,16 @@ jobs:
           grep -q 'scene-cosmos.svg' styles.css
           grep -q 'play-cell.off-route{opacity:.82' styles.css
           echo "Иллюстрации миров и тематические поверхности найдены."
+          grep -q 'Diorama pass 2' styles.css
+          grep -q 'tile-empty:before' styles.css
+          grep -q 'data-game-scene="island".*tile-empty' styles.css
+          grep -q 'data-game-scene="city".*tile-empty' styles.css
+          grep -q 'data-game-scene="mystery".*tile-empty' styles.css
+          grep -q 'data-game-scene="neon".*tile-empty' styles.css
+          grep -q 'data-game-scene="cosmos".*tile-empty' styles.css
+          grep -q 'diorama-world-7' index.html
+          grep -q 'diorama-world-6' index.html
+          echo "Объёмные поверхности, тематические декорации и обновление кеша найдены."
 
       - name: Проверить синтаксис JavaScript
         run: |
