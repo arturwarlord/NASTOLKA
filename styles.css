@@ -705,3 +705,72 @@ html.game-mode.map-history-open #mapHistoryToggle{background:var(--lime);color:#
 }
 
 html.game-mode [hidden]{display:none!important}
+
+
+/* Forward-only adventure road: full-screen route rail with jump-to-player navigation. */
+html.game-mode body{overflow:hidden}
+html.game-mode .game-dialog{height:100dvh;max-height:100dvh;overflow:hidden;display:flex;flex-direction:column;padding:12px clamp(12px,2.5vw,36px) 14px}
+html.game-mode .game-world-topbar{flex:0 0 auto;margin-bottom:10px;padding-bottom:10px}
+html.game-mode .game-dialog>.eyebrow{margin-bottom:5px;font-size:8px}
+html.game-mode .game-dialog>#dialogTitle{font-size:clamp(22px,2.4vw,34px);margin-bottom:4px}
+html.game-mode .game-dialog>#dialogDescription{font-size:10px;line-height:1.4;margin-bottom:8px;max-width:1000px}
+html.game-mode .game-dialog>.dialog-actions{margin-bottom:8px}
+html.game-mode #customGamePanel{flex:1;min-height:0;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(220px,290px);grid-template-rows:auto auto auto minmax(0,1fr) auto;grid-template-areas:"setup setup" "names names" "status status" "locations locations" "board log" "actions log" "history history";gap:8px 14px;overflow-y:auto;align-content:start}
+html.game-mode #customGamePanel>.game-setup{grid-area:setup;margin:0;padding:8px 10px;gap:8px}
+html.game-mode #playerNameFields{grid-area:names;margin:0;gap:6px}
+html.game-mode .player-name-field{padding:5px 9px;min-width:100px}
+html.game-mode .player-name-field input{font-size:11px;margin-top:3px}
+html.game-mode #turnStatus{grid-area:status;margin:0;padding:8px 12px;font-size:11px}
+html.game-mode #playerLocationBar{grid-area:locations;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:2px 1px 7px;scrollbar-width:thin;scroll-snap-type:x proximity}
+html.game-mode .player-location{position:relative;flex:0 0 clamp(180px,22vw,260px);min-width:0;display:flex;align-items:center;gap:9px;text-align:left;padding:9px 10px 12px;border:1px solid #c9d9c01f;border-radius:7px;background:#111a14e8;color:var(--text);overflow:hidden;scroll-snap-align:start}
+html.game-mode .player-location.is-current{border-color:var(--token-color);background:linear-gradient(115deg,color-mix(in srgb,var(--token-color) 13%,#111a14),#111a14 72%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--token-color) 25%,transparent)}
+html.game-mode .player-location-marker{flex:0 0 30px;width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:var(--token-color);color:#11150d;font-size:12px;font-weight:900}
+html.game-mode .player-location-info{display:flex;flex-direction:column;gap:4px;min-width:0}
+html.game-mode .player-location-info strong{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.game-mode .player-location-info small{font-size:9px;color:#aab9a7;white-space:nowrap}
+html.game-mode .player-location-progress{position:absolute;bottom:0;left:0;height:3px;background:var(--token-color);opacity:.9}
+html.game-mode #playBoard{grid-area:board;position:relative;display:flex;align-items:center;gap:clamp(20px,3vw,38px);width:100%;max-width:none;height:clamp(220px,33vh,340px);min-height:220px;overflow-x:auto;overflow-y:hidden;padding:24px clamp(24px,4vw,58px);border:1px solid #b4c9a044;border-radius:12px;background:linear-gradient(180deg,#142218c9,#101810f2);box-shadow:inset 0 1px #f0ffdf12,0 16px 40px #0005;scrollbar-width:thin;scroll-snap-type:x proximity;isolation:isolate}
+html.game-mode #playBoard:before{content:"";position:absolute;z-index:0;left:0;right:0;top:50%;height:clamp(42px,6vh,60px);transform:translateY(-50%);border-block:2px solid #d8b98735;background:repeating-linear-gradient(90deg,#6c5337 0 34px,#806344 34px 58px,#62492f 58px 78px);box-shadow:0 7px 18px #0008,inset 0 2px #d9b98b22,inset 0 -3px #291f17}
+html.game-mode #playBoard:after{content:"";position:absolute;z-index:0;left:0;right:0;top:50%;height:2px;transform:translateY(-50%);background:repeating-linear-gradient(90deg,#e9d5ad88 0 18px,transparent 18px 32px);pointer-events:none}
+html.game-mode .play-cell.road-cell{position:relative;z-index:1;flex:0 0 clamp(122px,14vw,174px);width:clamp(122px,14vw,174px);height:100%;min-height:170px;aspect-ratio:auto;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 10px;border:1px solid #a6bd975c;border-radius:9px;background:linear-gradient(145deg,#314a35f5,#18291df7 75%);box-shadow:0 12px 24px #0008,inset 0 1px #e4f5d21c;overflow:visible;scroll-snap-align:center;transition:transform .25s,border-color .25s}
+html.game-mode .play-cell.road-cell:nth-child(even){transform:translateY(8px)}
+html.game-mode .play-cell.road-cell:nth-child(odd){transform:translateY(-5px)}
+html.game-mode .play-cell.road-cell.current-player-cell{border-color:var(--lime);box-shadow:0 0 0 2px #d8ff3e33,0 0 26px #d8ff3e26,0 14px 28px #0009}
+html.game-mode .play-cell.road-cell .route-step{position:absolute;top:8px;left:9px;font-size:10px;letter-spacing:1px;color:#c2d1b9}
+html.game-mode .play-cell.road-cell .play-cell-symbol{font-size:clamp(30px,3.8vw,48px);filter:drop-shadow(0 7px 6px #0008)}
+html.game-mode .play-cell.road-cell .road-cell-name{max-width:100%;font-size:9px;letter-spacing:1.2px;font-weight:800;text-align:center;color:#d3e1c8;line-height:1.5}
+html.game-mode .play-cell.road-cell.tile-start{background:radial-gradient(circle at 35% 25%,#efffb0,#779b35 75%,#344a20);color:#10170b;border-color:#e4ff8b}
+html.game-mode .play-cell.road-cell.tile-finish{background:radial-gradient(circle at 35% 25%,#fff0c5,#a78e5a 70%,#51452d);color:#211a0e;border-color:#ffe7ad}
+html.game-mode .play-cell.road-cell.tile-treasure{background:linear-gradient(145deg,#6c5b2c,#2c291a);border-color:#b49a4d}
+html.game-mode .play-cell.road-cell.tile-trap{background:linear-gradient(145deg,#6c3e35,#291b19);border-color:#a96959}
+html.game-mode .play-cell.road-cell.tile-event{background:linear-gradient(145deg,#554776,#241e37);border-color:#9a83c6}
+html.game-mode .play-cell.road-cell .play-tokens{position:absolute;right:8px;bottom:8px;display:flex;gap:4px;max-width:90%;z-index:3}
+html.game-mode .play-cell.road-cell .player-token{width:26px;height:26px;font-size:12px;border:2px solid #f7ffe5;box-shadow:0 2px 0 #0007,0 0 0 2px #0d160eaa,0 0 12px #fff5}
+html.game-mode #nastolkaBoard3D{display:none!important}
+html.game-mode .game-world-props{display:none!important}
+html.game-mode #gameLog{grid-area:log;min-height:0;max-height:100%;overflow:auto;margin:0;padding:12px}
+html.game-mode .game-actions{grid-area:actions;margin:0;padding:8px;display:flex;align-items:center}
+html.game-mode .game-actions .primary-button{min-height:42px}
+html.game-mode .game-history{grid-area:history}
+html.game-mode #customGamePanel[hidden]{display:none!important}
+html.game-mode .game-dialog>.eyebrow,html.game-mode .game-dialog>#dialogTitle,html.game-mode .game-dialog>#dialogDescription,html.game-mode .game-dialog>.dialog-actions{flex:0 0 auto}
+@media(max-width:900px){
+ html.game-mode .game-dialog{padding:10px}
+ html.game-mode #customGamePanel{grid-template-columns:minmax(0,1fr);grid-template-areas:"setup" "names" "status" "locations" "board" "actions" "log" "history";gap:7px}
+ html.game-mode #playBoard{height:clamp(190px,29vh,270px);min-height:190px}
+ html.game-mode #gameLog{max-height:90px}
+ html.game-mode .game-world-topbar{margin-bottom:7px}
+ html.game-mode .game-world-brand small{display:none}
+}
+@media(max-width:520px){
+ html.game-mode .game-dialog{padding:8px}
+ html.game-mode .game-dialog>#dialogTitle{font-size:22px}
+ html.game-mode .game-dialog>#dialogDescription{max-height:30px;overflow:hidden}
+ html.game-mode .game-world-live{display:none}
+ html.game-mode .game-world-topbar{grid-template-columns:1fr auto;grid-template-rows:auto}
+ html.game-mode #playerLocationBar{gap:6px}
+ html.game-mode .player-location{flex-basis:190px;padding:7px 8px 10px}
+ html.game-mode #playBoard{height:210px;min-height:210px;padding:18px 20px;gap:22px}
+ html.game-mode .play-cell.road-cell{flex-basis:126px;width:126px;min-height:170px}
+ html.game-mode #gameLog{max-height:72px}
+}
