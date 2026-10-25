@@ -23,11 +23,49 @@
     mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
   }
   function tree(parent,x,z,scale,leaf,wood){
-    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.11*scale,.18*scale,1.4*scale,7),wood);
-    trunk.position.set(x,.7*scale,z);trunk.castShadow=true;parent.add(trunk);
-    for(let i=0;i<3;i++){
-      const crown=new THREE.Mesh(new THREE.IcosahedronGeometry((.68-i*.11)*scale,1),new THREE.MeshStandardMaterial({color:leaf,roughness:1,flatShading:false}));
-      crown.position.set(x,(1.25+i*.43)*scale,z);crown.scale.set(1,.86,1.04);crown.castShadow=true;parent.add(crown);
+    // Layered woodland tree: tapered trunk, radial limbs, root flare and broken-up foliage.
+    // The silhouette avoids the stacked-ball look while remaining light enough for mobile WebGL.
+    const bark=wood.clone();bark.roughness=.96;
+    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.075*scale,.19*scale,1.95*scale,9,3),bark);
+    trunk.position.set(x,.91*scale,z);trunk.castShadow=true;trunk.receiveShadow=true;parent.add(trunk);
+    const rand=()=>Math.random();
+    for(let r=0;r<5;r++){
+      const a=r*Math.PI*2/5+rand()*.35,len=(.36+rand()*.25)*scale;
+      const root=new THREE.Mesh(new THREE.CylinderGeometry(.012*scale,.075*scale,len,5),bark);
+      root.position.set(x+Math.cos(a)*len*.32,.12*scale,z+Math.sin(a)*len*.32);
+      root.rotation.z=Math.cos(a)*-.72;root.rotation.x=Math.sin(a)*.72;
+      root.castShadow=true;parent.add(root);
+    }
+    for(let i=0;i<7;i++){
+      const t=.34+i*.085,angle=i*2.39996+rand()*.3;
+      const startY=t*1.95*scale,reach=(.28+rand()*.25)*scale,tipY=startY+(.24+rand()*.22)*scale;
+      const start=new THREE.Vector3(x,startY,z);
+      const end=new THREE.Vector3(x+Math.cos(angle)*reach,tipY,z+Math.sin(angle)*reach);
+      const direction=new THREE.Vector3().subVectors(end,start);
+      const limb=new THREE.Mesh(new THREE.CylinderGeometry(.018*scale,.067*scale,direction.length(),5),bark);
+      limb.position.copy(start).add(end).multiplyScalar(.5);
+      limb.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());
+      limb.castShadow=true;parent.add(limb);
+    }
+    const baseColor=new THREE.Color(leaf);
+    const canopyColors=[baseColor.clone().multiplyScalar(.66),baseColor.clone().multiplyScalar(.82),baseColor.clone(),baseColor.clone().lerp(new THREE.Color(0x9ca96a),.22)];
+    for(let i=0;i<15;i++){
+      const angle=i*2.39996+rand()*.2,ring=Math.sqrt((i+.5)/15);
+      const cx=x+Math.cos(angle)*ring*.72*scale+(rand()-.5)*.13*scale;
+      const cz=z+Math.sin(angle)*ring*.65*scale+(rand()-.5)*.13*scale;
+      const cy=(1.65+rand()*.92)*scale;
+      const radius=(.30+rand()*.23)*scale;
+      const geometry=new THREE.IcosahedronGeometry(radius,1);
+      const pos=geometry.attributes.position;
+      for(let v=0;v<pos.count;v++){
+        const n=.84+rand()*.32;
+        pos.setXYZ(v,pos.getX(v)*n,pos.getY(v)*(.88+rand()*.28),pos.getZ(v)*n);
+      }
+      geometry.computeVertexNormals();
+      const material=new THREE.MeshStandardMaterial({color:canopyColors[i%canopyColors.length],roughness:.98,flatShading:true});
+      const crown=new THREE.Mesh(geometry,material);
+      crown.position.set(cx,cy,cz);crown.scale.set(1.04,.88,1.02);crown.rotation.y=rand()*Math.PI;
+      crown.castShadow=true;crown.receiveShadow=true;parent.add(crown);
     }
   }
   function build(sceneName){
