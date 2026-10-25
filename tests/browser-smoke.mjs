@@ -42,7 +42,7 @@ try {
     await page.waitForFunction(() => {
       const canvas = document.querySelector('#nastolkaBoard3D');
       return canvas && getComputedStyle(canvas).display !== 'none' && canvas.width > 0 && canvas.height > 0;
-    }, { timeout: 10000 });
+    }, undefined, { timeout: 10000 });
     await page.waitForTimeout(250);
 
     const layout = await page.evaluate(() => {
