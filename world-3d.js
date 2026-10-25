@@ -86,18 +86,66 @@
     cosmos:{base:0x171d35,rim:0x424865,inset:0x272f4d,empty:0x303e62,path:0x59658a,start:0x7899cb,finish:0xd0c6ff,trap:0x864d7a,event:0x8197e5,detail:0x40567a,detail2:0x6c7397,metal:0xb4c7f4}
   };
   let activeBoardLook=boardLooks.wild;
+  function terrainMaterial(base,kind,seed){
+    const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
+    const c=canvas.getContext('2d');c.fillStyle='#'+base.toString(16).padStart(6,'0');c.fillRect(0,0,256,256);
+    let state=(seed+17)*2654435761>>>0;
+    const rand=()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};
+    // Dense, fine-grained albedo variation instead of flat toy-like tile colors.
+    for(let i=0;i<4400;i++){
+      const v=Math.floor(rand()*48)-24,alpha=.12+rand()*.24;
+      const r=Math.max(0,Math.min(255,((base>>16)&255)+v));
+      const g=Math.max(0,Math.min(255,((base>>8)&255)+v));
+      const b=Math.max(0,Math.min(255,(base&255)+v));
+      c.fillStyle='rgba('+r+','+g+','+b+','+alpha+')';
+      const size=kind==='soil'?1+rand()*4:1+rand()*2.5;
+      c.beginPath();c.ellipse(rand()*256,rand()*256,size,size*(.4+rand()),rand()*3.14,0,Math.PI*2);c.fill();
+    }
+    if(kind==='grass'){
+      for(let i=0;i<1800;i++){
+        const x=rand()*256,y=rand()*256;
+        c.strokeStyle=rand()>.5?'rgba(150,177,91,.2)':'rgba(16,47,22,.24)';
+        c.lineWidth=.5+rand();c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x-2+rand()*4,y-4-rand()*5,x-4+rand()*8,y-3-rand()*11);c.stroke();
+      }
+    } else if(kind==='soil'){
+      for(let i=0;i<130;i++){
+        c.strokeStyle=rand()>.5?'rgba(213,181,123,.18)':'rgba(35,26,17,.2)';c.lineWidth=.5+rand()*2;
+        c.beginPath();c.moveTo(rand()*256,rand()*256);c.lineTo(rand()*256,rand()*256);c.stroke();
+      }
+    }
+    const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=2;
+    return new THREE.MeshStandardMaterial({map:tex,color:0xffffff,roughness:kind==='stone'?.88:1});
+  }
   function createBoardMaterials(){
-    const key=root.dataset.gameScene||'wild';
-    activeBoardLook=boardLooks[key]||boardLooks.wild;
+    const key=root.dataset.gameScene||'wild';activeBoardLook=boardLooks[key]||boardLooks.wild;
     boardMaterials={
-      empty:new THREE.MeshStandardMaterial({color:activeBoardLook.empty,roughness:1}),
-      path:new THREE.MeshStandardMaterial({color:activeBoardLook.path,roughness:.94}),
-      start:new THREE.MeshStandardMaterial({color:activeBoardLook.start,roughness:.78}),
-      finish:new THREE.MeshStandardMaterial({color:activeBoardLook.finish,roughness:.75}),
-      treasure:new THREE.MeshStandardMaterial({color:0x9d7428,metalness:.22,roughness:.45}),
-      trap:new THREE.MeshStandardMaterial({color:activeBoardLook.trap,roughness:.82}),
-      event:new THREE.MeshStandardMaterial({color:activeBoardLook.event,roughness:.55,metalness:key==='neon'||key==='cosmos'?.2:.02})
+      empty:terrainMaterial(key==='island'?0x54784a:activeBoardLook.empty,'grass',11),
+      path:terrainMaterial(key==='island'?0xb79a69:activeBoardLook.path,'soil',23),
+      start:terrainMaterial(activeBoardLook.start,'grass',31),
+      finish:terrainMaterial(activeBoardLook.finish,'grass',47),
+      treasure:terrainMaterial(0x887043,'soil',59),
+      trap:terrainMaterial(activeBoardLook.trap,'stone',71),
+      event:terrainMaterial(activeBoardLook.event,'stone',83)
     };
+  }
+  function addCanopy(x,z,scale,seed){
+    const greens=[0x254c2d,0x315b34,0x3d6839,0x496e3d,0x2b542f];
+    const trunkMat=new THREE.MeshStandardMaterial({color:0x493528,roughness:1});
+    const trunk=boardMesh(new THREE.CylinderGeometry(.035*scale,.075*scale,.24*scale,7),trunkMat,x,.18,z);
+    trunk.rotation.x=.08;
+    for(let n=0;n<5;n++){
+      const angle=n*2.399+seed*.31,r=.08+((seed+n*7)%5)*.018;
+      const crown=boardMesh(new THREE.IcosahedronGeometry(scale*(.19+(n%3)*.035),1),
+        new THREE.MeshStandardMaterial({color:greens[(seed+n*3)%greens.length],roughness:1}),
+        x+Math.cos(angle)*r,.31+(n%2)*.035,z+Math.sin(angle)*r,1.05,.72,.94);
+      crown.rotation.y=angle;
+    }
+    // A few sunlit leaves and tiny ground plants give the canopy a less geometric edge.
+    for(let n=0;n<4;n++){
+      const tuft=boardMesh(new THREE.SphereGeometry(.045*scale,6,5),
+        new THREE.MeshStandardMaterial({color:n%2?0x607b3e:0x75904a,roughness:1}),
+        x+Math.sin(seed+n*2)*scale*.19,.34,z+Math.cos(seed+n*3)*scale*.18,.8,1,.8);
+    }
   }
   function boardMesh(geometry,material,x,y,z,scaleX=1,scaleY=1,scaleZ=1){
     const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.scale.set(scaleX,scaleY,scaleZ);m.castShadow=true;m.receiveShadow=true;boardRoot.add(m);return m;
@@ -159,57 +207,59 @@
     boardMesh(new THREE.BoxGeometry(8.36,.045,8.36),rimMat,0,-.005,0);
     const insetMat=new THREE.MeshStandardMaterial({color:look.inset,roughness:.94});
     boardMesh(new THREE.BoxGeometry(8.12,.018,8.12),insetMat,0,.025,0);
+    // Top-down natural terrain: flat continuous ground, textured soil and grass,
+    // with trees/rocks as environmental decoration rather than raised toy-like cubes.
     for(let i=0;i<8;i++)for(let j=0;j<8;j++){
       const cell=board.children[i*8+j];if(!cell||!cell.classList.contains('play-cell'))continue;
       const type=['start','finish','treasure','trap','event','empty'].find(t=>cell.classList.contains('tile-'+t))||'path';
-      const x=j-3.5,z=i-3.5;
-      boardMesh(new THREE.BoxGeometry(.995,.045,.995),boardMaterials[type],x,.052,z);
-      // Forest paths get restrained organic ground clutter; gameplay cells stay unchanged.
-      if(root.dataset.gameScene==='wild'&&(type==='path'||type==='empty')&&((i*8+j)%3!==1))addForestFloorDetail(x,z,i*8+j+1);
-      // Forest canopy clusters are seen from above; keep paths and special cells clear.
-      if(root.dataset.gameScene==='wild'&&type==='empty'){
-        const seed=i*8+j+1;
-        if(seed%4!==1)addTopDownTree(x+(seed%2?.23:-.23),z+(seed%3===0?.22:-.2),seed);
-        if(seed%7===0)addTopDownTree(x-.27,z+.24,seed+3);
-      }
-      // Fine bevel-like inset and natural surface variation.
+      const x=j-3.5,z=i-3.5,seed=i*8+j+1;
+      const terrain=boardMesh(new THREE.PlaneGeometry(.99,.99),boardMaterials[type],x,.055,z);
+      terrain.rotation.x=-Math.PI/2;terrain.receiveShadow=true;terrain.castShadow=false;
       if(type==='path'){
+        // Uneven dirt edge stones, scattered rather than arranged as decorative beads.
         for(let k=0;k<3;k++){
-          const pebble=new THREE.Mesh(new THREE.DodecahedronGeometry(.075+(k%2)*.025,0),new THREE.MeshStandardMaterial({color:k===1?0xb8a17b:look.detail2,roughness:1}));
-          pebble.position.set(x+(Math.random()-.5)*.58,.19,z+(Math.random()-.5)*.58);pebble.scale.y=.38;pebble.castShadow=true;boardRoot.add(pebble);
+          const px=x+Math.sin(seed*2.1+k*4.3)*.34,pz=z+Math.cos(seed*1.7+k*3.7)*.34;
+          const stone=boardMesh(new THREE.DodecahedronGeometry(.035+(k%2)*.018,0),new THREE.MeshStandardMaterial({color:k===1?0x9a8b70:0x665b49,roughness:1}),px,.09,pz,1.2,.55,.8);
+          stone.rotation.y=seed*k;
+        }
+        if(seed%4===0){
+          const grassMat=new THREE.MeshStandardMaterial({color:0x516b37,roughness:1});
+          for(let k=0;k<3;k++){const blade=boardMesh(new THREE.ConeGeometry(.018,.12,4),grassMat,x+Math.sin(seed+k)*.37,.11,z+Math.cos(seed*2+k)*.34);blade.rotation.z=(k-1)*.32;}
         }
       } else if(type==='empty'){
-        const rockMat=new THREE.MeshStandardMaterial({color:look.detail2,roughness:1});
-        for(let k=0;k<2;k++){
-          const bush=new THREE.Mesh(new THREE.IcosahedronGeometry(.19+Math.random()*.13,1),new THREE.MeshStandardMaterial({color:k?look.detail:look.empty,roughness:1}));
-          bush.position.set(x+(k?-.2:.2),.27,z+(Math.random()-.5)*.3);bush.scale.y=1.35;bush.castShadow=true;boardRoot.add(bush);
+        if(seed%3!==0)addCanopy(x+((seed%3)-1)*.12,z+((seed%5)-2)*.07,.7+(seed%4)*.08,seed);
+        if(seed%4===0){
+          const boulder=boardMesh(new THREE.DodecahedronGeometry(.13,1),new THREE.MeshStandardMaterial({color:0x626454,roughness:1}),x+.28,.12,z-.24,1.25,.72,.95);
+          boulder.rotation.y=seed*.7;
         }
-        if((i*8+j)%3===0)boardMesh(new THREE.DodecahedronGeometry(.13,1),rockMat,x+.25,.25,z+.24,.9,.65,.8);
+        for(let k=0;k<3;k++){
+          const bush=boardMesh(new THREE.SphereGeometry(.085+(k%2)*.025,7,6),new THREE.MeshStandardMaterial({color:[0x294f2d,0x3a6337,0x496b3c][k],roughness:1}),x+Math.sin(seed+k*2)*.31,.12,z+Math.cos(seed*1.4+k*2)*.3,.95,.62,1.05);
+        }
       } else if(type==='treasure'){
-        const gold=new THREE.MeshStandardMaterial({color:0xe0b64d,metalness:.35,roughness:.36});
-        boardMesh(new THREE.BoxGeometry(.36,.25,.28),gold,x,.27,z);
-        boardMesh(new THREE.BoxGeometry(.39,.07,.31),gold,x,.42,z);
-        boardMesh(new THREE.BoxGeometry(.055,.08,.025),new THREE.MeshStandardMaterial({color:0x51351a,metalness:.1}),x,.33,z+.16);
+        const chestWood=new THREE.MeshStandardMaterial({color:0x624126,roughness:.82});
+        const gold=new THREE.MeshStandardMaterial({color:0xc3a04b,metalness:.45,roughness:.38});
+        boardMesh(new THREE.BoxGeometry(.25,.16,.2),chestWood,x,.16,z);
+        boardMesh(new THREE.BoxGeometry(.27,.035,.22),gold,x,.25,z);
+        boardMesh(new THREE.BoxGeometry(.035,.1,.025),gold,x,.18,z+.105);
       } else if(type==='trap'){
-        const iron=new THREE.MeshStandardMaterial({color:look.metal,metalness:.7,roughness:.36});
-        for(let k=0;k<4;k++){const spike=boardMesh(new THREE.ConeGeometry(.065,.24,6),iron,x-.24+k*.16,.25,z);spike.rotation.z=Math.PI;}
-        boardMesh(new THREE.TorusGeometry(.28,.035,6,20),iron,x,.2,z,1,1,.8);
+        const iron=new THREE.MeshStandardMaterial({color:0x6f7771,metalness:.65,roughness:.42});
+        boardMesh(new THREE.TorusGeometry(.22,.022,5,20),iron,x,.09,z,1,1,.8);
+        for(let k=0;k<5;k++){const spike=boardMesh(new THREE.ConeGeometry(.045,.15,5),iron,x-.17+k*.085,.15,z+Math.sin(k*1.2)*.06);spike.rotation.z=Math.PI;}
       } else if(type==='event'){
-        const crystal=new THREE.MeshStandardMaterial({color:0xb7a4ff,metalness:.22,roughness:.24,emissive:0x30204b});
-        const gem=boardMesh(new THREE.OctahedronGeometry(.22,0),crystal,x,.38,z,.8,1.25,.8);gem.rotation.y=.4;
+        const glow=new THREE.MeshStandardMaterial({color:activeBoardLook.event,emissive:activeBoardLook.event,emissiveIntensity:.28,roughness:.35});
+        boardMesh(new THREE.OctahedronGeometry(.13,0),glow,x,.19,z,.75,1.1,.75);
+        boardMesh(new THREE.RingGeometry(.2,.225,24),new THREE.MeshStandardMaterial({color:activeBoardLook.event,transparent:true,opacity:.65,roughness:.6}),x,.075,z);
       } else {
-        const markerMat=new THREE.MeshStandardMaterial({color:type==='start'?0xd7f08a:0xe8d4a7,roughness:.5});
-        boardMesh(new THREE.CylinderGeometry(.22,.27,.08,20),markerMat,x,.16,z);
-        boardMesh(new THREE.CylinderGeometry(.035,.045,.48,8),markerMat,x,.43,z);
+        const markerMat=new THREE.MeshStandardMaterial({color:type==='start'?0x9caf62:0xd7bd83,roughness:.75});
+        boardMesh(new THREE.CylinderGeometry(.16,.2,.045,16),markerMat,x,.09,z);
+        if(type==='start')addCanopy(x+.28,z-.2,.42,seed+13);
       }
-      // The DOM token names/colors mirror local and online game state.
       const tokenEls=cell.querySelectorAll('.player-token');
       tokenEls.forEach((token,index)=>{
         const css=getComputedStyle(token).getPropertyValue('--token-color').trim()||['#d8ff3e','#7ec8ff','#ff9b82','#c4a7ff'][index%4];
-        const color=new THREE.Color(css);
-        const tokenMat=new THREE.MeshStandardMaterial({color,metalness:.12,roughness:.34});
-        boardMesh(new THREE.CylinderGeometry(.105,.14,.12,16),tokenMat,x-.22+index*.14,.25,z+.18);
-        boardMesh(new THREE.SphereGeometry(.095,12,10),tokenMat,x-.22+index*.14,.38,z+.18,.85,1.18,.85);
+        const color=new THREE.Color(css),tokenMat=new THREE.MeshStandardMaterial({color,metalness:.16,roughness:.3});
+        boardMesh(new THREE.CylinderGeometry(.09,.12,.08,16),tokenMat,x-.15+index*.12,.13,z+.13);
+        boardMesh(new THREE.SphereGeometry(.075,12,10),tokenMat,x-.15+index*.12,.21,z+.13,.88,1.15,.88);
       });
     }
     updateBoardPosition();
