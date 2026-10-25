@@ -5,7 +5,7 @@
   const root=document.documentElement;
   let renderer,scene,camera,world,raf,resizeObserver;
   let detailedTreeModel=null,treeLoaderPromise=null,treeAssetAttempted=false;
-  let detailedRockModel=null,rockAssetAttempted=false,boardAssetDecorations=null;
+  let detailedRockModel=null,rockAssetAttempted=false,boardAssetDecorations=null,boardRockDecorations=null,boardTreeDecorations=null;
   let treeRecords=[];
   const palettes={
     wild:{fog:0x111b15,ground:0x344332,rock:0x56584b,leaf:0x29472d,accent:0x84945a,sky:0x26352a},
@@ -131,14 +131,15 @@
     treeAssetAttempted=true;
     // Real CC0 broadleaf hero trees; lightweight procedural trees remain as distant fallback.
     loadPolyHavenModel('jacaranda_tree').then(model=>{
-      detailedTreeModel=model;applyDetailedTreeModel();
+      detailedTreeModel=model;applyDetailedTreeModel();applyBoardTreeDecorations();
       console.info('NASTOLKA: loaded Poly Haven CC0 Jacaranda hero trees.');
     }).catch(error=>console.warn('NASTOLKA: tree model unavailable; keeping fallback.',error));
   }
   function applyBoardRockDecorations(){
     if(!detailedRockModel||!boardRoot||root.dataset.gameScene!=='wild')return;
-    if(boardAssetDecorations)boardRoot.remove(boardAssetDecorations);
-    boardAssetDecorations=new THREE.Group();
+    if(!boardAssetDecorations){boardAssetDecorations=new THREE.Group();boardRoot.add(boardAssetDecorations);}
+    if(boardRockDecorations)boardAssetDecorations.remove(boardRockDecorations);
+    boardRockDecorations=new THREE.Group();
     const bounds=new THREE.Box3().setFromObject(detailedRockModel);
     const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
     if(!size.x||!Number.isFinite(size.x))return;
@@ -148,9 +149,28 @@
       cluster.position.set(x-center.x*scale,.055-bounds.min.y*scale,z-center.z*scale);
       cluster.rotation.y=rotation;
       cluster.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;}});
-      boardAssetDecorations.add(cluster);
+      boardRockDecorations.add(cluster);
     });
-    boardRoot.add(boardAssetDecorations);
+    boardAssetDecorations.add(boardRockDecorations);
+  }
+  function applyBoardTreeDecorations(){
+    if(!detailedTreeModel||!boardRoot||root.dataset.gameScene!=='wild')return;
+    if(!boardAssetDecorations){boardAssetDecorations=new THREE.Group();boardRoot.add(boardAssetDecorations);}
+    if(boardTreeDecorations)boardAssetDecorations.remove(boardTreeDecorations);
+    boardTreeDecorations=new THREE.Group();
+    const bounds=new THREE.Box3().setFromObject(detailedTreeModel);
+    const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
+    if(!size.y||!Number.isFinite(size.y))return;
+    const fit=2.25/size.y;
+    [[-2.55,-4.02,.15],[2.55,-4.05,.78]].forEach(([x,z,rotation])=>{
+      const treeModel=detailedTreeModel.clone(true);
+      treeModel.scale.setScalar(fit);
+      treeModel.position.set(x-center.x*fit,.055-bounds.min.y*fit,z-center.z*fit);
+      treeModel.rotation.y=rotation;
+      treeModel.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;}});
+      boardTreeDecorations.add(treeModel);
+    });
+    boardAssetDecorations.add(boardTreeDecorations);
   }
   function loadBoardRockModel(){
     if(rockAssetAttempted||root.dataset.gameScene!=='wild')return;
@@ -726,7 +746,7 @@
     lastBoardSignature=boardSignature(board);
     board.classList.add('board-3d-ready');
     if(boardRoot){boardScene.remove(boardRoot);boardRoot.traverse(o=>{if(boardAssetDecorations&&(o===boardAssetDecorations||boardAssetDecorations.getObjectById(o.id)))return;if(o.geometry)o.geometry.dispose();if(o.material&&!Object.values(boardMaterials).includes(o.material)){if(Array.isArray(o.material))o.material.forEach(m=>{if(m.map)m.map.dispose();m.dispose();});else{if(o.material.map)o.material.map.dispose();o.material.dispose();}}});}
-    boardRoot=new THREE.Group();boardAssetDecorations=null;boardScene.add(boardRoot);
+    boardRoot=new THREE.Group();boardAssetDecorations=null;boardRockDecorations=null;boardTreeDecorations=null;boardScene.add(boardRoot);
     const look=activeBoardLook;
     const baseMat=new THREE.MeshStandardMaterial({color:look.base,roughness:.98,metalness:0});
     const rimMat=new THREE.MeshStandardMaterial({color:look.rim,roughness:.96,metalness:(root.dataset.gameScene==='neon'||root.dataset.gameScene==='cosmos')?.08:0});
@@ -884,7 +904,7 @@
         boardMesh(new THREE.SphereGeometry(.075,12,10),tokenMat,x-.15+index*.12,.21,z+.13,.88,1.15,.88);
       });
     }
-    if(root.dataset.gameScene==='wild'){if(detailedRockModel)applyBoardRockDecorations();else loadBoardRockModel();}
+    if(root.dataset.gameScene==='wild'){if(detailedRockModel)applyBoardRockDecorations();else loadBoardRockModel();if(detailedTreeModel)applyBoardTreeDecorations();}
     updateBoardPosition();
     if(boardRenderer)boardRenderer.render(boardScene,boardCamera);
   }
