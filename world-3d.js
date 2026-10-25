@@ -113,7 +113,7 @@
   function loadPolyHavenModel(assetId){
     if(polyHavenModelPromises[assetId])return polyHavenModelPromises[assetId];
     polyHavenModelPromises[assetId]=Promise.all([
-      import('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js'),
+      import('https://esm.sh/three@0.160.1/examples/jsm/loaders/GLTFLoader.js'),
       fetch('https://api.polyhaven.com/files/'+encodeURIComponent(assetId)).then(response=>{
         if(!response.ok)throw new Error('Poly Haven asset manifest HTTP '+response.status);
         return response.json();
@@ -143,8 +143,8 @@
     const bounds=new THREE.Box3().setFromObject(detailedRockModel);
     const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
     if(!size.x||!Number.isFinite(size.x))return;
-    [[-3.45,-3.45,.15],[3.42,3.38,2.05]].forEach(([x,z,rotation],index)=>{
-      const scale=(2.15/size.x)*(index===0?1:.86),cluster=detailedRockModel.clone(true);
+    [[-3.55,-3.5,.15],[3.55,3.45,2.05],[-4.0,.1,.7],[4.0,-.1,1.8]].forEach(([x,z,rotation],index)=>{
+      const scale=(2.65/size.x)*(index%2===0?1:.86),cluster=detailedRockModel.clone(true);
       cluster.scale.setScalar(scale);
       cluster.position.set(x-center.x*scale,.055-bounds.min.y*scale,z-center.z*scale);
       cluster.rotation.y=rotation;
@@ -161,8 +161,8 @@
     const bounds=new THREE.Box3().setFromObject(detailedTreeModel);
     const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
     if(!size.y||!Number.isFinite(size.y))return;
-    const fit=2.25/size.y;
-    [[-2.55,-4.02,.15],[2.55,-4.05,.78]].forEach(([x,z,rotation])=>{
+    const fit=3.25/size.y;
+    [[-3.25,-3.95,.15],[3.25,-3.95,.78],[-4.02,-1.9,.42],[4.02,1.8,1.12],[-3.55,3.55,2.25],[3.55,3.55,2.9]].forEach(([x,z,rotation])=>{
       const treeModel=detailedTreeModel.clone(true);
       treeModel.scale.setScalar(fit);
       treeModel.position.set(x-center.x*fit,.055-bounds.min.y*fit,z-center.z*fit);
