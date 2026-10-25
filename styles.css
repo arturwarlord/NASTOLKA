@@ -438,3 +438,30 @@ html.game-mode .player-token{width:clamp(22px,2.7vw,38px);height:clamp(22px,2.7v
 html.game-mode .play-cell.current-player-cell{box-shadow:0 0 0 3px #f4ffb0,0 0 28px #d8ff3ecc,inset 0 0 24px #eaff9b44}
 @media(max-width:900px){html.game-mode .game-world-props{z-index:0;opacity:.38}html.game-mode #customGamePanel{z-index:1}}
 @media(max-width:620px){html.game-mode .game-world-props{z-index:0;opacity:.24}html.game-mode .game-world-props .prop-left{left:-15%;top:28%;font-size:56px}html.game-mode .game-world-props .prop-right{right:-15%;top:37%;font-size:52px}html.game-mode #playBoard{border-width:2px;padding:7px;box-shadow:0 18px 35px #000b,0 5px 0 #3b2418,inset 0 2px 0 #f0c38b66}html.game-mode .play-cell.route-cell.tile-path:before{inset:4%}}
+
+
+/* Adventure board v2: visible miniature scenery, terrain details and dice feedback */
+html.game-mode .game-world-props{z-index:0!important;opacity:.78}
+html.game-mode .game-world-props span{filter:drop-shadow(0 18px 15px #000c) drop-shadow(0 0 15px var(--scene-glow,#8bb86b))}
+html.game-mode #customGamePanel{z-index:2}
+html.game-mode #playBoard{position:relative;overflow:visible;isolation:isolate}
+html.game-mode #playBoard:after{content:"";position:absolute;inset:-11px;border:1px solid #d4b17b55;border-radius:22px;box-shadow:0 0 0 5px #130d0877,0 0 50px var(--scene-glow,#8bb86b)22;pointer-events:none;z-index:-1}
+html.game-mode .play-cell{overflow:hidden}
+html.game-mode .play-cell.tile-path .play-cell-symbol{display:none}
+html.game-mode .path-inlay{position:absolute;right:12%;bottom:10%;font-size:clamp(7px,1vw,14px);color:#fff0c788;text-shadow:0 1px 2px #29190b;z-index:1}
+html.game-mode .cell-terrain{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(16px,2.8vw,42px);filter:drop-shadow(0 3px 3px #0009);opacity:.88;transform:translateY(1px);z-index:2}
+html.game-mode .play-cell.tile-empty:before{inset:0;background:radial-gradient(ellipse at 50% 82%,#b4d78a44,transparent 48%),linear-gradient(145deg,#ffffff0b,transparent 48%);border:0}
+html.game-mode .play-cell.tile-empty .play-cell-symbol{display:none}
+html.game-mode .play-cell.tile-start .play-cell-symbol,html.game-mode .play-cell.tile-finish .play-cell-symbol,html.game-mode .play-cell.tile-treasure .play-cell-symbol,html.game-mode .play-cell.tile-trap .play-cell-symbol,html.game-mode .play-cell.tile-event .play-cell-symbol{font-size:clamp(20px,3vw,44px);filter:drop-shadow(0 4px 3px #000a)}
+html.game-mode .play-cell.tile-treasure{animation:treasureShimmer 3.5s ease-in-out infinite}
+html.game-mode .play-cell.tile-event{animation:arcanePulse 4s ease-in-out infinite}
+html.game-mode .play-cell.tile-trap:before{content:"";position:absolute;inset:13%;border:1px dashed #ffd0b477;border-radius:50%;z-index:1}
+html.game-mode .play-cell.tile-start:after,html.game-mode .play-cell.tile-finish:after{content:"";position:absolute;inset:7%;border:1px solid #fff7;border-radius:inherit;pointer-events:none}
+html.game-mode #turnStatus{position:relative;overflow:hidden}
+html.game-mode #turnStatus:after{content:"✦  ✧  ✦";position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:20px;letter-spacing:5px;color:var(--scene-glow,#a6d47a);opacity:.65;pointer-events:none}
+html.game-mode #playBoard.dice-rolling{animation:boardDiceShake .65s cubic-bezier(.36,.07,.19,.97) both}
+@keyframes boardDiceShake{0%,100%{transform:translateX(0) rotate(0)}15%{transform:translateX(-5px) rotate(-.3deg)}30%{transform:translateX(5px) rotate(.3deg)}45%{transform:translateX(-4px)}60%{transform:translateX(3px)}75%{transform:translateX(-1px)}}
+@keyframes treasureShimmer{0%,100%{filter:brightness(1);box-shadow:0 0 10px #ffd35b22,inset 0 2px #fff9,inset 0 -7px 10px #3b210d}50%{filter:brightness(1.17);box-shadow:0 0 24px #ffd35b77,inset 0 2px #fff9,inset 0 -7px 10px #3b210d}}
+@keyframes arcanePulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.14)}}
+@media(prefers-reduced-motion:reduce){html.game-mode .play-cell.tile-treasure,html.game-mode .play-cell.tile-event{animation:none}html.game-mode #playBoard.dice-rolling{animation:none}}
+@media(max-width:620px){html.game-mode .cell-terrain{font-size:clamp(13px,4vw,25px)}html.game-mode #turnStatus:after{display:none}}
