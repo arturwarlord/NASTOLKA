@@ -155,7 +155,7 @@
   // DOM remains authoritative for turns and multiplayer; WebGL supplies the rendered board.
   let boardRenderer,boardScene,boardCamera,boardCanvas,boardObserver,boardResizeHandler;
   let boardRoot,boardFrame;
-  let boardMaterials,lastBoardSignature='',boardSyncQueued=false;
+  let boardMaterials,lastBoardSignature='',boardSyncQueued=false,boardZoom=1;
   // Theme-specific board materials: the same playable grid becomes a different physical world.
   const boardLooks={
     wild:{base:0x17231a,rim:0x514333,inset:0x283b29,empty:0x284632,path:0x92734b,start:0x9ab849,finish:0xc7a365,trap:0x783d35,event:0x66528f,detail:0x54734a,detail2:0x64523a,metal:0x9b9b8b},
@@ -563,6 +563,21 @@
     }
     if(seed%3===0)addFern(x+(((seed*5)%7)/10-.3),z+(((seed*3)%9)/12-.3),seed);
   }
+  function updateBoardCameraFraming(){
+    if(!boardCamera)return;
+    const aspect=Math.max(.35,boardCamera.aspect||1);
+    // Keep the complete square map visible at any screen ratio, while using as much
+    // of the viewport as possible. User zoom can deliberately move closer than fit.
+    const fitDistance=Math.max(12.5,13.8/aspect);
+    const distance=fitDistance/boardZoom;
+    boardCamera.position.set(0,distance*.628,distance*.778);
+    boardCamera.lookAt(0,.05,0);
+  }
+  function setBoardZoom(next){
+    boardZoom=Math.max(.72,Math.min(1.85,next));
+    updateBoardCameraFraming();
+    if(boardRenderer&&boardScene&&boardCamera)boardRenderer.render(boardScene,boardCamera);
+  }
   function updateBoardPosition(){
     const board=document.getElementById('playBoard');
     if(!board||!boardCanvas||!boardRenderer)return;
@@ -570,8 +585,9 @@
     boardCanvas.style.left=Math.round(r.left)+'px';boardCanvas.style.top=Math.round(r.top)+'px';
     boardCanvas.style.width=Math.round(r.width)+'px';boardCanvas.style.height=Math.round(r.height)+'px';
     boardRenderer.setSize(Math.max(1,Math.round(r.width)),Math.max(1,Math.round(r.height)),false);
-    boardCamera.aspect=Math.max(.5,r.width/Math.max(1,r.height));
+    boardCamera.aspect=Math.max(.35,r.width/Math.max(1,r.height));
     boardCamera.updateProjectionMatrix();
+    updateBoardCameraFraming();
     boardFrame=board;
   }
   function boardSignature(board){
@@ -740,8 +756,8 @@
     boardScene=new THREE.Scene();boardScene.background=null;
     // Cinematic oblique perspective: the board reads as a real miniature MOBA world,
     // with visible terrain thickness, depth falloff and a horizon-facing forest edge.
-    boardCamera=new THREE.PerspectiveCamera(34,1,.1,60);
-    boardCamera.position.set(0,12.5,15.5);boardCamera.lookAt(0,.05,0);
+    boardCamera=new THREE.PerspectiveCamera(34,1,.1,80);
+    boardZoom=1;boardCamera.position.set(0,12.5,15.5);boardCamera.lookAt(0,.05,0);
     boardRenderer=new THREE.WebGLRenderer({canvas:boardCanvas,antialias:true,alpha:true,powerPreference:'low-power'});
     boardRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));boardRenderer.setClearColor(0x000000,0);
     boardRenderer.shadowMap.enabled=true;boardRenderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -749,6 +765,12 @@
     boardScene.add(new THREE.HemisphereLight(0xcbd7c4,0x171d15,.78));
     const fill=new THREE.DirectionalLight(0x9fb7c8,.28);fill.position.set(6,5,-6);boardScene.add(fill);
     const sun=new THREE.DirectionalLight(0xffe2bb,3.15);sun.position.set(-5,11,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-7;sun.shadow.camera.right=7;sun.shadow.camera.top=7;sun.shadow.camera.bottom=-7;sun.shadow.bias=-.00018;sun.shadow.normalBias=.025;boardScene.add(sun);
+    const zoomIn=document.getElementById('mapZoomIn');
+    const zoomOut=document.getElementById('mapZoomOut');
+    const viewReset=document.getElementById('mapViewReset');
+    if(zoomIn&&!zoomIn.dataset.bound){zoomIn.dataset.bound='1';zoomIn.addEventListener('click',()=>setBoardZoom(boardZoom+.16));}
+    if(zoomOut&&!zoomOut.dataset.bound){zoomOut.dataset.bound='1';zoomOut.addEventListener('click',()=>setBoardZoom(boardZoom-.16));}
+    if(viewReset&&!viewReset.dataset.bound){viewReset.dataset.bound='1';viewReset.addEventListener('click',()=>setBoardZoom(1));}
     const sync=()=>{
       if(boardSyncQueued)return;
       boardSyncQueued=true;
