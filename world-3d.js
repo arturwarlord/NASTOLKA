@@ -138,6 +138,15 @@
     let state=(seed+1)*2654435761>>>0;
     return ()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};
   }
+  function irregularPatch(radius,seed,segments=22){
+    const geometry=new THREE.CircleGeometry(radius,segments),positions=geometry.attributes.position,rand=seeded(seed+937);
+    // Deform only the perimeter: dirt edges become naturally broken instead of perfect coins.
+    for(let i=1;i<positions.count;i++){
+      const x=positions.getX(i),y=positions.getY(i),factor=.78+rand()*.42;
+      positions.setXY(i,x*factor,y*factor);
+    }
+    positions.needsUpdate=true;geometry.computeVertexNormals();return geometry;
+  }
   function addCanopy(x,z,scale,seed){
     // Taller, irregular woodland trees: visible trunks, branching limbs and layered foliage.
     const rand=seeded(seed),greens=[0x203b25,0x29492c,0x315632,0x3a6036,0x45683a,0x526f40,0x5b7845];
@@ -282,20 +291,26 @@
     boardMesh(new THREE.BoxGeometry(8.36,.045,8.36),rimMat,0,-.005,0);
     const insetMat=new THREE.MeshStandardMaterial({color:look.inset,roughness:.94});
     boardMesh(new THREE.BoxGeometry(8.12,.018,8.12),insetMat,0,.025,0);
-    // Top-down natural terrain: flat continuous ground, textured soil and grass,
-    // with trees/rocks as environmental decoration rather than raised toy-like cubes.
+    // One uninterrupted forest floor removes visible cell seams; the DOM grid still owns gameplay.
+    if(root.dataset.gameScene==='wild'){
+      const forestFloor=boardMesh(new THREE.PlaneGeometry(8.08,8.08),boardMaterials.empty,0,.052,0);
+      forestFloor.rotation.x=-Math.PI/2;forestFloor.receiveShadow=true;forestFloor.castShadow=false;
+    }
+    // Textured terrain and irregular path overlays; the DOM grid remains the gameplay source of truth.
     for(let i=0;i<8;i++)for(let j=0;j<8;j++){
       const cell=board.children[i*8+j];if(!cell||!cell.classList.contains('play-cell'))continue;
       const type=['start','finish','treasure','trap','event','empty'].find(t=>cell.classList.contains('tile-'+t))||'path';
       const x=j-3.5,z=i-3.5,seed=i*8+j+1;
       // Forest ground is continuous grass; dirt paths are irregular overlays, not square tiles.
       const terrainType=root.dataset.gameScene==='wild'?'empty':type;
-      const terrain=boardMesh(new THREE.PlaneGeometry(1.015,1.015),boardMaterials[terrainType],x,.055,z);
-      terrain.rotation.x=-Math.PI/2;terrain.receiveShadow=true;terrain.castShadow=false;
+      if(root.dataset.gameScene!=='wild'){
+        const terrain=boardMesh(new THREE.PlaneGeometry(1.015,1.015),boardMaterials[terrainType],x,.055,z);
+        terrain.rotation.x=-Math.PI/2;terrain.receiveShadow=true;terrain.castShadow=false;
+      }
       if(type==='path'){
         if(root.dataset.gameScene==='wild'){
           const rand=seeded(seed+173);
-          const dirt=boardMesh(new THREE.CircleGeometry(.59,24),boardMaterials.path,x,.062,z,.94+rand()*.16,1,.82+rand()*.2);
+          const dirt=boardMesh(irregularPatch(.59,seed+173,26),boardMaterials.path,x,.062,z,.94+rand()*.16,1,.82+rand()*.2);
           dirt.rotation.x=-Math.PI/2;
           // Join neighboring path cells into one readable trail rather than isolated dirt coins.
           const right=board.children[i*8+j+1];
@@ -309,7 +324,7 @@
             join.rotation.x=-Math.PI/2;
           }
           for(let n=0;n<2;n++){
-            const patch=boardMesh(new THREE.CircleGeometry(.24+rand()*.12,14),boardMaterials.path,x+(rand()-.5)*.38,.063,z+(rand()-.5)*.38,.8+rand()*.5,1,.65+rand()*.6);
+            const patch=boardMesh(irregularPatch(.24+rand()*.12,seed+n+291,16),boardMaterials.path,x+(rand()-.5)*.38,.063,z+(rand()-.5)*.38,.8+rand()*.5,1,.65+rand()*.6);
             patch.rotation.x=-Math.PI/2;
           }
         }
