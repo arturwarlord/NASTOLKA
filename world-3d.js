@@ -139,28 +139,48 @@
     return ()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};
   }
   function addCanopy(x,z,scale,seed){
-    // Organic overhead canopy clusters: overlapping irregular crowns, not stacked toy cones.
-    const rand=seeded(seed), greens=[0x203f28,0x294e2e,0x315a34,0x3a6539,0x456d3c,0x527746];
-    const shadow=boardMesh(new THREE.CircleGeometry(.43*scale,18),forestMat(0x101d14),x+.055,.087,z+.07);
+    // Taller, irregular woodland trees: visible trunks, branching limbs and layered foliage.
+    const rand=seeded(seed),greens=[0x203b25,0x29492c,0x315632,0x3a6036,0x45683a,0x526f40,0x5b7845];
+    const shadow=boardMesh(new THREE.CircleGeometry(.34*scale,20),forestMat(0x10170f),x+.055,.087,z+.07,.9,1,.8);
     shadow.rotation.x=-Math.PI/2;
-    const trunk=boardMesh(new THREE.CylinderGeometry(.055*scale,.105*scale,.18*scale,8),forestMat(0x3d2c20),x,.13,z);
-    trunk.castShadow=true;
-    // Wide central crown plus asymmetric lobes create a naturally uneven silhouette.
-    for(let n=0;n<11;n++){
-      const angle=rand()*Math.PI*2,dist=n===0?0:(.10+rand()*.19)*scale;
-      const radius=(.19+rand()*.13)*scale;
-      const crown=boardMesh(new THREE.SphereGeometry(radius,9,7),forestMat(greens[Math.floor(rand()*greens.length)]),
-        x+Math.cos(angle)*dist,.19+rand()*.045,z+Math.sin(angle)*dist,
-        .88+rand()*.48,.48+rand()*.18,.82+rand()*.48);
-      crown.rotation.y=rand()*Math.PI;
+    const bark=forestMat(seed%3===0?0x39291e:0x4b3524);
+    const trunkH=.62*scale;
+    const trunk=boardMesh(new THREE.CylinderGeometry(.045*scale,.09*scale,trunkH,7),bark,x,.055+trunkH/2,z);
+    trunk.rotation.z=(rand()-.5)*.09;
+    // Forked branches break the straight, toy-like trunk silhouette.
+    for(let n=0;n<3;n++){
+      const a=rand()*Math.PI*2,branchLen=(.19+rand()*.1)*scale;
+      const branch=boardMesh(new THREE.CylinderGeometry(.012*scale,.027*scale,branchLen,5),bark,
+        x+Math.cos(a)*branchLen*.25,.055+trunkH*(.62+n*.09),z+Math.sin(a)*branchLen*.25);
+      branch.rotation.set(Math.sin(a)*.72,0,Math.cos(a)*.72);
     }
-    // Small edge leaves break the smooth circular outline from the overhead camera.
-    for(let n=0;n<7;n++){
-      const angle=rand()*Math.PI*2,dist=(.28+rand()*.08)*scale;
-      const leaf=boardMesh(new THREE.SphereGeometry(.065*scale,7,5),forestMat(greens[Math.floor(rand()*greens.length)]),
-        x+Math.cos(angle)*dist,.205,z+Math.sin(angle)*dist,.85,.45,1.2);
+    // Layered asymmetric foliage, raised above the ground so perspective reveals depth.
+    for(let n=0;n<13;n++){
+      const angle=rand()*Math.PI*2,dist=n===0?0:(.08+rand()*.22)*scale;
+      const radius=(.17+rand()*.14)*scale;
+      const crownY=.055+trunkH*.92+rand()*.22*scale;
+      const crown=boardMesh(new THREE.SphereGeometry(radius,10,8),forestMat(greens[Math.floor(rand()*greens.length)]),
+        x+Math.cos(angle)*dist,crownY,z+Math.sin(angle)*dist,
+        .9+rand()*.5,.72+rand()*.42,.85+rand()*.5);
+      crown.rotation.set((rand()-.5)*.18,rand()*Math.PI,(rand()-.5)*.18);
+    }
+    // A few small leaf clusters create an uneven, natural crown edge.
+    for(let n=0;n<5;n++){
+      const angle=rand()*Math.PI*2,dist=(.25+rand()*.1)*scale;
+      const leaf=boardMesh(new THREE.SphereGeometry(.055*scale,8,6),forestMat(greens[Math.floor(rand()*greens.length)]),
+        x+Math.cos(angle)*dist,.055+trunkH*.86+rand()*.2*scale,z+Math.sin(angle)*dist,.9,.8,1.15);
       leaf.rotation.y=angle;
     }
+  }
+  function addForestEdge(x,z,seed){
+    const rand=seeded(seed+2401),rock=forestMat(seed%2?0x55594b:0x696b5c,.98);
+    // Broken stone outcrops at the forest boundary make the terrain feel carved, not boxed.
+    for(let n=0;n<2+(seed%2);n++){
+      const px=x+(rand()-.5)*.62,pz=z+(rand()-.5)*.62,size=.13+rand()*.17;
+      const b=boardMesh(new THREE.DodecahedronGeometry(size,1),rock,px,.055+size*.36,pz,.9+rand()*.55,.7+rand()*.6,.85+rand()*.45);
+      b.rotation.set(rand()*.25,rand()*Math.PI,rand()*.2);
+    }
+    if(seed%2===0)addForestRoots(x+(rand()-.5)*.18,z+(rand()-.5)*.18,seed+77);
   }
   function boardMesh(geometry,material,x,y,z,scaleX=1,scaleY=1,scaleZ=1){
     const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.scale.set(scaleX,scaleY,scaleZ);m.castShadow=true;m.receiveShadow=true;boardRoot.add(m);return m;
@@ -321,6 +341,10 @@
         const markerMat=new THREE.MeshStandardMaterial({color:type==='start'?0x9caf62:0xd7bd83,roughness:.75});
         boardMesh(new THREE.CylinderGeometry(.16,.2,.045,16),markerMat,x,.09,z);
         if(type==='start')addCanopy(x+.28,z-.2,.42,seed+13);
+      }
+      // Rough natural border: broken rock shelves and exposed roots instead of a clean square rim.
+      if(root.dataset.gameScene==='wild'&&(i===0||i===7||j===0||j===7)&&seed%2===0){
+        addForestEdge(x+(j===0?.22:j===7?-.22:0),z+(i===0?.22:i===7?-.22:0),seed);
       }
       const tokenEls=cell.querySelectorAll('.player-token');
       tokenEls.forEach((token,index)=>{
