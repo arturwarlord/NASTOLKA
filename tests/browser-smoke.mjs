@@ -49,13 +49,13 @@ try {
       // Don't count a green UI smoke test as success if the ready-made environment assets silently fell back.
       await page.waitForFunction(() => {
         const status = window.__nastolkaAssetStatus;
-        return status && status.tree !== 'pending' && status.rock !== 'pending';
+        return status && status.tree !== 'pending' && status.rock !== 'pending' && status.fern !== 'pending';
       }, undefined, { timeout: 60000 });
       const assetStatus = await page.evaluate(() => window.__nastolkaAssetStatus);
-      if (assetStatus.tree !== 'loaded' || assetStatus.rock !== 'loaded') {
+      if (assetStatus.tree !== 'loaded' || assetStatus.rock !== 'loaded' || assetStatus.fern !== 'loaded') {
         throw new Error(`Ready-made 3D assets did not load: ${JSON.stringify(assetStatus)}`);
       }
-      console.log('OK external 3D assets: real tree and rock models loaded.');
+      console.log('OK external 3D assets: real tree, rock and fern models loaded.');
     }
 
     const layout = await page.evaluate(() => {
