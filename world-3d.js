@@ -5,6 +5,7 @@
   const root=document.documentElement;
   let renderer,scene,camera,world,raf,resizeObserver;
   let detailedTreeModel=null,treeLoaderPromise=null,treeAssetAttempted=false;
+  let detailedRockModel=null,rockAssetAttempted=false,boardAssetDecorations=null;
   let treeRecords=[];
   const palettes={
     wild:{fog:0x111b15,ground:0x344332,rock:0x56584b,leaf:0x29472d,accent:0x84945a,sky:0x26352a},
@@ -108,35 +109,57 @@
     }
     return result;
   }
-  function loadDetailedTreeModel(){
-    if(treeAssetAttempted)return;
-    treeAssetAttempted=true;
-    // Load a genuine CC0 broadleaf tree from Poly Haven. The API manifest is searched
-    // for its 1K glTF file so textures stay linked relative to the model; no ZIP is
-    // passed to GLTFLoader. If the network/model host fails, the local fallback remains.
-    treeLoaderPromise=Promise.all([
+  const polyHavenModelPromises={};
+  function loadPolyHavenModel(assetId){
+    if(polyHavenModelPromises[assetId])return polyHavenModelPromises[assetId];
+    polyHavenModelPromises[assetId]=Promise.all([
       import('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js'),
-      fetch('https://api.polyhaven.com/files/jacaranda_tree').then(response=>{
+      fetch('https://api.polyhaven.com/files/'+encodeURIComponent(assetId)).then(response=>{
         if(!response.ok)throw new Error('Poly Haven asset manifest HTTP '+response.status);
         return response.json();
       })
     ]).then(([{GLTFLoader},manifest])=>{
-      const candidates=findPolyHavenModelFile(manifest,[],[])
-        .sort((a,b)=>{
-          const a1=a.path.includes('1k')?0:a.path.includes('2k')?1:2;
-          const b1=b.path.includes('1k')?0:b.path.includes('2k')?1:2;
-          return a1-b1;
-        });
-      if(!candidates.length)throw new Error('No direct glTF model URL in Poly Haven manifest');
+      const rank=path=>path.includes('1k')?0:path.includes('2k')?1:2;
+      const candidates=findPolyHavenModelFile(manifest,[],[]).sort((a,b)=>rank(a.path)-rank(b.path));
+      if(!candidates.length)throw new Error('No direct glTF model URL for '+assetId);
       return new GLTFLoader().loadAsync(candidates[0].url).then(gltf=>gltf.scene);
-    }).then(model=>{
-      detailedTreeModel=model;
-      applyDetailedTreeModel();
+    }).catch(error=>{delete polyHavenModelPromises[assetId];throw error;});
+    return polyHavenModelPromises[assetId];
+  }
+  function loadDetailedTreeModel(){
+    if(treeAssetAttempted)return;
+    treeAssetAttempted=true;
+    // Real CC0 broadleaf hero trees; lightweight procedural trees remain as distant fallback.
+    loadPolyHavenModel('jacaranda_tree').then(model=>{
+      detailedTreeModel=model;applyDetailedTreeModel();
       console.info('NASTOLKA: loaded Poly Haven CC0 Jacaranda hero trees.');
-    }).catch(error=>{
-      console.warn('NASTOLKA: Poly Haven tree asset unavailable; keeping local fallback.',error);
-      treeLoaderPromise=null;
+    }).catch(error=>console.warn('NASTOLKA: tree model unavailable; keeping fallback.',error));
+  }
+  function applyBoardRockDecorations(){
+    if(!detailedRockModel||!boardRoot||root.dataset.gameScene!=='wild')return;
+    if(boardAssetDecorations)boardRoot.remove(boardAssetDecorations);
+    boardAssetDecorations=new THREE.Group();
+    const bounds=new THREE.Box3().setFromObject(detailedRockModel);
+    const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
+    if(!size.x||!Number.isFinite(size.x))return;
+    [[-3.45,-3.45,.15],[3.42,3.38,2.05]].forEach(([x,z,rotation],index)=>{
+      const scale=(2.15/size.x)*(index===0?1:.86),cluster=detailedRockModel.clone(true);
+      cluster.scale.setScalar(scale);
+      cluster.position.set(x-center.x*scale,.055-bounds.min.y*scale,z-center.z*scale);
+      cluster.rotation.y=rotation;
+      cluster.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;}});
+      boardAssetDecorations.add(cluster);
     });
+    boardRoot.add(boardAssetDecorations);
+  }
+  function loadBoardRockModel(){
+    if(rockAssetAttempted||root.dataset.gameScene!=='wild')return;
+    rockAssetAttempted=true;
+    // Two instances of a scanned six-stone CC0 set enrich the outer rim without crowding the grid.
+    loadPolyHavenModel('rock_moss_set_02').then(model=>{
+      detailedRockModel=model;applyBoardRockDecorations();
+      console.info('NASTOLKA: loaded Poly Haven CC0 mossy rock decorations.');
+    }).catch(error=>console.warn('NASTOLKA: rock model unavailable; keeping fallback.',error));
   }
   function build(sceneName){
     treeRecords=[];
@@ -703,7 +726,7 @@
     lastBoardSignature=boardSignature(board);
     board.classList.add('board-3d-ready');
     if(boardRoot){boardScene.remove(boardRoot);boardRoot.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&& !Object.values(boardMaterials).includes(o.material)){if(Array.isArray(o.material))o.material.forEach(m=>{if(m.map)m.map.dispose();m.dispose();});else{if(o.material.map)o.material.map.dispose();o.material.dispose();}}});}
-    boardRoot=new THREE.Group();boardScene.add(boardRoot);
+    boardRoot=new THREE.Group();boardAssetDecorations=null;boardScene.add(boardRoot);
     const look=activeBoardLook;
     const baseMat=new THREE.MeshStandardMaterial({color:look.base,roughness:.98,metalness:0});
     const rimMat=new THREE.MeshStandardMaterial({color:look.rim,roughness:.96,metalness:(root.dataset.gameScene==='neon'||root.dataset.gameScene==='cosmos')?.08:0});
@@ -861,6 +884,7 @@
         boardMesh(new THREE.SphereGeometry(.075,12,10),tokenMat,x-.15+index*.12,.21,z+.13,.88,1.15,.88);
       });
     }
+    if(root.dataset.gameScene==='wild'){if(detailedRockModel)applyBoardRockDecorations();else loadBoardRockModel();}
     updateBoardPosition();
     if(boardRenderer)boardRenderer.render(boardScene,boardCamera);
   }
