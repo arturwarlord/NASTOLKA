@@ -269,6 +269,30 @@
       stain.rotation.z=(rand()-.5)*.18;
     }
   }
+  function addForestMushrooms(x,z,seed){
+    // Tiny, subdued mushroom clusters provide scale cues along damp woodland edges.
+    const rand=seeded(seed+5019),stem=forestMat(0xb8ad8a,.95);
+    const caps=[forestMat(0x76513b,.92),forestMat(0x8a6845,.92),forestMat(0x5c6540,.98)];
+    const count=2+(seed%2);
+    for(let n=0;n<count;n++){
+      const px=x+(rand()-.5)*.28,pz=z+(rand()-.5)*.26,h=.055+rand()*.045,r=.035+rand()*.018;
+      boardMesh(new THREE.CylinderGeometry(.009,.012,h,5),stem,px,.058+h/2,pz,1,1,1);
+      const cap=boardMesh(new THREE.SphereGeometry(r,7,5),caps[(seed+n)%caps.length],px,.058+h,pz,1,.42,1);
+      cap.castShadow=false;
+      if(n===0&&seed%3===0){
+        const moss=boardMesh(new THREE.SphereGeometry(.11,7,5),forestMat(0x3b5a32),px-.04,.066,pz+.025,1.5,.12,.8);
+        moss.castShadow=false;
+      }
+    }
+  }
+  function addForestMist(x,z,seed){
+    // Low, translucent haze catches the forest light without obscuring gameplay tokens.
+    const rand=seeded(seed+6101);
+    const mistMat=new THREE.MeshBasicMaterial({color:0xb8c7a9,transparent:true,opacity:.055,depthWrite:false,side:THREE.DoubleSide});
+    const haze=boardMesh(new THREE.CircleGeometry(.35+rand()*.3,16),mistMat,x+(rand()-.5)*.18,.084,z+(rand()-.5)*.18,1.5,.55,.75);
+    haze.rotation.x=-Math.PI/2;
+    haze.castShadow=false;haze.renderOrder=2;
+  }
   function addTopDownTree(x,z,seed){addCanopy(x,z,1.15,seed);}
   function addForestRoots(x,z,seed){
     const rand=seeded(seed+401),rootMat=forestMat(seed%3===0?0x493a27:0x5a452e),count=3+(seed%3);
@@ -416,6 +440,8 @@
       } else if(type==='empty'){
         const rand=seeded(seed+211);
         if(root.dataset.gameScene==='wild'&&seed%2===0)addTerrainRelief(x+(rand()-.5)*.22,z+(rand()-.5)*.22,seed);
+        if(root.dataset.gameScene==='wild'&&seed%4===1)addForestMushrooms(x-.22,z+.24,seed);
+        if(root.dataset.gameScene==='wild'&&seed%7===0)addForestMist(x,z,seed);
         if(seed%3!==0)addCanopy(x+((seed%3)-1)*.12,z+((seed%5)-2)*.07,.7+(seed%4)*.08,seed);
         if(seed%4===0)addBoulderDetail(x+.27,z-.22,seed);
         if(seed%5===1)addForestRoots(x-.12,z+.12,seed);
