@@ -768,11 +768,9 @@
     const zoomIn=document.getElementById('mapZoomIn');
     const zoomOut=document.getElementById('mapZoomOut');
     const viewReset=document.getElementById('mapViewReset');
-    const historyToggle=document.getElementById('mapHistoryToggle');
     if(zoomIn&&!zoomIn.dataset.bound){zoomIn.dataset.bound='1';zoomIn.addEventListener('click',()=>setBoardZoom(boardZoom+.16));}
     if(zoomOut&&!zoomOut.dataset.bound){zoomOut.dataset.bound='1';zoomOut.addEventListener('click',()=>setBoardZoom(boardZoom-.16));}
     if(viewReset&&!viewReset.dataset.bound){viewReset.dataset.bound='1';viewReset.addEventListener('click',()=>setBoardZoom(1));}
-    if(historyToggle&&!historyToggle.dataset.bound){historyToggle.dataset.bound='1';historyToggle.addEventListener('click',()=>{const open=root.classList.toggle('map-history-open');historyToggle.setAttribute('aria-pressed',String(open));historyToggle.setAttribute('aria-label',open?'Закрыть историю игры':'Открыть историю игры');});}
     const sync=()=>{
       if(boardSyncQueued)return;
       boardSyncQueued=true;
