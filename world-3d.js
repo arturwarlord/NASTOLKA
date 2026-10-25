@@ -725,7 +725,7 @@
     if(!board||!boardRenderer||!board.isConnected)return;
     lastBoardSignature=boardSignature(board);
     board.classList.add('board-3d-ready');
-    if(boardRoot){boardScene.remove(boardRoot);boardRoot.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&& !Object.values(boardMaterials).includes(o.material)){if(Array.isArray(o.material))o.material.forEach(m=>{if(m.map)m.map.dispose();m.dispose();});else{if(o.material.map)o.material.map.dispose();o.material.dispose();}}});}
+    if(boardRoot){boardScene.remove(boardRoot);boardRoot.traverse(o=>{if(boardAssetDecorations&&(o===boardAssetDecorations||boardAssetDecorations.getObjectById(o.id)))return;if(o.geometry)o.geometry.dispose();if(o.material&&!Object.values(boardMaterials).includes(o.material)){if(Array.isArray(o.material))o.material.forEach(m=>{if(m.map)m.map.dispose();m.dispose();});else{if(o.material.map)o.material.map.dispose();o.material.dispose();}}});}
     boardRoot=new THREE.Group();boardAssetDecorations=null;boardScene.add(boardRoot);
     const look=activeBoardLook;
     const baseMat=new THREE.MeshStandardMaterial({color:look.base,roughness:.98,metalness:0});
