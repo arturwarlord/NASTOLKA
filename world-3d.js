@@ -128,41 +128,44 @@
       event:terrainMaterial(activeBoardLook.event,'stone',83)
     };
   }
+  const forestMaterialCache={};
+  function forestMat(color,roughness=1){
+    const key=color+'-'+roughness;
+    if(!forestMaterialCache[key])forestMaterialCache[key]=new THREE.MeshStandardMaterial({color,roughness});
+    return forestMaterialCache[key];
+  }
+  function seeded(seed){
+    let state=(seed+1)*2654435761>>>0;
+    return ()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};
+  }
   function addCanopy(x,z,scale,seed){
-    const greens=[0x254c2d,0x315b34,0x3d6839,0x496e3d,0x2b542f];
-    const trunkMat=new THREE.MeshStandardMaterial({color:0x493528,roughness:1});
-    const trunk=boardMesh(new THREE.CylinderGeometry(.035*scale,.075*scale,.24*scale,7),trunkMat,x,.18,z);
-    trunk.rotation.x=.08;
-    for(let n=0;n<5;n++){
-      const angle=n*2.399+seed*.31,r=.08+((seed+n*7)%5)*.018;
-      const crown=boardMesh(new THREE.IcosahedronGeometry(scale*(.19+(n%3)*.035),1),
-        new THREE.MeshStandardMaterial({color:greens[(seed+n*3)%greens.length],roughness:1}),
-        x+Math.cos(angle)*r,.31+(n%2)*.035,z+Math.sin(angle)*r,1.05,.72,.94);
-      crown.rotation.y=angle;
+    // Organic overhead canopy clusters: overlapping irregular crowns, not stacked toy cones.
+    const rand=seeded(seed), greens=[0x203f28,0x294e2e,0x315a34,0x3a6539,0x456d3c,0x527746];
+    const shadow=boardMesh(new THREE.CircleGeometry(.43*scale,18),forestMat(0x101d14),x+.055,.087,z+.07);
+    shadow.rotation.x=-Math.PI/2;
+    const trunk=boardMesh(new THREE.CylinderGeometry(.055*scale,.105*scale,.18*scale,8),forestMat(0x3d2c20),x,.13,z);
+    trunk.castShadow=true;
+    // Wide central crown plus asymmetric lobes create a naturally uneven silhouette.
+    for(let n=0;n<11;n++){
+      const angle=rand()*Math.PI*2,dist=n===0?0:(.10+rand()*.19)*scale;
+      const radius=(.19+rand()*.13)*scale;
+      const crown=boardMesh(new THREE.SphereGeometry(radius,9,7),forestMat(greens[Math.floor(rand()*greens.length)]),
+        x+Math.cos(angle)*dist,.19+rand()*.045,z+Math.sin(angle)*dist,
+        .88+rand()*.48,.48+rand()*.18,.82+rand()*.48);
+      crown.rotation.y=rand()*Math.PI;
     }
-    // A few sunlit leaves and tiny ground plants give the canopy a less geometric edge.
-    for(let n=0;n<4;n++){
-      const tuft=boardMesh(new THREE.SphereGeometry(.045*scale,6,5),
-        new THREE.MeshStandardMaterial({color:n%2?0x607b3e:0x75904a,roughness:1}),
-        x+Math.sin(seed+n*2)*scale*.19,.34,z+Math.cos(seed+n*3)*scale*.18,.8,1,.8);
+    // Small edge leaves break the smooth circular outline from the overhead camera.
+    for(let n=0;n<7;n++){
+      const angle=rand()*Math.PI*2,dist=(.28+rand()*.08)*scale;
+      const leaf=boardMesh(new THREE.SphereGeometry(.065*scale,7,5),forestMat(greens[Math.floor(rand()*greens.length)]),
+        x+Math.cos(angle)*dist,.205,z+Math.sin(angle)*dist,.85,.45,1.2);
+      leaf.rotation.y=angle;
     }
   }
   function boardMesh(geometry,material,x,y,z,scaleX=1,scaleY=1,scaleZ=1){
     const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.scale.set(scaleX,scaleY,scaleZ);m.castShadow=true;m.receiveShadow=true;boardRoot.add(m);return m;
   }
-  function addTopDownTree(x,z,seed){
-    const greens=[0x244b2d,0x315f35,0x3c7040,0x557c45];
-    const trunkMat=new THREE.MeshStandardMaterial({color:0x493728,roughness:1});
-    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.075,.11,.16,7),trunkMat);
-    trunk.position.set(x,.105,z);boardRoot.add(trunk);
-    const r=.27+(seed%4)*.035;
-    const shade=new THREE.Mesh(new THREE.CircleGeometry(r*1.12,12),new THREE.MeshStandardMaterial({color:0x14271a,roughness:1}));
-    shade.rotation.x=-Math.PI/2;shade.position.set(x+.045,.09,z+.055);boardRoot.add(shade);
-    for(let n=0;n<3;n++){
-      const crown=new THREE.Mesh(new THREE.SphereGeometry(r*(1-n*.16),10,7),new THREE.MeshStandardMaterial({color:greens[(seed+n)%greens.length],roughness:1}));
-      crown.scale.set(1,.24,.86);crown.position.set(x+Math.sin(seed+n*2)*.055,.18+n*.012,z+Math.cos(seed+n)*.045);crown.castShadow=true;boardRoot.add(crown);
-    }
-  }
+  function addTopDownTree(x,z,seed){addCanopy(x,z,1.15,seed);}
   function addForestFloorDetail(x,z,seed){
     // Small, irregular moss islands and fallen twigs break the perfect-square look
     // without changing the underlying logical grid or making the board too heavy.
@@ -213,7 +216,7 @@
       const cell=board.children[i*8+j];if(!cell||!cell.classList.contains('play-cell'))continue;
       const type=['start','finish','treasure','trap','event','empty'].find(t=>cell.classList.contains('tile-'+t))||'path';
       const x=j-3.5,z=i-3.5,seed=i*8+j+1;
-      const terrain=boardMesh(new THREE.PlaneGeometry(.99,.99),boardMaterials[type],x,.055,z);
+      const terrain=boardMesh(new THREE.PlaneGeometry(1.015,1.015),boardMaterials[type],x,.055,z);
       terrain.rotation.x=-Math.PI/2;terrain.receiveShadow=true;terrain.castShadow=false;
       if(type==='path'){
         // Uneven dirt edge stones, scattered rather than arranged as decorative beads.
@@ -222,8 +225,14 @@
           const stone=boardMesh(new THREE.DodecahedronGeometry(.035+(k%2)*.018,0),new THREE.MeshStandardMaterial({color:k===1?0x9a8b70:0x665b49,roughness:1}),px,.09,pz,1.2,.55,.8);
           stone.rotation.y=seed*k;
         }
+        if(seed%2===0){
+          const rand=seeded(seed+91),greens=[0x284d2d,0x355d32,0x496b39];
+          for(let n=0;n<4;n++){
+            const tuft=boardMesh(new THREE.SphereGeometry(.045+rand()*.025,6,5),forestMat(greens[n%3]),x+(rand()-.5)*.78,.09,z+(rand()-.5)*.78,.8,.5,1.1);
+          }
+        }
         if(seed%4===0){
-          const grassMat=new THREE.MeshStandardMaterial({color:0x516b37,roughness:1});
+          const grassMat=forestMat(0x516b37);
           for(let k=0;k<3;k++){const blade=boardMesh(new THREE.ConeGeometry(.018,.12,4),grassMat,x+Math.sin(seed+k)*.37,.11,z+Math.cos(seed*2+k)*.34);blade.rotation.z=(k-1)*.32;}
         }
       } else if(type==='empty'){
