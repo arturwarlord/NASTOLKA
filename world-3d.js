@@ -805,6 +805,8 @@
   function build3DBoard(){
     const board=document.getElementById('playBoard');
     if(!board||!boardRenderer||!board.isConnected)return;
+    if(board.classList.contains('road-layout')){if(boardCanvas)boardCanvas.style.display='none';return;}
+    if(boardCanvas)boardCanvas.style.display='block';
     lastBoardSignature=boardSignature(board);
     board.classList.add('board-3d-ready');
     if(boardRoot){boardScene.remove(boardRoot);boardRoot.traverse(o=>{if(boardAssetDecorations&&(o===boardAssetDecorations||boardAssetDecorations.getObjectById(o.id)))return;if(o.geometry)o.geometry.dispose();if(o.material&&!Object.values(boardMaterials).includes(o.material)){if(Array.isArray(o.material))o.material.forEach(m=>{if(m.map)m.map.dispose();m.dispose();});else{if(o.material.map)o.material.map.dispose();o.material.dispose();}}});}
