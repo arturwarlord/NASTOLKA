@@ -367,6 +367,7 @@ function renderPlayBoard(){
   const board=$('#playBoard');
   const miniatures=['♟','♞','♜','♛'];
   board.dataset.layout='road';
+  board.className+=' road-layout';
   board.replaceChildren();
   const scene=document.documentElement.dataset.gameScene||'wild';
   const symbols={
