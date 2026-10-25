@@ -4,7 +4,7 @@
   'use strict';
   const root=document.documentElement;
   let renderer,scene,camera,world,raf,resizeObserver;
-  let detailedTreeModel=null,treeLoaderPromise=null,treeAssetAttempted=false;
+  let detailedTreeModel=null,treeLoaderPromise=null,treeAssetAttempted=false;\n  window.__nastolkaAssetStatus={tree:'pending',rock:'pending'};
   let detailedRockModel=null,rockAssetAttempted=false,boardAssetDecorations=null,boardRockDecorations=null,boardTreeDecorations=null;
   let treeRecords=[];
   const palettes={
@@ -101,28 +101,68 @@
   function findPolyHavenModelFile(node,path,result){
     if(!node||typeof node!=='object')return result;
     if(typeof node.url==='string'&&/\.(gltf|glb)(?:[?#].*)?$/i.test(node.url)){
-      result.push({url:node.url,path:path.join('/').toLowerCase()});
+      result.push({url:node.url,path:path.join('/').toLowerCase(),include:node.include||{}});
     }
     for(const [key,value] of Object.entries(node)){
-      if(key==='url')continue;
+      if(key==='url'||key==='include')continue;
       findPolyHavenModelFile(value,path.concat(key),result);
     }
     return result;
+  }
+  function normalizeAssetPath(value){
+    return String(value||'').replace(/\\\\/g,'/').replace(/^\.\\//,'').replace(/^\\//,'').toLowerCase();
+  }
+  function includedAssetUrl(include,uri){
+    const wanted=normalizeAssetPath(uri);
+    const entries=Object.entries(include||{});
+    let match=entries.find(([path])=>normalizeAssetPath(path)===wanted);
+    if(!match){
+      const basename=wanted.split('/').pop();
+      match=entries.find(([path])=>normalizeAssetPath(path).split('/').pop()===basename);
+    }
+    if(!match)return null;
+    const value=match[1];
+    return typeof value==='string'?value:(value&&typeof value.url==='string'?value.url:null);
   }
   const polyHavenModelPromises={};
   function loadPolyHavenModel(assetId){
     if(polyHavenModelPromises[assetId])return polyHavenModelPromises[assetId];
     polyHavenModelPromises[assetId]=Promise.all([
       import('https://esm.sh/three@0.160.1/examples/jsm/loaders/GLTFLoader.js'),
-      fetch('https://api.polyhaven.com/files/'+encodeURIComponent(assetId)).then(response=>{
+      fetch('https://api.polyhaven.com/files/'+encodeURIComponent(assetId),{headers:{'User-Agent':'NASTOLKA-3D/1.0'}}).then(response=>{
         if(!response.ok)throw new Error('Poly Haven asset manifest HTTP '+response.status);
         return response.json();
       })
-    ]).then(([{GLTFLoader},manifest])=>{
-      const rank=path=>path.includes('1k')?0:path.includes('2k')?1:2;
-      const candidates=findPolyHavenModelFile(manifest,[],[]).sort((a,b)=>rank(a.path)-rank(b.path));
-      if(!candidates.length)throw new Error('No direct glTF model URL for '+assetId);
-      return new GLTFLoader().loadAsync(candidates[0].url).then(gltf=>gltf.scene);
+    ]).then(async ([{GLTFLoader},manifest])=>{
+      const candidates=findPolyHavenModelFile(manifest,[],[]);
+      const rank=item=>{
+        const path=item.path;
+        const format=/\\.glb(?:[?#].*)?$/i.test(item.url)?0:1;
+        const resolution=path.includes('1k')?0:path.includes('2k')?1:2;
+        return format*10+resolution;
+      };
+      candidates.sort((a,b)=>rank(a)-rank(b));
+      if(!candidates.length)throw new Error('Poly Haven returned no glTF/GLB file for '+assetId);
+      const candidate=candidates[0],loader=new GLTFLoader();
+      if(/\\.glb(?:[?#].*)?$/i.test(candidate.url)){
+        const gltf=await loader.loadAsync(candidate.url);
+        return gltf.scene;
+      }
+      // Poly Haven's .gltf files reference companion files listed in the API's include map.
+      // Resolve those URLs explicitly; loading the .gltf URL alone leaves buffers/textures missing.
+      const response=await fetch(candidate.url);
+      if(!response.ok)throw new Error('Poly Haven glTF HTTP '+response.status+' for '+assetId);
+      const document=await response.json();
+      for(const group of [document.buffers||[],document.images||[]]){
+        for(const item of group){
+          if(!item.uri||item.uri.startsWith('data:'))continue;
+          const url=includedAssetUrl(candidate.include,item.uri);
+          if(url)item.uri=url;
+        }
+      }
+      const basePath=new URL('.',candidate.url).href;
+      const gltf=await loader.parseAsync(document,basePath);
+      return gltf.scene;
     }).catch(error=>{delete polyHavenModelPromises[assetId];throw error;});
     return polyHavenModelPromises[assetId];
   }
@@ -132,8 +172,8 @@
     // Real CC0 broadleaf hero trees; lightweight procedural trees remain as distant fallback.
     loadPolyHavenModel('jacaranda_tree').then(model=>{
       detailedTreeModel=model;applyDetailedTreeModel();applyBoardTreeDecorations();
-      console.info('NASTOLKA: loaded Poly Haven CC0 Jacaranda hero trees.');
-    }).catch(error=>console.warn('NASTOLKA: tree model unavailable; keeping fallback.',error));
+      window.__nastolkaAssetStatus.tree='loaded';\n      console.info('NASTOLKA: loaded Poly Haven CC0 Jacaranda model; replaced '+treeRecords.length+' procedural trees.');
+    }).catch(error=>{window.__nastolkaAssetStatus.tree='failed';console.error('NASTOLKA: real tree model failed to load.',error);});
   }
   function applyBoardRockDecorations(){
     if(!detailedRockModel||!boardRoot||root.dataset.gameScene!=='wild')return;
@@ -179,7 +219,7 @@
     loadPolyHavenModel('rock_moss_set_02').then(model=>{
       detailedRockModel=model;applyBoardRockDecorations();
       console.info('NASTOLKA: loaded Poly Haven CC0 mossy rock decorations.');
-    }).catch(error=>console.warn('NASTOLKA: rock model unavailable; keeping fallback.',error));
+    }).catch(error=>{window.__nastolkaAssetStatus.rock='failed';console.error('NASTOLKA: real rock model failed to load.',error);});
   }
   function build(sceneName){
     treeRecords=[];
