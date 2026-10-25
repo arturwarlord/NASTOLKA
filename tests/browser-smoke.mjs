@@ -37,6 +37,7 @@ try {
     await page.goto('http://127.0.0.1:4173/?play=wild', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#gameDialog[open]', { timeout: 10000 });
     await page.waitForFunction(() => document.documentElement.classList.contains('game-mode'));
+    await page.locator('#startGameBtn').click();
     // The forward road is DOM-driven; the environment canvas supplies the 3D scenery.
     await page.waitForSelector('#playerLocationBar', { state: 'attached', timeout: 15000 });
     await page.waitForSelector('#playBoard .road-cell', { state: 'attached', timeout: 15000 });
