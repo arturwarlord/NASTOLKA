@@ -394,6 +394,22 @@
     const chip=boardMesh(new THREE.DodecahedronGeometry(size*.42,0),rockMat,x+(rand()-.5)*.18,.085,z+(rand()-.5)*.15,.9,.72,1.1);
     chip.rotation.y=rand()*Math.PI;
   }
+  function addPathGrassTransition(x,z,seed,side){
+    // Soft, broken grass fringes grow into the dirt only where the trail meets empty forest.
+    const rand=seeded(seed+side.dx*31+side.dz*47+7103);
+    const grass=[0x3b5c32,0x4b6b39,0x627846];
+    const patch=boardMesh(new THREE.CircleGeometry(.13+rand()*.07,12),forestMat(grass[seed%grass.length],1),
+      x+side.dx*.405,.064,z+side.dz*.405,side.dx===0?1.25:.78,1,side.dz===0?1.25:.78);
+    patch.rotation.x=-Math.PI/2;patch.castShadow=false;patch.receiveShadow=false;
+    for(let n=0;n<3;n++){
+      const along=(rand()-.5)*.28,px=x+side.dx*.405+(side.dz!==0?along:0),pz=z+side.dz*.405+(side.dx!==0?along:0);
+      const blade=boardMesh(new THREE.ConeGeometry(.014+rand()*.01,.075+rand()*.045,4),
+        forestMat(grass[(seed+n+1)%grass.length],1),px,.09+rand()*.018,pz);
+      blade.rotation.z=(rand()-.5)*.42;
+      blade.rotation.x=(rand()-.5)*.28;
+      blade.castShadow=false;
+    }
+  }
   function addForestFloorDetail(x,z,seed){
     // Small, irregular moss islands and fallen twigs break the perfect-square look
     // without changing the underlying logical grid or making the board too heavy.
@@ -463,6 +479,13 @@
           // Join neighboring path cells into one readable trail rather than isolated dirt coins.
           const right=board.children[i*8+j+1];
           const down=board.children[(i+1)*8+j];
+          const left=board.children[i*8+j-1];
+          const up=board.children[(i-1)*8+j];
+          const isEmptyCell=neighbor=>!!neighbor&&neighbor.classList.contains('tile-empty');
+          if(j<7&&isEmptyCell(right))addPathGrassTransition(x,z,seed,{dx:1,dz:0});
+          if(j>0&&isEmptyCell(left))addPathGrassTransition(x,z,seed,{dx:-1,dz:0});
+          if(i<7&&isEmptyCell(down))addPathGrassTransition(x,z,seed,{dx:0,dz:1});
+          if(i>0&&isEmptyCell(up))addPathGrassTransition(x,z,seed,{dx:0,dz:-1});
           if(j<7&&right&&right.classList.contains('tile-path')){
             const join=boardMesh(new THREE.CircleGeometry(.54,20),boardMaterials.path,x+.5,.0615,z,1.18,1,.82);
             join.rotation.x=-Math.PI/2;
